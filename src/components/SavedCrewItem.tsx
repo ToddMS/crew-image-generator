@@ -1,6 +1,7 @@
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
 import { SavedCrew } from "../types";
 import { getSeatLabel } from "../services/BoatService";
+import EditCrewForm from "./forms/EditCrewForm";
 import "../styles/SavedCrewItem.css";
 
 interface SavedCrewItemProps {
@@ -22,79 +23,56 @@ const SavedCrewItem = ({
 }: SavedCrewItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const toggleExpansion = () => {
+  const handleToggleExpansion = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === "INPUT" || target.tagName === "BUTTON") return;
+
+    if (isExpanded) {
+      onEdit(null);
+    }
+
     setIsExpanded(!isExpanded);
   };
 
-  const handleNameChange = (index: number, value: string) => {
-    const updatedNames = [...crew.crewNames];
-    updatedNames[index] = value;
-    onUpdateNames(crew.id, updatedNames);
-  };
-
-  const handleCrewNameChange = (updatedCrewName: string) => {
-    onUpdateCrewName(crew.id, updatedCrewName);
-  };
-
   return (
-    <div
-      className={`crew-item ${isExpanded ? "expanded" : ""}`}
-      onClick={toggleExpansion}
-    >
+    <div className={`crew-item ${isExpanded ? "expanded" : ""}`} onClick={handleToggleExpansion}>
       <div className="crew-summary">
         <h3>{crew.clubName}</h3>
         <h3>{crew.raceName}</h3>
-        <h3>{crew.name} - {crew.boatType.value}</h3>
+        <h3>{crew.name} - {crew.boatType.value}</h3> {/* ✅ Uses latest crew name from props */}
       </div>
+
       <div>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onDelete(crew.id); }} 
-              disabled={currentlyEditing === crew.id}
-            >
-              Delete
-            </button>
-          </div>
+        <button 
+          onClick={(e) => { e.stopPropagation(); onDelete(crew.id); }} 
+          disabled={currentlyEditing === crew.id}
+        >
+          Delete
+        </button>
+      </div>
 
       {isExpanded && (
-        <div className="crew-details">
+        <div className="crew-details" onClick={(e) => e.stopPropagation()}>
           {currentlyEditing === crew.id ? (
+            <EditCrewForm
+              crew={crew}
+              onUpdateNames={onUpdateNames}
+              onUpdateCrewName={onUpdateCrewName}
+              onCancel={() => onEdit(null)}
+            />
+          ) : (
             <>
-              <h4>Crew Name:</h4>
-              <input
-                type="text"
-                value={crew.name}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => handleCrewNameChange(e.target.value)}
-              />
+              <h4>Crew Members:</h4>
+              {crew.crewNames.map((name, index) => (
+                <p key={index}>
+                  <strong>{getSeatLabel(crew.boatType.value, index, crew.crewNames.length)}:</strong> {name}
+                </p>
+              ))}
+              <button onClick={(e) => { e.stopPropagation(); onEdit(crew.id); }}>
+                Edit Crew
+              </button>
             </>
-          ) : null}
-
-          <div>
-            <h4>Crew Members:</h4>
-            {crew.crewNames.map((name, index) => (
-              <div key={index}>
-                {currentlyEditing === crew.id ? (
-                  <div>
-                    <label>{getSeatLabel(crew.boatType.value, index, crew.crewNames.length)}</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => handleNameChange(index, e.target.value)}
-                    />
-                  </div>
-                ) : (
-                  <p>
-                    <strong>{getSeatLabel(crew.boatType.value, index, crew.crewNames.length)}:</strong> {name}
-                  </p>
-                )}
-              </div>
-            ))}
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(crew.id); }}
-              disabled={Boolean(currentlyEditing && currentlyEditing !== crew.id)}
-            >
-              {currentlyEditing === crew.id ? "Update" : "Edit"}
-            </button>
-          </div>
+          )}
         </div>
       )}
     </div>
