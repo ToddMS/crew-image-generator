@@ -1,22 +1,24 @@
-.error-message {
-  color: red;
-  margin-top: 10px;
+.roster-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
 }
 
-input {
-  background-color: #242424;
-  transition: background-color 0.3s ease-in-out;
+.roster-title {
+  margin-bottom: 15px;
 }
 
-.error-flash {
-  animation: flash 0.5s ease-in-out;
+.roster-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-@keyframes flash {
-  0%, 50% {
-    background-color: red;
-  }
-  100% {
-    background-color: #242424;
-  }
+/* Button centering */
+.button-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }

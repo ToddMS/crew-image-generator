@@ -14,24 +14,13 @@ const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
   const [raceName, setRaceName] = useState("Henley");
   const [boatName, setBoatName] = useState("M1");
   const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
-  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
-
-  const validateForm = () => {
-    const newErrors = {
-      clubName: !clubName.trim(),
-      raceName: !raceName.trim(),
-      boatName: !boatName.trim(),
-      selectedBoat: !selectedBoat,
-    };
-
-    setErrors(newErrors);
-    return !Object.values(newErrors).includes(true);
-  };
+  const [hasSubmitted, setHasSubmitted] = useState(false); // Track form submission
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setHasSubmitted(true); // Mark as submitted to show errors if needed
 
-    if (validateForm() && selectedBoat) {
+    if (clubName.trim() && raceName.trim() && boatName.trim() && selectedBoat) {
       onFormSubmit(clubName, raceName, boatName, selectedBoat);
     }
   };
@@ -43,44 +32,41 @@ const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
       </Typography>
 
       <form onSubmit={handleFormSubmit} className="race-form">
+        {/* Two Column Layout for Inputs */}
         <Box className="input-grid">
           <TextField
-            className="crew-info"
             label="Club Name"
             variant="outlined"
             fullWidth
             value={clubName}
             onChange={(e) => setClubName(e.target.value)}
-            error={errors.clubName}
-            helperText={errors.clubName ? "Club name is required" : ""}
+            error={hasSubmitted && !clubName.trim()}
+            helperText={hasSubmitted && !clubName.trim() ? "Club name is required" : ""}
           />
 
           <TextField
-            className="crew-info"
             label="Race Name"
             variant="outlined"
             fullWidth
             value={raceName}
             onChange={(e) => setRaceName(e.target.value)}
-            error={errors.raceName}
-            helperText={errors.raceName ? "Race name is required" : ""}
+            error={hasSubmitted && !raceName.trim()}
+            helperText={hasSubmitted && !raceName.trim() ? "Race name is required" : ""}
           />
 
           <TextField
-            className="crew-info"
             label="Boat Name"
             variant="outlined"
             fullWidth
             value={boatName}
             onChange={(e) => setBoatName(e.target.value)}
-            error={errors.boatName}
-            helperText={errors.boatName ? "Boat name is required" : ""}
+            error={hasSubmitted && !boatName.trim()}
+            helperText={hasSubmitted && !boatName.trim() ? "Boat name is required" : ""}
           />
 
-          <FormControl fullWidth error={errors.selectedBoat}>
+          <FormControl fullWidth error={hasSubmitted && !selectedBoat}>
+            <InputLabel>Select Boat Class</InputLabel>
             <Select
-              label='Select Boat Class'
-              className="crew-info"
               value={selectedBoat?.value || ""}
               onChange={(e) => {
                 const boat = boatClass.find((b) => b.value === e.target.value);
@@ -97,10 +83,13 @@ const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
                 </MenuItem>
               ))}
             </Select>
-            {errors.selectedBoat && <Typography color="error">Boat class is required</Typography>}
+            {hasSubmitted && !selectedBoat && (
+              <Typography color="error">Boat class is required</Typography>
+            )}
           </FormControl>
         </Box>
 
+        {/* Submit Button */}
         <div className="button-container">
           <Button type="submit" variant="contained" color="primary">
             Submit
