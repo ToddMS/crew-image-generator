@@ -1,11 +1,18 @@
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import BoatManager from './components/BoatManager';
 
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
+
 function App() {
   return (
-    <div className="app-container">
+    <ThemeProvider theme={darkTheme}>
       <BoatManager />
-    </div>
+    </ThemeProvider>
   );
 }
 

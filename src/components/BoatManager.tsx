@@ -79,22 +79,17 @@ const BoatManager = () => {
   };
 
   return (
-    <div className="boat-manager-container">
-      <table className="full-screen-table">
-        <thead>
-          <tr>
-            <th colSpan={3} className="table-header">
-              <RaceForm boatClass={boatClass} onSelectBoat={setSelectedBoat} onFormSubmit={handleFormSubmit} />
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="content-row">
-            <td className="column">
-              <h3>Club Race Crews</h3>
-              <p>Manage club-wide race crews here (e.g., Henley crews).</p>
-            </td>
-            <td className="column">
+    <>
+      <div className="race-form-container">
+        <RaceForm 
+          boatClass={boatClass} 
+          onSelectBoat={setSelectedBoat} 
+          onFormSubmit={handleFormSubmit} 
+        />
+      </div>
+
+          
+        
               {isCreatingCrew && selectedBoat && (
                 <RosterForm
                   selectedBoat={selectedBoat}
@@ -104,8 +99,8 @@ const BoatManager = () => {
                   onSubmit={handleSubmitRoster}
                 />
               )}
-            </td>
-            <td className="column">
+            
+            
               <SavedCrewsList
                 crews={savedCrews}
                 onEdit={handleEditCrew}
@@ -114,11 +109,8 @@ const BoatManager = () => {
                 onUpdateNames={handleUpdateNames}
                 onUpdateCrewName={handleUpdateCrewName}
               />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            
+    </>
   );
 };
 

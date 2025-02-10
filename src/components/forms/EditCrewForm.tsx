@@ -11,7 +11,7 @@ interface EditCrewFormProps {
   onCancel: () => void;
 }
 
-const EditCrewForm = ({ crew, onUpdateNames, onUpdateCrewName, onCancel }: EditCrewFormProps) => {
+const EditCrewForm = ({ crew, onUpdateNames, onCancel }: EditCrewFormProps) => {
   const [crewMembers, setCrewMembers] = useState([...crew.crewNames]);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
