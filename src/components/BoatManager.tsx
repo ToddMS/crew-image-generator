@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { BoatType, SavedCrew } from "../types";
-import RosterForm from "./RosterForm";
-import RaceForm from "./RaceForm";
+import RosterForm from "./forms/RosterForm";
+import RaceForm from "./forms/RaceForm";
 import SavedCrewsList from "./SavedCrewsList";
-import { createCrew, addCrew, getCrews, deleteCrew } from "../services/BoatService";
+import { createCrew, addCrew, getCrews, deleteCrew, updateCrew } from "../services/BoatService";
 import "../styles/BoatManager.css";
 
 const BoatManager = () => {
@@ -18,24 +18,23 @@ const BoatManager = () => {
   ]);
 
   const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
-  const [clubName, setClubName] = useState<string>("Auriol Kensington");
-  const [raceName, setRaceName] = useState<string>("Henley");
-  const [boatName, setBoatName] = useState<string>("M1");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [clubName, setClubName] = useState<string>("");
+  const [raceName, setRaceName] = useState<string>("");
+  const [boatName, setBoatName] = useState<string>("");
   const [names, setNames] = useState<string[]>([]);
   const [savedCrews, setSavedCrews] = useState<SavedCrew[]>([]);
   const [isCreatingCrew, setIsCreatingCrew] = useState<boolean>(false);
+  const [currentlyEditing, setCurrentlyEditing] = useState<string | null>(null);
 
   useEffect(() => {
     setSavedCrews(getCrews());
   }, []);
 
-  const handleSelectBoat = (boat: BoatType) => {
-    setSelectedBoat(boat);
-  };
-
-  const handleCreateCrew = () => {
-    if (!selectedBoat || !clubName || !raceName || !boatName) return;
+  const handleFormSubmit = (club: string, race: string, boat: string, selectedBoat: BoatType) => {
+    setClubName(club);
+    setRaceName(race);
+    setBoatName(boat);
+    setSelectedBoat(selectedBoat);
     setNames(Array(selectedBoat.seats).fill(""));
     setIsCreatingCrew(true);
   };
@@ -45,11 +44,38 @@ const BoatManager = () => {
 
     const newCrew = createCrew(selectedBoat, names, boatName, clubName, raceName);
     addCrew(newCrew);
-    setSavedCrews(getCrews());
+    setSavedCrews(getCrews()); 
 
     setIsCreatingCrew(false);
     setSelectedBoat(null);
     setNames([]);
+  };
+
+  const handleEditCrew = (crewId: string | null) => {
+    setCurrentlyEditing(crewId);
+  };
+
+  const handleUpdateNames = (crewId: string, updatedNames: string[]) => {
+    const updatedCrew = savedCrews.find(crew => crew.id === crewId);
+    if (!updatedCrew) return;
+
+    const newCrew = { ...updatedCrew, crewNames: updatedNames };
+    updateCrew(newCrew);
+    setSavedCrews(getCrews()); 
+  };
+
+  const handleUpdateCrewName = (crewId: string, updatedCrewName: string) => {
+    const updatedCrew = savedCrews.find(crew => crew.id === crewId);
+    if (!updatedCrew) return;
+
+    const newCrew = { ...updatedCrew, name: updatedCrewName };
+    updateCrew(newCrew);
+    setSavedCrews(getCrews());
+  };
+
+  const handleDeleteCrew = (crewId: string) => {
+    deleteCrew(crewId);
+    setSavedCrews(getCrews());
   };
 
   return (
@@ -58,10 +84,7 @@ const BoatManager = () => {
         <thead>
           <tr>
             <th colSpan={3} className="table-header">
-              <RaceForm boatClass={boatClass} onSelectBoat={handleSelectBoat} />
-              <button className="create-crew-button" onClick={handleCreateCrew} disabled={!selectedBoat}>
-                Create Crew
-              </button>
+              <RaceForm boatClass={boatClass} onSelectBoat={setSelectedBoat} onFormSubmit={handleFormSubmit} />
             </th>
           </tr>
         </thead>
@@ -85,11 +108,11 @@ const BoatManager = () => {
             <td className="column">
               <SavedCrewsList
                 crews={savedCrews}
-                onEdit={() => {}}
-                onDelete={() => {}}
-                currentlyEditing={null}
-                onUpdateNames={() => {}}
-                onUpdateCrewName={() => {}}
+                onEdit={handleEditCrew}
+                onDelete={handleDeleteCrew}
+                currentlyEditing={currentlyEditing}
+                onUpdateNames={handleUpdateNames}
+                onUpdateCrewName={handleUpdateCrewName}
               />
             </td>
           </tr>
