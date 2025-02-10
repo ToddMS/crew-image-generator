@@ -3,8 +3,7 @@ import { BoatType } from "../../types/index";
 import "../../styles/forms/RosterForm.css";
 import { Button, Typography, Box, Stack } from "@mui/material";
 import CoxswainField from "../boat-seats/CoxswainField";
-import CrewRow from "../boat-seats/CrewRow";
-import SingleScullField from "../boat-seats/SingleScullField"; // New component for single rowers
+import BoatSeats from "../boat-seats/BoatSeats";
 
 interface RosterFormProps {
   selectedBoat: BoatType;
@@ -27,14 +26,8 @@ const RosterForm = ({ selectedBoat, names, onNamesChange, onSubmit }: RosterForm
     }
   };
 
-  const isEight = selectedBoat.seats === 9; 
-  const isFour = selectedBoat.seats === 5 || selectedBoat.seats === 4;
-  const isTwo = selectedBoat.seats === 2;
-  const isSingle = selectedBoat.seats === 1;
-
   const hasCox = selectedBoat.seats > 1 && selectedBoat.seats % 2 !== 0;
 
-  // Function to update crew member names
   const handleNameChange = (index: number, value: string) => {
     const newNames = [...names];
     newNames[index] = value;
@@ -48,21 +41,14 @@ const RosterForm = ({ selectedBoat, names, onNamesChange, onSubmit }: RosterForm
       <Box className="roster-grid">
         <Stack spacing={2} alignItems="center">
           {hasCox && <CoxswainField name={names[0]} onNameChange={(name) => handleNameChange(0, name)} hasSubmitted={hasSubmitted} />}
-
-          {isEight && (
-            <Stack spacing={2}>
-              <CrewRow boatType={selectedBoat.value} rowSeats={names.slice(1, 5)} rowIndex={0} onNamesChange={handleNameChange} hasSubmitted={hasSubmitted} />
-              <CrewRow boatType={selectedBoat.value} rowSeats={names.slice(5, 9)} rowIndex={1} onNamesChange={handleNameChange} hasSubmitted={hasSubmitted} />
-            </Stack>
-          )}
-
-          {isFour && <CrewRow boatType={selectedBoat.value} rowSeats={names.slice(1, 5)} rowIndex={0} onNamesChange={handleNameChange} hasSubmitted={hasSubmitted} />}
-
-          {isTwo && <CrewRow boatType={selectedBoat.value} rowSeats={names} rowIndex={0} onNamesChange={handleNameChange} hasSubmitted={hasSubmitted} />}
-
-          {isSingle && (
-            <SingleScullField name={names[0]} onNameChange={(name) => handleNameChange(0, name)} hasSubmitted={hasSubmitted} />
-          )}
+          
+          <BoatSeats 
+            boatType={selectedBoat.value} 
+            names={hasCox ? names.slice(1) : names} 
+            onNamesChange={(index, name) => handleNameChange(hasCox ? index + 1 : index, name)} 
+            hasSubmitted={hasSubmitted} 
+            hasCox={hasCox} 
+          />
         </Stack>
       </Box>
 
