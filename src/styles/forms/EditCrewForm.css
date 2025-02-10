@@ -13,7 +13,6 @@
 }
 
 .button-container {
-  display: flex;
   gap: 10px;
   margin-top: 10px;
 }
@@ -23,10 +22,8 @@
   color: black;
   padding: 10px 20px;
   border: none;
-  border-radius: 20px;
   cursor: pointer;
   font-size: 16px;
-  transition: background 0.3s ease-in-out;
 }
 
 .cancel-button:hover {
