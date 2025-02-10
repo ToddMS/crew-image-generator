@@ -4,12 +4,14 @@ let savedCrews: SavedCrew[] = [];
 
 export const getCrews = () => savedCrews;
 
-export const createCrew = (boat: BoatType, crewNames: string[]): SavedCrew => {
+export const createCrew = (boat: BoatType, crewNames: string[], crewName: string, clubName: string, raceName: string): SavedCrew => {
     return {
         id: Date.now().toString(),
-        name: `Crew for ${boat.value}`,
-        crewNames,
+        name: crewName,
+        crewNames: crewNames,
         boatType: boat,
+        clubName: clubName,
+        raceName: raceName,
     };
 };
 
@@ -21,7 +23,6 @@ export const updateCrew = (updatedCrew: SavedCrew) => {
     savedCrews = savedCrews.map(crew => 
         crew.id === updatedCrew.id ? updatedCrew : crew
     );
-    console.log(savedCrews);
 };
 
 export const deleteCrew = (crewId: string) => {
@@ -29,21 +30,19 @@ export const deleteCrew = (crewId: string) => {
 };
 
 export const getSeatLabel = (boatType: string, index: number, totalSeats: number) => {
-  const hasCox = boatType.includes('+');
-  const actualTotalSeats = hasCox ? totalSeats - 1 : totalSeats;
+    if (boatType === '1x') return 'Rower';
 
-  if (hasCox && index === 0) {
-      return 'Cox';
-  }
+    const hasCox = boatType.includes('+');
+    const totalRowers = hasCox ? totalSeats - 1 : totalSeats;
 
-  const seatNumber = actualTotalSeats - index;
+    if (hasCox && index === 0) return 'Cox';
 
-  if (seatNumber === actualTotalSeats) {
-      return 'Stroke';
-  } else if (seatNumber === 0) {
-      return 'Bow';
-  }
+    const seatIndex = hasCox ? index - 1 : index; 
+    const seatNumber = totalRowers - seatIndex;
 
-  return `Seat ${seatNumber}`;
+    if (seatNumber === totalRowers) return 'Stroke';
+    if (seatNumber === 1) return 'Bow';
+    return `Seat ${seatNumber}`;
 };
+
 

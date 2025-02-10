@@ -8,4 +8,6 @@ export interface BoatType {
     name: string;
     crewNames: string[];
     boatType: BoatType;
+    clubName: string;
+    raceName: string;
   }

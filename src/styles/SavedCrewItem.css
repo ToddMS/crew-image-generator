@@ -1,0 +1,24 @@
+.crew-item {
+  border: 2px solid #ccc;
+  padding: 10px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.crew-item:hover {
+  background-color: #414141;
+  border-color: #999;
+}
+
+.crew-details {
+  margin-top: 5px;
+  padding: 5px;
+  border-top: 1px solid #ccc;
+}
+
+.crew-item:not(.expanded) .crew-details {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}

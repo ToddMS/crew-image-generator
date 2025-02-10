@@ -1,0 +1,67 @@
+
+  
+  .boat-manager-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  
+  .full-screen-table {
+    border-collapse: collapse;
+  }
+  
+  .table-header {
+    padding: 15px;
+  }
+  
+  .content-row {
+    width: 100%;
+    display: flex;
+    height: 750px;
+    padding-bottom: 10px;
+  }
+  
+  .column {
+    padding: 20px;
+    border: 1px solid #ccc;
+    height: 90%;
+    overflow-y: auto;
+  }
+  
+  .column::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .column::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  .column::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  
+  .column::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  th, td {
+    width: 33.33%;
+    text-align: center;
+  }
+  
+  @media (max-width: 768px) {
+    .content-row {
+      display: flex;
+      flex-direction: column;
+    }
+    .column {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
+  
