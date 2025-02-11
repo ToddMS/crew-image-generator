@@ -31,18 +31,17 @@ export const deleteCrew = (crewId: string) => {
 
 export const getSeatLabel = (boatType: string, index: number, totalSeats: number) => {
     if (boatType === '1x') return 'Rower';
-
+    
     const hasCox = boatType.includes('+');
-    const totalRowers = hasCox ? totalSeats - 1 : totalSeats;
 
-    if (hasCox && index === 0) return 'Cox';
+    const seatNumber = totalSeats - index + (hasCox ? 1 : 0);
 
-    const seatIndex = hasCox ? index - 1 : index; 
-    const seatNumber = totalRowers - seatIndex;
-
-    if (seatNumber === totalRowers) return 'Stroke';
+    if (seatNumber === totalSeats) return 'Stroke';
     if (seatNumber === 1) return 'Bow';
     return `Seat ${seatNumber}`;
 };
+
+
+
 
 

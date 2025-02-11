@@ -1,7 +1,7 @@
 import { useState, FormEvent } from "react";
 import { BoatType } from "../../types";
-import ErrorPopup from "../errors/ErrorPopup";
 import "../../styles/forms/RaceForm.css";
+import { TextField, Typography, Button, MenuItem, Select, FormControl, InputLabel, Box } from "@mui/material";
 
 interface RaceFormProps {
   boatClass: BoatType[];
@@ -14,90 +14,89 @@ const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
   const [raceName, setRaceName] = useState("Henley");
   const [boatName, setBoatName] = useState("M1");
   const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
-
-  const validateForm = () => {
-    const newErrors = {
-      clubName: !clubName.trim(),
-      raceName: !raceName.trim(),
-      boatName: !boatName.trim(),
-      selectedBoat: !selectedBoat,
-    };
-
-    setErrors(newErrors);
-    return !Object.values(newErrors).includes(true);
-  };
+  const [hasSubmitted, setHasSubmitted] = useState(false); // Track form submission
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setHasSubmitted(true); // Mark as submitted to show errors if needed
 
-    if (validateForm() && selectedBoat) {
+    if (clubName.trim() && raceName.trim() && boatName.trim() && selectedBoat) {
       onFormSubmit(clubName, raceName, boatName, selectedBoat);
-    } else {
-      setShowErrorPopup(true);
     }
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="club-race-form">
-      <div>
-        <label>Club Name:</label>
-        <input
-          type="text"
-          value={clubName}
-          onChange={(e) => setClubName(e.target.value)}
-          className={errors.clubName ? "error-flash" : ""}
-        />
-      </div>
+    <div className="race-form-container">
+      <Typography variant="h3" className="race-form-title">
+        Please enter information about your crew
+      </Typography>
 
-      <div>
-        <label>Race Name:</label>
-        <input
-          type="text"
-          value={raceName}
-          onChange={(e) => setRaceName(e.target.value)}
-          className={errors.raceName ? "error-flash" : ""}
-        />
-      </div>
+      <form onSubmit={handleFormSubmit} className="race-form">
+        {/* Two Column Layout for Inputs */}
+        <Box className="input-grid">
+          <TextField
+            label="Club Name"
+            variant="outlined"
+            fullWidth
+            value={clubName}
+            onChange={(e) => setClubName(e.target.value)}
+            error={hasSubmitted && !clubName.trim()}
+            helperText={hasSubmitted && !clubName.trim() ? "Club name is required" : ""}
+          />
 
-      <div>
-        <label>Boat Name:</label>
-        <input
-          type="text"
-          value={boatName}
-          onChange={(e) => setBoatName(e.target.value)}
-          className={errors.boatName ? "error-flash" : ""}
-        />
-      </div>
+          <TextField
+            label="Race Name"
+            variant="outlined"
+            fullWidth
+            value={raceName}
+            onChange={(e) => setRaceName(e.target.value)}
+            error={hasSubmitted && !raceName.trim()}
+            helperText={hasSubmitted && !raceName.trim() ? "Race name is required" : ""}
+          />
 
-      <div>
-        <label>Select Boat Class:</label>
-        <select
-          value={selectedBoat?.value || ""}
-          onChange={(e) => {
-            const boat = boatClass.find((b) => b.value === e.target.value);
-            setSelectedBoat(boat || null);
-            if (boat) {
-              onSelectBoat(boat);
-            }
-          }}
-          className={errors.selectedBoat ? "error-flash" : ""}
-        >
-          <option value="" disabled>Choose a boat class</option>
-          {boatClass.map((boat) => (
-            <option key={boat.value} value={boat.value}>
-              {boat.value}
-            </option>
-          ))}
-        </select>
-      </div>
+          <TextField
+            label="Boat Name"
+            variant="outlined"
+            fullWidth
+            value={boatName}
+            onChange={(e) => setBoatName(e.target.value)}
+            error={hasSubmitted && !boatName.trim()}
+            helperText={hasSubmitted && !boatName.trim() ? "Boat name is required" : ""}
+          />
 
-      <div className="button-container">
-        <button type="submit" className="rounded-button">Submit</button>
-        <ErrorPopup message="Please fill in all required fields." visible={showErrorPopup} onClose={() => setShowErrorPopup(false)} />
-      </div>
-    </form>
+          <FormControl fullWidth error={hasSubmitted && !selectedBoat}>
+            <InputLabel>Select Boat Class</InputLabel>
+            <Select
+              value={selectedBoat?.value || ""}
+              onChange={(e) => {
+                const boat = boatClass.find((b) => b.value === e.target.value);
+                setSelectedBoat(boat || null);
+                if (boat) {
+                  onSelectBoat(boat);
+                }
+              }}
+            >
+              <MenuItem value="" disabled>Choose a boat class</MenuItem>
+              {boatClass.map((boat) => (
+                <MenuItem key={boat.value} value={boat.value}>
+                  {boat.value}
+                </MenuItem>
+              ))}
+            </Select>
+            {hasSubmitted && !selectedBoat && (
+              <Typography color="error">Boat class is required</Typography>
+            )}
+          </FormControl>
+        </Box>
+
+        {/* Submit Button */}
+        <div className="button-container">
+          <Button type="submit" variant="contained" color="primary">
+            Submit
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 
