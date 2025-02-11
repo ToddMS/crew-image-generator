@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SavedCrew } from "../types";
 import { getSeatLabel } from "../services/BoatService";
 import EditCrewForm from "./forms/EditCrewForm";
-import "../styles/SavedCrewItem.css";
+import { Typography, Box, Paper, Stack, Button } from "@mui/material";
 
 interface SavedCrewItemProps {
   crew: SavedCrew;
@@ -35,24 +35,25 @@ const SavedCrewItem = ({
   };
 
   return (
-    <div className={`crew-item ${isExpanded ? "expanded" : ""}`} onClick={handleToggleExpansion}>
-      <div className="crew-summary">
-        <h3>{crew.clubName}</h3>
-        <h3>{crew.raceName}</h3>
-        <h3>{crew.name} - {crew.boatType.value}</h3> {/* ✅ Uses latest crew name from props */}
-      </div>
-
-      <div>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onDelete(crew.id); }} 
+    <Paper elevation={3} sx={{ padding: 2 }} onClick={handleToggleExpansion}>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Stack>
+          <Typography variant="h6">{crew.clubName}</Typography>
+          <Typography variant="subtitle1">{crew.raceName}</Typography>
+          <Typography variant="subtitle1">{crew.name} - {crew.boatType.value}</Typography>
+        </Stack>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={(e) => { e.stopPropagation(); onDelete(crew.id); }}
           disabled={currentlyEditing === crew.id}
         >
           Delete
-        </button>
-      </div>
+        </Button>
+      </Box>
 
       {isExpanded && (
-        <div className="crew-details" onClick={(e) => e.stopPropagation()}>
+        <Box mt={2} onClick={(e) => e.stopPropagation()}>
           {currentlyEditing === crew.id ? (
             <EditCrewForm
               crew={crew}
@@ -62,20 +63,20 @@ const SavedCrewItem = ({
             />
           ) : (
             <>
-              <h4>Crew Members:</h4>
+              <Typography variant="subtitle2">Crew Members:</Typography>
               {crew.crewNames.map((name, index) => (
-                <p key={index}>
+                <Typography key={index}>
                   <strong>{getSeatLabel(crew.boatType.value, index, crew.crewNames.length)}:</strong> {name}
-                </p>
+                </Typography>
               ))}
-              <button onClick={(e) => { e.stopPropagation(); onEdit(crew.id); }}>
+              <Button variant="contained" color="primary" onClick={(e) => { e.stopPropagation(); onEdit(crew.id); }}>
                 Edit Crew
-              </button>
+              </Button>
             </>
           )}
-        </div>
+        </Box>
       )}
-    </div>
+    </Paper>
   );
 };
 

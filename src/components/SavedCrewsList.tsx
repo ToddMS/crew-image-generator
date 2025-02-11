@@ -1,5 +1,7 @@
-import { SavedCrew } from "../types/index";
+import { SavedCrew } from "../types";
 import SavedCrewItem from "./SavedCrewItem";
+import { Typography, Box, Stack } from "@mui/material";
+import "../styles/SavedCrewList.css";
 
 interface SavedCrewsListProps {
   crews: SavedCrew[];
@@ -19,26 +21,28 @@ const SavedCrewsList = ({
   onUpdateCrewName 
 }: SavedCrewsListProps) => {
   return (
-    <div>
-      <h2>Saved Crews</h2>
-      {crews.length === 0 ? (
-        <p>No saved crews yet</p>
-      ) : (
-        <div>
-          {crews.map((crew) => (
-            <SavedCrewItem
-              key={crew.id}
-              crew={crew}
-              currentlyEditing={currentlyEditing}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onUpdateNames={onUpdateNames}
-              onUpdateCrewName={onUpdateCrewName}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <Box className="saved-crews-container">
+  <Box className="saved-crews-box">
+    <Typography variant="h4" className="saved-crews-title">Saved Crews</Typography>
+    {crews.length === 0 ? (
+      <Typography variant="body1">No saved crews yet</Typography>
+    ) : (
+      <Stack className="saved-crews-stack">
+        {crews.map((crew) => (
+          <SavedCrewItem
+            key={crew.id}
+            crew={crew}
+            currentlyEditing={currentlyEditing}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onUpdateNames={onUpdateNames}
+            onUpdateCrewName={onUpdateCrewName}
+          />
+        ))}
+      </Stack>
+    )}
+  </Box>
+</Box>
   );
 };
 

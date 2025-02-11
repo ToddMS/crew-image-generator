@@ -2,7 +2,7 @@ import { useState, useEffect, FormEvent } from "react";
 import { SavedCrew } from "../../types/index";
 import { getSeatLabel } from "../../services/BoatService";
 import ErrorPopup from "../errors/ErrorPopup";
-import "../../styles/forms/EditCrewForm.css";
+import { Typography, Box, Stack, TextField, Button, Paper } from "@mui/material";
 
 interface EditCrewFormProps {
   crew: SavedCrew;
@@ -37,31 +37,34 @@ const EditCrewForm = ({ crew, onUpdateNames, onCancel }: EditCrewFormProps) => {
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="edit-crew-form">
-      <h3>Edit Crew</h3>
-      <h4>Crew Members:</h4>
-      {crewMembers.map((name, index) => (
-        <div key={index}>
-          <label>{getSeatLabel(crew.boatType.value, index, crewMembers.length)}</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => {
-              const updatedNames = [...crewMembers];
-              updatedNames[index] = e.target.value;
-              setCrewMembers(updatedNames);
-            }}
-            className={showErrors && !name.trim() ? "error-flash" : ""}
-          />
-        </div>
-      ))}
-
-      <div className="button-container">
-        <button type="submit" className="rounded-button">Save</button>
-        <button type="button" className="cancel-button" onClick={onCancel}>Cancel</button>
+    <Paper elevation={3} sx={{ padding: 3 }}>
+      <form onSubmit={handleFormSubmit}>
+        <Typography variant="h5" gutterBottom>Edit Crew</Typography>
+        <Typography variant="h6">Crew Members:</Typography>
+        <Stack spacing={2}>
+          {crewMembers.map((name, index) => (
+            <TextField
+              key={index}
+              label={getSeatLabel(crew.boatType.value, index, crewMembers.length)}
+              value={name}
+              onChange={(e) => {
+                const updatedNames = [...crewMembers];
+                updatedNames[index] = e.target.value;
+                setCrewMembers(updatedNames);
+              }}
+              error={showErrors && !name.trim()}
+              helperText={showErrors && !name.trim() ? "This field is required" : ""}
+              fullWidth
+            />
+          ))}
+        </Stack>
+        <Box mt={2} display="flex" gap={2}>
+          <Button type="submit" variant="contained" color="primary">Save</Button>
+          <Button variant="outlined" color="secondary" onClick={onCancel}>Cancel</Button>
+        </Box>
         <ErrorPopup message="Please fill in all fields before saving." visible={showErrorPopup} onClose={() => setShowErrorPopup(false)} />
-      </div>
-    </form>
+      </form>
+    </Paper>
   );
 };
 

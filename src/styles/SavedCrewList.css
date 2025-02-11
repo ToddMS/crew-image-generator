@@ -1,3 +1,24 @@
-.overflow {
-    overflow-y: scroll;
-}
+.saved-crews-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .saved-crews-box {
+    max-width: 600px;
+    width: 100%;
+    padding: 16px;
+    text-align: center;
+  }
+  
+  .saved-crews-title {
+    margin-bottom: 16px;
+  }
+  
+  .saved-crews-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  
