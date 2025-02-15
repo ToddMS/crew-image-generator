@@ -5,20 +5,19 @@ import { TextField, Typography, Button, MenuItem, Select, FormControl, InputLabe
 
 interface RaceFormProps {
   boatClass: BoatType[];
-  onSelectBoat: (selectedBoat: BoatType) => void;
   onFormSubmit: (club: string, race: string, boat: string, selectedBoat: BoatType) => void;
 }
 
-const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
+const RaceForm = ({ boatClass, onFormSubmit }: RaceFormProps) => {
   const [clubName, setClubName] = useState("Auriol Kensington");
   const [raceName, setRaceName] = useState("Henley");
   const [boatName, setBoatName] = useState("M1");
   const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false); // Track form submission
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setHasSubmitted(true); // Mark as submitted to show errors if needed
+    setHasSubmitted(true);
 
     if (clubName.trim() && raceName.trim() && boatName.trim() && selectedBoat) {
       onFormSubmit(clubName, raceName, boatName, selectedBoat);
@@ -32,7 +31,6 @@ const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
       </Typography>
 
       <form onSubmit={handleFormSubmit} className="race-form">
-        {/* Two Column Layout for Inputs */}
         <Box className="input-grid">
           <TextField
             label="Club Name"
@@ -71,9 +69,6 @@ const RaceForm = ({ boatClass, onSelectBoat, onFormSubmit }: RaceFormProps) => {
               onChange={(e) => {
                 const boat = boatClass.find((b) => b.value === e.target.value);
                 setSelectedBoat(boat || null);
-                if (boat) {
-                  onSelectBoat(boat);
-                }
               }}
             >
               <MenuItem value="" disabled>Choose a boat class</MenuItem>

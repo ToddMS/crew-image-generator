@@ -16,9 +16,7 @@ const SavedCrewsList = ({
   crews, 
   onEdit, 
   onDelete, 
-  currentlyEditing, 
-  onUpdateNames, 
-  onUpdateCrewName 
+  currentlyEditing
 }: SavedCrewsListProps) => {
   return (
     <Box className="saved-crews-container">
@@ -35,8 +33,6 @@ const SavedCrewsList = ({
             currentlyEditing={currentlyEditing}
             onEdit={onEdit}
             onDelete={onDelete}
-            onUpdateNames={onUpdateNames}
-            onUpdateCrewName={onUpdateCrewName}
           />
         ))}
       </Stack>
