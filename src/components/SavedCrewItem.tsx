@@ -1,5 +1,5 @@
 import { SavedCrew } from "../types";
-import { getSeatLabel } from "../services/BoatService";
+import { getSeatLabel } from "../utils/BoatUtils";
 import { Typography, Box, Paper, Stack, Button } from "@mui/material";
 
 interface SavedCrewItemProps {
@@ -9,12 +9,13 @@ interface SavedCrewItemProps {
   onDelete: (crewId: string) => void;
 }
 
-const SavedCrewItem = ({
-  crew,
-  currentlyEditing,
-  onEdit,
-  onDelete,
-}: SavedCrewItemProps) => {
+const SavedCrewItem = ({ crew, currentlyEditing, onEdit, onDelete }: SavedCrewItemProps) => {
+  console.log("Rendering crew:", crew);
+
+  if (!crew || !crew.boatType || !crew.boatType.seats) {
+    return <Typography color="error">Error: Invalid crew data</Typography>;
+  }
+
   const numberOfRowers = crew.boatType.seats;
 
   return (
@@ -28,20 +29,10 @@ const SavedCrewItem = ({
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => onEdit(crew.id)}
-            disabled={currentlyEditing === crew.id}
-          >
+          <Button variant="contained" color="primary" onClick={() => onEdit(crew.id)} disabled={currentlyEditing === crew.id}>
             Edit
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => onDelete(crew.id)}
-            disabled={currentlyEditing === crew.id}
-          >
+          <Button variant="contained" color="error" onClick={() => onDelete(crew.id)} disabled={currentlyEditing === crew.id}>
             Delete
           </Button>
         </Stack>
@@ -54,10 +45,7 @@ const SavedCrewItem = ({
         <Stack spacing={1}>
           {crew.crewNames.map((name, index) => (
             <Typography key={index} variant="body2">
-              <strong>
-                {getSeatLabel(crew.boatType.value, index, numberOfRowers)}:
-              </strong>{" "}
-              {name}
+              <strong>{getSeatLabel(crew.boatType.value, index, numberOfRowers)}:</strong> {name}
             </Typography>
           ))}
         </Stack>

@@ -1,5 +1,5 @@
 import { TextField, Stack } from "@mui/material";
-import { getSeatLabel } from "../../services/BoatService";
+import { getSeatLabel } from "../../utils/BoatUtils";
 
 interface BoatSeatsProps {
   boatType: string;

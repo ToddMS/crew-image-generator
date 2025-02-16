@@ -1,56 +1,73 @@
-import { SavedCrew, BoatType } from '../types';
+import { SavedCrew } from "../types";
 
-let savedCrews: SavedCrew[] = [];
+const API_URL = "http://localhost:8080/api/crews";
 
-export const getCrews = () => savedCrews;
+export const getCrews = async (): Promise<SavedCrew[]> => {
+    try {
+        const response = await fetch(API_URL, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
 
-export const createCrew = (
-  boat: BoatType, 
-  crewNames: string[], 
-  crewName: string, 
-  clubName: string, 
-  raceName: string
-): SavedCrew => {
-  return {
-    id: Date.now().toString(),
-    name: crewName,
-    crewNames: crewNames,
-    boatType: boat,
-    clubName: clubName,
-    raceName: raceName,
-  };
-};
+        if (!response.ok) throw new Error(`Failed to fetch crews: ${response.status} ${response.statusText}`);
 
-export const addCrew = (newCrew: SavedCrew) => {
-  savedCrews = [...savedCrews, newCrew];
-};
-
-export const updateCrew = (updatedCrew: SavedCrew) => {
-  savedCrews = savedCrews.map(crew => 
-    crew.id === updatedCrew.id ? updatedCrew : crew
-  );
-};
-
-export const deleteCrew = (crewId: string) => {
-  savedCrews = savedCrews.filter(crew => crew.id !== crewId);
-};
-
-export const getSeatLabel = (boatType: string, index: number, totalRowers: number): string => {
-    const hasCox = boatType.includes('+');
-    
-    if (hasCox && index === 0) {
-      return 'Cox';
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching crews:", error);
+        return [];
     }
-    
-    const adjustedIndex = hasCox ? index - 1 : index;
-    
-    if (adjustedIndex === 0) {
-      return 'Stroke';
+};
+
+export const createCrew = async (crew: {
+  name: string;
+  crewNames: string[];
+  boatType: string;
+  clubName: string;
+  raceName: string;
+}): Promise<SavedCrew | null> => {
+  try {
+      const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(crew),
+      });
+
+      const data = await response.json(); // Read response JSON before error checking
+
+      if (!response.ok) throw new Error(`Failed to create crew: ${response.status} ${data?.message || response.statusText}`);
+
+      return data;
+  } catch (error) {
+      console.error("Error creating crew:", error);
+      return null;
+  }
+};
+
+
+export const updateCrew = async (id: string, updatedCrew: Partial<SavedCrew>): Promise<SavedCrew | null> => {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedCrew),
+        });
+
+        if (!response.ok) throw new Error("Failed to update crew");
+        return await response.json();
+    } catch (error) {
+        console.error("Error updating crew:", error);
+        return null;
     }
-    
-    if (adjustedIndex === totalRowers - 1) {
-      return 'Bow';
+};
+
+export const deleteCrew = async (crewId: string): Promise<void> => {
+    try {
+        const response = await fetch(`${API_URL}/${crewId}`, {
+            method: "DELETE",
+        });
+
+        if (!response.ok) throw new Error("Failed to delete crew");
+    } catch (error) {
+        console.error("Error deleting crew:", error);
     }
-    
-    return `${totalRowers - adjustedIndex}`;
-  };
+};
