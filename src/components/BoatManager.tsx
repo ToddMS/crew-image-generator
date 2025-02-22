@@ -1,153 +1,87 @@
 import { useState, useEffect } from "react";
-import { BoatType, SavedCrew } from "../types";
+import { useCrewContext } from "../context/CrewContext";
 import RosterForm from "./forms/RosterForm";
 import RaceForm from "./forms/RaceForm";
 import SavedCrewsList from "./SavedCrewsList";
-import { createCrew, getCrews, deleteCrew, updateCrew } from "../services/BoatService";
 import "../styles/BoatManager.css";
+import { BoatType } from "../types/crew.types"; // ✅ Ensure this import is correct
+
+// ✅ Define boatClass array
+const boatClass: BoatType[] = [
+    { id: 1, value: "8+", seats: 8, name: "Eight" },
+    { id: 2, value: "4+", seats: 4, name: "Four" },
+    { id: 3, value: "4-", seats: 4, name: "Coxless Four" },
+    { id: 4, value: "4x", seats: 4, name: "Quad" },
+    { id: 5, value: "2-", seats: 2, name: "Pair" },
+    { id: 6, value: "2x", seats: 2, name: "Double" },
+    { id: 7, value: "1x", seats: 1, name: "Single" },
+];
 
 const BoatManager = () => {
-    const [boatClass] = useState<BoatType[]>([
-        { value: "8+", seats: 8, name: "Eight" },
-        { value: "4+", seats: 4, name: "Four" },
-        { value: "4-", seats: 4, name: "Coxless Four" },
-        { value: "4x", seats: 4, name: "Quad" },
-        { value: "2-", seats: 2, name: "Pair" },
-        { value: "2x", seats: 2, name: "Double" },
-        { value: "1x", seats: 1, name: "Single" },
-    ]);
+    const { crews, fetchCrews, addCrew, updateCrew, deleteCrew, selectedBoat, setSelectedBoat, editingCrew } = useCrewContext();
 
-    const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
     const [clubName, setClubName] = useState("");
     const [raceName, setRaceName] = useState("");
     const [boatName, setBoatName] = useState("");
     const [names, setNames] = useState<string[]>([]);
-    const [savedCrews, setSavedCrews] = useState<SavedCrew[]>([]);
-    const [editingCrew, setEditingCrew] = useState<SavedCrew | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
 
-    // Fetch crews from backend on component mount
     useEffect(() => {
-        async function fetchCrews() {
-            setLoading(true);
-            try {
-                const crews = await getCrews();
-                setSavedCrews(crews);
-            } catch (error) {
-                console.error("Failed to fetch crews:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
         fetchCrews();
-    }, []);
+    }, [fetchCrews]);
+    
+    useEffect(() => {
+        console.log("Updated crews list:", crews); // ✅ Debug crews
+    }, [crews]); // ✅ Log whenever crews change
+    
 
-    const handleFormSubmit = (club: string, race: string, boat: string, selectedBoat: BoatType) => {
-        setClubName(club);
-        setRaceName(race);
-        setBoatName(boat);
-        setSelectedBoat(selectedBoat);
-        setNames(Array(selectedBoat.value.includes('+') ? selectedBoat.seats + 1 : selectedBoat.seats).fill(""));
-    };
-
-    const handleSubmitRoster = async () => {
-        if (!selectedBoat || names.some((name) => name.trim() === "")) return;
-
-        setLoading(true);
-        try {
-            if (editingCrew) {
-                const updatedCrew = { ...editingCrew, crewNames: names };
-                await updateCrew(editingCrew.id, updatedCrew);
-                setEditingCrew(null);
-            } else {
-                const newCrew = await createCrew({
-                    name: boatName,
-                    crewNames: names,
-                    boatType: selectedBoat.value,
-                    clubName,
-                    raceName,
-                });
-
-                if (newCrew) {
-                    setSavedCrews(await getCrews());
-                }
-            }
-        } catch (error) {
-            console.error("Error submitting crew:", error);
-        } finally {
-            setLoading(false);
-            setNames(Array(selectedBoat.value.includes('+') ? selectedBoat.seats + 1 : selectedBoat.seats).fill(""));
+    useEffect(() => {
+        if (editingCrew) {
+            setClubName(editingCrew.clubName);
+            setRaceName(editingCrew.raceName);
+            setBoatName(editingCrew.name);
+            setNames([...editingCrew.crewNames]);
+            setSelectedBoat(editingCrew.boatType);
         }
-    };
-
-    const handleEditCrew = (crewId: string | null) => {
-        if (!crewId) {
-            setEditingCrew(null);
-            return;
-        }
-
-        const crewToEdit = savedCrews.find((crew) => crew.id === crewId);
-        if (!crewToEdit) return;
-
-        setEditingCrew(crewToEdit);
-        setSelectedBoat(crewToEdit.boatType);
-        setNames([...crewToEdit.crewNames]);
-    };
-
-    const handleDeleteCrew = async (crewId: string) => {
-        setLoading(true);
-        try {
-            await deleteCrew(crewId);
-            setSavedCrews(await getCrews());
-        } catch (error) {
-            console.error("Error deleting crew:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleUpdateCrew = async (crewId: string, updatedData: Partial<SavedCrew>) => {
-        setLoading(true);
-        try {
-            await updateCrew(crewId, updatedData);
-            setSavedCrews(await getCrews()); // Refresh list after update
-        } catch (error) {
-            console.error("Error updating crew:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [editingCrew, setSelectedBoat]);
 
     return (
         <div className="boat-manager">
-            <RaceForm boatClass={boatClass} onFormSubmit={handleFormSubmit} />
-
-            {selectedBoat && (
-                <RosterForm
-                    selectedBoat={selectedBoat}
-                    names={names}
-                    onNamesChange={setNames}
-                    onSubmit={handleSubmitRoster}
-                    clubName={clubName}
-                    raceName={raceName}
-                    crewName={boatName}
-                />
-            )}
-
-            {loading && <p>Loading...</p>} {/* Show loading indicator if data is being fetched */}
-
-            <SavedCrewsList
-                crews={savedCrews}
-                currentlyEditing={editingCrew?.id || null}
-                onEdit={handleEditCrew}
-                onDelete={handleDeleteCrew}
-                onUpdateNames={(crewId, updatedNames) => {
-                    handleUpdateCrew(crewId, { crewNames: updatedNames });
-                }}
-                onUpdateCrewName={(crewId, updatedCrewName) => {
-                    handleUpdateCrew(crewId, { name: updatedCrewName });
-                }}
+            <RaceForm 
+                boatClass={boatClass} // ✅ Passes boatClass properly
+                onFormSubmit={(club, race, boat, boatType) => {
+                    setClubName(club);
+                    setRaceName(race);
+                    setBoatName(boat);
+                    setSelectedBoat(boatType);
+                }} 
             />
+
+            {selectedBoat && <RosterForm 
+    clubName={clubName} 
+    raceName={raceName} 
+    crewName={boatName} 
+    selectedBoat={selectedBoat} 
+    names={names} 
+    onNamesChange={setNames} 
+    onSubmit={() => {
+        if (!editingCrew) { // ✅ Prevents error when no crew is being edited
+            console.error("No crew selected for editing.");
+            return;
+        }
+
+        updateCrew(editingCrew.id, { 
+            id: editingCrew.id, 
+            name: boatName, 
+            crewNames: names, 
+            boatType: selectedBoat, 
+            clubName, 
+            raceName 
+        });
+    }} 
+/>
+}
+
+            <SavedCrewsList />
         </div>
     );
 };

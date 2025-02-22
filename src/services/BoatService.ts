@@ -1,73 +1,33 @@
-import { SavedCrew } from "../types";
+import { ApiService } from './api.service';
+import { Crew } from '../types/crew.types';
 
-const API_URL = "http://localhost:8080/api/crews";
-
-export const getCrews = async (): Promise<SavedCrew[]> => {
-    try {
-        const response = await fetch(API_URL, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" }
-        });
-
-        if (!response.ok) throw new Error(`Failed to fetch crews: ${response.status} ${response.statusText}`);
-
-        return await response.json();
-    } catch (error) {
-        console.error("Error fetching crews:", error);
-        return [];
+export const getCrews = async (): Promise<Crew[]> => {
+    const response = await ApiService.getCrews();
+    if (response.error) {
+        throw new Error(response.error);
     }
+    return response.data || [];
 };
 
-export const createCrew = async (crew: {
-  name: string;
-  crewNames: string[];
-  boatType: string;
-  clubName: string;
-  raceName: string;
-}): Promise<SavedCrew | null> => {
-  try {
-      const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(crew),
-      });
-
-      const data = await response.json(); // Read response JSON before error checking
-
-      if (!response.ok) throw new Error(`Failed to create crew: ${response.status} ${data?.message || response.statusText}`);
-
-      return data;
-  } catch (error) {
-      console.error("Error creating crew:", error);
-      return null;
-  }
-};
-
-
-export const updateCrew = async (id: string, updatedCrew: Partial<SavedCrew>): Promise<SavedCrew | null> => {
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedCrew),
-        });
-
-        if (!response.ok) throw new Error("Failed to update crew");
-        return await response.json();
-    } catch (error) {
-        console.error("Error updating crew:", error);
-        return null;
+export const createCrew = async (crew: Omit<Crew, 'id'>): Promise<Crew> => {
+    const response = await ApiService.createCrew(crew);
+    if (response.error) {
+        throw new Error(response.error);
     }
+    return response.data!;
 };
 
-export const deleteCrew = async (crewId: string): Promise<void> => {
-    try {
-        const response = await fetch(`${API_URL}/${crewId}`, {
-            method: "DELETE",
-        });
+export const updateCrew = async (id: string, crew: Crew): Promise<Crew> => {
+    const response = await ApiService.updateCrew(id, crew);
+    if (response.error) {
+        throw new Error(response.error);
+    }
+    return response.data!;
+};
 
-        if (!response.ok) throw new Error("Failed to delete crew");
-    } catch (error) {
-        console.error("Error deleting crew:", error);
+export const deleteCrew = async (id: string): Promise<void> => {
+    const response = await ApiService.deleteCrew(id);
+    if (response.error) {
+        throw new Error(response.error);
     }
 };

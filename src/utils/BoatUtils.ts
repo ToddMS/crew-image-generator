@@ -1,4 +1,4 @@
-export const getSeatLabel = (boatType: string, index: number, totalRowers: number): string => {
+export const getSeatLabel = (boatType: string , index: number, totalRowers: number): string => {
     const hasCox = boatType.includes('+');
 
     if (hasCox && index === 0) {

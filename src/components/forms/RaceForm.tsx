@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { BoatType } from "../../types";
+import { BoatType } from "../../types/crew.types";
 import "../../styles/forms/RaceForm.css";
 import { TextField, Typography, Button, MenuItem, Select, FormControl, InputLabel, Box } from "@mui/material";
 

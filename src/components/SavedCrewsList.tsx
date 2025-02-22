@@ -1,44 +1,25 @@
-import { SavedCrew } from "../types";
+import { useCrewContext } from "../context/CrewContext";
 import SavedCrewItem from "./SavedCrewItem";
 import { Typography, Box, Stack } from "@mui/material";
-import "../styles/SavedCrewList.css";
 
-interface SavedCrewsListProps {
-  crews: SavedCrew[];
-  onEdit: (crewId: string | null) => void;
-  onDelete: (crewId: string) => void;
-  currentlyEditing: string | null;
-  onUpdateNames: (crewId: string, names: string[]) => void;
-  onUpdateCrewName: (crewId: string, crewName: string) => void;
-}
+const SavedCrewsList = () => {
+  const { crews } = useCrewContext();
 
-const SavedCrewsList = ({ 
-  crews, 
-  onEdit, 
-  onDelete, 
-  currentlyEditing
-}: SavedCrewsListProps) => {
+  console.log("Rendering SavedCrewsList with crews:", crews); // ✅ Debugging log
+
   return (
     <Box className="saved-crews-container">
-  <Box className="saved-crews-box">
-    <Typography variant="h4" className="saved-crews-title">Saved Crews</Typography>
-    {crews.length === 0 ? (
-      <Typography variant="body1">No saved crews yet</Typography>
-    ) : (
-      <Stack className="saved-crews-stack">
-        {crews.map((crew) => (
-          <SavedCrewItem
-            key={crew.id}
-            crew={crew}
-            currentlyEditing={currentlyEditing}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
-      </Stack>
-    )}
-  </Box>
-</Box>
+      <Typography variant="h4">Saved Crews</Typography>
+      {crews.length === 0 ? (
+        <Typography>No saved crews</Typography>
+      ) : (
+        <Stack spacing={2}>
+          {crews.map((crew) => (
+            <SavedCrewItem key={crew.id} crew={crew} />
+          ))}
+        </Stack>
+      )}
+    </Box>
   );
 };
 
