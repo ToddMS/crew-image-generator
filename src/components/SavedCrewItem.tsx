@@ -1,21 +1,17 @@
-import { SavedCrew } from "../types";
-import { getSeatLabel } from "../services/BoatService";
+import { useCrewContext } from "../context/CrewContext";
+import { Crew } from "../types/crew.types";
 import { Typography, Box, Paper, Stack, Button } from "@mui/material";
+import { getSeatLabel } from "../utils/BoatUtils";
 
 interface SavedCrewItemProps {
-  crew: SavedCrew;
-  currentlyEditing: string | null;
-  onEdit: (crewId: string | null) => void;
-  onDelete: (crewId: string) => void;
+  crew: Crew;
 }
 
-const SavedCrewItem = ({
-  crew,
-  currentlyEditing,
-  onEdit,
-  onDelete,
-}: SavedCrewItemProps) => {
-  const numberOfRowers = crew.boatType.seats;
+const SavedCrewItem = ({ crew }: SavedCrewItemProps) => {
+  const { deleteCrew, editCrew } = useCrewContext();
+  if (!crew || !crew.boatType || !crew.boatType.seats) {
+    return <Typography color="error">Error: Invalid crew data</Typography>;
+  }
 
   return (
     <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
@@ -28,20 +24,10 @@ const SavedCrewItem = ({
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => onEdit(crew.id)}
-            disabled={currentlyEditing === crew.id}
-          >
+          <Button variant="contained" color="primary" onClick={() => editCrew(crew.id)}>
             Edit
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => onDelete(crew.id)}
-            disabled={currentlyEditing === crew.id}
-          >
+          <Button variant="contained" color="error" onClick={() => deleteCrew(crew.id)}>
             Delete
           </Button>
         </Stack>
@@ -54,10 +40,7 @@ const SavedCrewItem = ({
         <Stack spacing={1}>
           {crew.crewNames.map((name, index) => (
             <Typography key={index} variant="body2">
-              <strong>
-                {getSeatLabel(crew.boatType.value, index, numberOfRowers)}:
-              </strong>{" "}
-              {name}
+              <strong>{getSeatLabel(crew.boatType.value, index, crew.boatType.seats)}:</strong> {name}
             </Typography>
           ))}
         </Stack>

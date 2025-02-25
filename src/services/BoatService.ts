@@ -1,56 +1,33 @@
-import { SavedCrew, BoatType } from '../types';
+import { ApiService } from './api.service';
+import { Crew } from '../types/crew.types';
 
-let savedCrews: SavedCrew[] = [];
-
-export const getCrews = () => savedCrews;
-
-export const createCrew = (
-  boat: BoatType, 
-  crewNames: string[], 
-  crewName: string, 
-  clubName: string, 
-  raceName: string
-): SavedCrew => {
-  return {
-    id: Date.now().toString(),
-    name: crewName,
-    crewNames: crewNames,
-    boatType: boat,
-    clubName: clubName,
-    raceName: raceName,
-  };
-};
-
-export const addCrew = (newCrew: SavedCrew) => {
-  savedCrews = [...savedCrews, newCrew];
-};
-
-export const updateCrew = (updatedCrew: SavedCrew) => {
-  savedCrews = savedCrews.map(crew => 
-    crew.id === updatedCrew.id ? updatedCrew : crew
-  );
-};
-
-export const deleteCrew = (crewId: string) => {
-  savedCrews = savedCrews.filter(crew => crew.id !== crewId);
-};
-
-export const getSeatLabel = (boatType: string, index: number, totalRowers: number): string => {
-    const hasCox = boatType.includes('+');
-    
-    if (hasCox && index === 0) {
-      return 'Cox';
+export const getCrews = async (): Promise<Crew[]> => {
+    const response = await ApiService.getCrews();
+    if (response.error) {
+        throw new Error(response.error);
     }
-    
-    const adjustedIndex = hasCox ? index - 1 : index;
-    
-    if (adjustedIndex === 0) {
-      return 'Stroke';
+    return response.data || [];
+};
+
+export const createCrew = async (crew: Omit<Crew, 'id'>): Promise<Crew> => {
+    const response = await ApiService.createCrew(crew);
+    if (response.error) {
+        throw new Error(response.error);
     }
-    
-    if (adjustedIndex === totalRowers - 1) {
-      return 'Bow';
+    return response.data!;
+};
+
+export const updateCrew = async (id: string, crew: Crew): Promise<Crew> => {
+    const response = await ApiService.updateCrew(id, crew);
+    if (response.error) {
+        throw new Error(response.error);
     }
-    
-    return `${totalRowers - adjustedIndex}`;
-  };
+    return response.data!;
+};
+
+export const deleteCrew = async (id: string): Promise<void> => {
+    const response = await ApiService.deleteCrew(id);
+    if (response.error) {
+        throw new Error(response.error);
+    }
+};
