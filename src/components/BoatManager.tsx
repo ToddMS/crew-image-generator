@@ -57,30 +57,33 @@ const BoatManager = () => {
             />
 
             {selectedBoat && <RosterForm 
-    clubName={clubName} 
-    raceName={raceName} 
-    crewName={boatName} 
-    selectedBoat={selectedBoat} 
-    names={names} 
-    onNamesChange={setNames} 
-    onSubmit={() => {
-        if (!editingCrew) { // ✅ Prevents error when no crew is being edited
-            console.error("No crew selected for editing.");
-            return;
-        }
-
-        updateCrew(editingCrew.id, { 
-            id: editingCrew.id, 
-            name: boatName, 
-            crewNames: names, 
-            boatType: selectedBoat, 
-            clubName, 
-            raceName 
-        });
-    }} 
-/>
-}
-
+                clubName={clubName} 
+                raceName={raceName} 
+                crewName={boatName} 
+                selectedBoat={selectedBoat} 
+                names={names} 
+                onNamesChange={setNames} 
+                onSubmit={() => {
+                    if (editingCrew) { 
+                        updateCrew(editingCrew.id, { 
+                            id: editingCrew.id, 
+                            name: boatName, 
+                            crewNames: names, 
+                            boatType: selectedBoat, 
+                            clubName, 
+                            raceName 
+                        });
+                    } else {
+                        addCrew({
+                            name: boatName,
+                            crewNames: names,
+                            boatType: selectedBoat!,
+                            clubName,
+                            raceName
+                        });
+                    }
+                }}                
+            />}
             <SavedCrewsList />
         </div>
     );
