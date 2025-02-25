@@ -9,9 +9,6 @@ interface SavedCrewItemProps {
 
 const SavedCrewItem = ({ crew }: SavedCrewItemProps) => {
   const { deleteCrew, editCrew } = useCrewContext();
-
-  console.log(crew)
-
   if (!crew || !crew.boatType || !crew.boatType.seats) {
     return <Typography color="error">Error: Invalid crew data</Typography>;
   }

@@ -2,39 +2,36 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import { Crew, BoatType } from "../types/crew.types";
 import { getCrews, createCrew, updateCrew, deleteCrew } from "../services/BoatService";
 
-// Define the type for the context
 interface CrewContextType {
     crews: Crew[];
     selectedBoat: BoatType | null;
-    editingCrew: Crew | null; // ✅ Track the crew being edited
+    editingCrew: Crew | null; 
     loading: boolean;
     error: string | null;
     fetchCrews: () => Promise<void>;
     addCrew: (crew: Omit<Crew, "id">) => Promise<void>;
     updateCrew: (id: string, crew: Crew) => Promise<void>;
     deleteCrew: (id: string) => Promise<void>;
-    editCrew: (id: string) => void; // ✅ Sets a crew for editing
+    editCrew: (id: string) => void;
     setSelectedBoat: (boat: BoatType | null) => void;
     clearError: () => void;
 }
 
-// ✅ Create context
 const CrewContext = createContext<CrewContextType | undefined>(undefined);
 
-// ✅ Provider component
 export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [crews, setCrews] = useState<Crew[]>([]);
     const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
-    const [editingCrew, setEditingCrew] = useState<Crew | null>(null); // ✅ Track which crew is being edited
+    const [editingCrew, setEditingCrew] = useState<Crew | null>(null); 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchCrews = useCallback(async () => {
+        console.log("fetching crews")
         setLoading(true);
         setError(null);
         try {
             const fetchedCrews = await getCrews();
-            console.log("Fetched crews:", fetchedCrews); // ✅ Debugging log
             setCrews(fetchedCrews);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to fetch crews");
@@ -44,7 +41,6 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
     
 
-    // Add a crew
     const addCrew = useCallback(async (crew: Omit<Crew, "id">) => {
         setLoading(true);
         setError(null);
@@ -58,14 +54,13 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [fetchCrews]);
 
-    // Update a crew
     const handleUpdateCrew = useCallback(async (id: string, crew: Crew) => {
         setLoading(true);
         setError(null);
         try {
             await updateCrew(id, crew);
             await fetchCrews();
-            setEditingCrew(null); // ✅ Clear editing state after update
+            setEditingCrew(null); 
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to update crew");
         } finally {
@@ -73,7 +68,6 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [fetchCrews]);
 
-    // Delete a crew
     const handleDeleteCrew = useCallback(async (id: string) => {
         setLoading(true);
         setError(null);
@@ -87,10 +81,7 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [fetchCrews]);
 
-    const handleEditCrew = (id: string) => {
-        console.log("Editing crew ID:", id); // ✅ Debugging log
-        console.log("Current crews:", crews); // ✅ Debugging log
-    
+    const handleEditCrew = (id: string) => {  
         const crewToEdit = crews.find((crew) => crew.id === id);
         
         if (!crewToEdit) {
@@ -109,14 +100,14 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
         <CrewContext.Provider value={{ 
             crews, 
             selectedBoat, 
-            editingCrew, // ✅ Provide the editing crew 
+            editingCrew, 
             loading, 
             error, 
             fetchCrews, 
             addCrew, 
             updateCrew: handleUpdateCrew, 
             deleteCrew: handleDeleteCrew, 
-            editCrew: handleEditCrew, // ✅ Provide editCrew
+            editCrew: handleEditCrew,
             setSelectedBoat, 
             clearError 
         }}>
@@ -125,7 +116,6 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 };
 
-// ✅ Hook to use CrewContext
 export const useCrewContext = () => {
     const context = useContext(CrewContext);
     if (!context) {
@@ -134,5 +124,4 @@ export const useCrewContext = () => {
     return context;
 };
 
-// ✅ Export CrewContext
 export { CrewContext };

@@ -4,9 +4,6 @@ import { Typography, Box, Stack } from "@mui/material";
 
 const SavedCrewsList = () => {
   const { crews } = useCrewContext();
-
-  console.log("Rendering SavedCrewsList with crews:", crews); // ✅ Debugging log
-
   return (
     <Box className="saved-crews-container">
       <Typography variant="h4">Saved Crews</Typography>
