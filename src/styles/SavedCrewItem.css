@@ -6,8 +6,7 @@
   text-align: center;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border-radius: 15px; /* ✅ Rounded corners */
+  border-radius: 15px; 
   box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease, height 0.3s ease;

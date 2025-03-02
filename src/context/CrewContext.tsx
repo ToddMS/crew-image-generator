@@ -12,7 +12,7 @@ interface CrewContextType {
     addCrew: (crew: Omit<Crew, "id">) => Promise<void>;
     updateCrew: (id: string, crew: Crew) => Promise<void>;
     deleteCrew: (id: string) => Promise<void>;
-    editCrew: (id: string) => void;
+    setEditingCrew: (crew: Crew | null) => void; 
     setSelectedBoat: (boat: BoatType | null) => void;
     clearError: () => void;
 }
@@ -22,12 +22,11 @@ const CrewContext = createContext<CrewContextType | undefined>(undefined);
 export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [crews, setCrews] = useState<Crew[]>([]);
     const [selectedBoat, setSelectedBoat] = useState<BoatType | null>(null);
-    const [editingCrew, setEditingCrew] = useState<Crew | null>(null); 
+    const [editingCrew, setEditingCrew] = useState<Crew | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchCrews = useCallback(async () => {
-        console.log("fetching crews")
         setLoading(true);
         setError(null);
         try {
@@ -39,7 +38,6 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
         }
     }, []);
-    
 
     const addCrew = useCallback(async (crew: Omit<Crew, "id">) => {
         setLoading(true);
@@ -81,33 +79,20 @@ export const CrewProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [fetchCrews]);
 
-    const handleEditCrew = (id: string) => {  
-        const crewToEdit = crews.find((crew) => crew.id === id);
-        
-        if (!crewToEdit) {
-            console.error(`Crew with ID ${id} not found.`);
-            return;
-        }
-    
-        setEditingCrew(crewToEdit);
-        setSelectedBoat(crewToEdit.boatType);
-    };
-    
-
     const clearError = () => setError(null);
 
     return (
         <CrewContext.Provider value={{ 
             crews, 
             selectedBoat, 
-            editingCrew, 
+            editingCrew,
             loading, 
             error, 
             fetchCrews, 
             addCrew, 
             updateCrew: handleUpdateCrew, 
             deleteCrew: handleDeleteCrew, 
-            editCrew: handleEditCrew,
+            setEditingCrew,  
             setSelectedBoat, 
             clearError 
         }}>
@@ -124,4 +109,3 @@ export const useCrewContext = () => {
     return context;
 };
 
-export { CrewContext };
