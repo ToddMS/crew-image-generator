@@ -9,12 +9,18 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 interface SavedCrewsListProps {
     crewRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
     expandedClubs: Record<string, boolean>;
-    toggleClub: (clubName: string) => void;
+    setExpandedClubs: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
     expandedRaces: Record<string, boolean>;
-    toggleRace: (raceKey: string) => void;
+    setExpandedRaces: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }
 
-const SavedCrewsList = ({ crewRefs, expandedClubs, toggleClub, expandedRaces, toggleRace }: SavedCrewsListProps) => {
+const SavedCrewsList = ({ 
+    crewRefs, 
+    expandedClubs, 
+    setExpandedClubs, 
+    expandedRaces, 
+    setExpandedRaces
+}: SavedCrewsListProps) => {
     const { crews } = useCrewContext();
 
     const groupedCrews = crews.reduce((acc, crew) => {
@@ -28,6 +34,32 @@ const SavedCrewsList = ({ crewRefs, expandedClubs, toggleClub, expandedRaces, to
         return acc;
     }, {} as Record<string, Record<string, Crew[]>>);
 
+    const handleToggleClub = (clubName: string) => {
+        setExpandedClubs((prev) => {
+            const isExpanding = !prev[clubName];
+            const newState = { ...prev, [clubName]: isExpanding };
+            
+            if (!isExpanding) {
+                // If club is being closed, close all races within it
+                setExpandedRaces((racePrev) => {
+                    const updatedRaces = { ...racePrev };
+                    Object.keys(groupedCrews[clubName] || {}).forEach((race) => {
+                        delete updatedRaces[`${clubName}-${race}`];
+                    });
+                    return updatedRaces;
+                });
+            }
+            return newState;
+        });
+    };
+
+    const handleToggleRace = (clubName: string, raceName: string) => {
+        setExpandedRaces((prev) => {
+            const raceKey = `${clubName}-${raceName}`;
+            return { ...prev, [raceKey]: !prev[raceKey] };
+        });
+    };
+
     return (
         <Box className="saved-crews-container">
             <Box className="saved-crews-box">
@@ -35,13 +67,13 @@ const SavedCrewsList = ({ crewRefs, expandedClubs, toggleClub, expandedRaces, to
 
                 {Object.entries(groupedCrews).map(([clubName, races]) => (
                     <Box key={clubName} className="club-section">
-                        <Button className="toggle-button" onClick={() => toggleClub(clubName)}>
+                        <Button className="toggle-button" onClick={() => handleToggleClub(clubName)}>
                             {expandedClubs[clubName] ? <ExpandLessIcon /> : <ExpandMoreIcon />} {clubName}
                         </Button>
 
                         {expandedClubs[clubName] && Object.entries(races).map(([raceName, crews]) => (
                             <Box key={raceName} className="race-section">
-                                <Button className="toggle-button race-toggle" onClick={() => toggleRace(`${clubName}-${raceName}`)}>
+                                <Button className="toggle-button race-toggle" onClick={() => handleToggleRace(clubName, raceName)}>
                                     {expandedRaces[`${clubName}-${raceName}`] ? <ExpandLessIcon /> : <ExpandMoreIcon />} {raceName}
                                 </Button>
 

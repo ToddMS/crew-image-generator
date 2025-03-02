@@ -126,9 +126,9 @@ const BoatManager = () => {
             <SavedCrewsList 
                 crewRefs={crewRefs} 
                 expandedClubs={expandedClubs} 
-                toggleClub={toggleClub} 
+                setExpandedClubs={setExpandedClubs} 
                 expandedRaces={expandedRaces} 
-                toggleRace={toggleRace} 
+                setExpandedRaces={setExpandedRaces} 
             />
         </div>
     );
