@@ -20,7 +20,6 @@
 }
 
 .club-section {
-  margin-bottom: 40px;
   text-align: left;
   padding: 15px;
 }
@@ -34,7 +33,6 @@
 }
 
 .race-section {
-  margin-bottom: 24px;
   padding-left: 25px;
 }
 
@@ -45,9 +43,9 @@
 }
 
 .crew-grid {
+  padding: 10px 0 10px 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 15px;
   justify-content: center;
-  margin-top: 12px;
 }

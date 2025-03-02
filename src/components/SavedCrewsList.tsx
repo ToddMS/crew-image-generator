@@ -1,14 +1,20 @@
 import { useCrewContext } from "../context/CrewContext";
 import SavedCrewItem from "./SavedCrewItem";
-import { Typography, Box } from "@mui/material";
+import { Typography, Box, Button } from "@mui/material";
 import { Crew } from "../types/crew.types";
 import "../styles/SavedCrewList.css";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 interface SavedCrewsListProps {
     crewRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
+    expandedClubs: Record<string, boolean>;
+    toggleClub: (clubName: string) => void;
+    expandedRaces: Record<string, boolean>;
+    toggleRace: (raceKey: string) => void;
 }
 
-const SavedCrewsList = ({ crewRefs }: SavedCrewsListProps) => {
+const SavedCrewsList = ({ crewRefs, expandedClubs, toggleClub, expandedRaces, toggleRace }: SavedCrewsListProps) => {
     const { crews } = useCrewContext();
 
     const groupedCrews = crews.reduce((acc, crew) => {
@@ -29,23 +35,29 @@ const SavedCrewsList = ({ crewRefs }: SavedCrewsListProps) => {
 
                 {Object.entries(groupedCrews).map(([clubName, races]) => (
                     <Box key={clubName} className="club-section">
-                        <Typography variant="h5" className="club-title">{clubName}</Typography>
+                        <Button className="toggle-button" onClick={() => toggleClub(clubName)}>
+                            {expandedClubs[clubName] ? <ExpandLessIcon /> : <ExpandMoreIcon />} {clubName}
+                        </Button>
 
-                        {Object.entries(races).map(([raceName, crews]) => (
+                        {expandedClubs[clubName] && Object.entries(races).map(([raceName, crews]) => (
                             <Box key={raceName} className="race-section">
-                                <Typography variant="h6" className="race-title">{raceName}</Typography>
+                                <Button className="toggle-button race-toggle" onClick={() => toggleRace(`${clubName}-${raceName}`)}>
+                                    {expandedRaces[`${clubName}-${raceName}`] ? <ExpandLessIcon /> : <ExpandMoreIcon />} {raceName}
+                                </Button>
 
-                                <Box className="crew-grid">
-                                    {crews.map((crew) => (
-                                        <SavedCrewItem 
-                                            key={crew.id} 
-                                            crew={crew} 
-                                            ref={(el) => {
-                                                if (el) crewRefs.current[crew.id] = el;
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
+                                {expandedRaces[`${clubName}-${raceName}`] && (
+                                    <Box className="crew-grid">
+                                        {crews.map((crew) => (
+                                            <SavedCrewItem 
+                                                key={crew.id} 
+                                                crew={crew} 
+                                                ref={(el) => {
+                                                    if (el) crewRefs.current[crew.id] = el;
+                                                }}
+                                            />
+                                        ))}
+                                    </Box>
+                                )}
                             </Box>
                         ))}
                     </Box>

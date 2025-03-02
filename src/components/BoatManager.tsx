@@ -31,6 +31,8 @@ const BoatManager = () => {
     const [raceName, setRaceName] = useState("");
     const [boatName, setBoatName] = useState("");
     const [names, setNames] = useState<string[]>([]);
+    const [expandedClubs, setExpandedClubs] = useState<Record<string, boolean>>({});
+    const [expandedRaces, setExpandedRaces] = useState<Record<string, boolean>>({});
     const rosterFormRef = useRef<HTMLDivElement | null>(null);
     const crewRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -51,6 +53,20 @@ const BoatManager = () => {
             }, 100);
         }
     }, [editingCrew, setSelectedBoat]);
+
+    const toggleClub = (clubName: string) => {
+        setExpandedClubs((prev) => ({
+            ...prev,
+            [clubName]: !prev[clubName]
+        }));
+    };
+
+    const toggleRace = (raceKey: string) => {
+        setExpandedRaces((prev) => ({
+            ...prev,
+            [raceKey]: !prev[raceKey]
+        }));
+    };
 
     const handleSubmit = async () => {
         if (!selectedBoat) {
@@ -79,14 +95,6 @@ const BoatManager = () => {
                 raceName,
             });
         }
-
-        setTimeout(() => {
-            fetchCrews().then(() => {
-                if (updatedCrew?.id) {
-                    crewRefs.current[updatedCrew.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-            });
-        }, 300);
     };
 
     return (
@@ -115,7 +123,13 @@ const BoatManager = () => {
                 )}
             </div>
 
-            <SavedCrewsList crewRefs={crewRefs} />
+            <SavedCrewsList 
+                crewRefs={crewRefs} 
+                expandedClubs={expandedClubs} 
+                toggleClub={toggleClub} 
+                expandedRaces={expandedRaces} 
+                toggleRace={toggleRace} 
+            />
         </div>
     );
 };
