@@ -12,19 +12,46 @@ interface RosterFormProps {
   clubName: string;
   raceName: string;
   crewName: string;
+  selectedCrewId?: string;
 }
 
 const RosterForm = ({ 
   selectedBoat, 
   names, 
   onNamesChange, 
-  onSubmit
+  onSubmit, 
+  selectedCrewId
 }: RosterFormProps) => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const hasCox = selectedBoat.value.includes('+');
   const totalSeats = hasCox ? selectedBoat.seats + 1 : selectedBoat.seats;
-
   const allFieldsFilled = names.length === totalSeats && names.every((name) => name.trim());
+
+  const handleGenerateImage = async () => {
+    if (!selectedCrewId) {
+      console.error("No crew selected!");
+      return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:8080/api/crews/generate-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ crewId: selectedCrewId }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to generate image");
+        }
+
+        const imageBlob = await response.blob();
+        const imageUrl = URL.createObjectURL(imageBlob);
+        setImageSrc(imageUrl);
+    } catch (error) {
+        console.error("Error generating image:", error);
+    }
+  };
 
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,7 +64,6 @@ const RosterForm = ({
     setHasSubmitted(false);
     onSubmit();
   };
-  
 
   const handleNameChange = (index: number, value: string) => {
     const newNames = [...names];
@@ -72,6 +98,25 @@ const RosterForm = ({
           Submit Roster
         </Button>
       </Box>
+
+      {selectedCrewId && (
+        <Box mt={3}>
+          <Button 
+            variant="contained"
+            color="secondary"
+            onClick={handleGenerateImage}
+          >
+            Generate Crew Image
+          </Button>
+        </Box>
+      )}
+
+      {imageSrc && (
+        <Box mt={3}>
+          <Typography variant="h5">Generated Crew Image:</Typography>
+          <img src={imageSrc} alt="Crew Image" style={{ width: "100%", maxWidth: "500px" }} />
+        </Box>
+      )}
     </form>
   );
 };

@@ -65,7 +65,6 @@ export const useCrewForm = (initialData?: Crew) => {
             [field]: value
         }));
         
-        // Clear error for the field being updated
         if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
