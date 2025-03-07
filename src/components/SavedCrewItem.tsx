@@ -1,52 +1,55 @@
 import { useCrewContext } from "../context/CrewContext";
 import { Crew } from "../types/crew.types";
-import { Typography, Box, Paper, Stack, Button } from "@mui/material";
+import { Typography, Box, Button, Stack } from "@mui/material";
 import { getSeatLabel } from "../utils/BoatUtils";
+import "../styles/SavedCrewItem.css";
+import { forwardRef } from "react";
 
 interface SavedCrewItemProps {
   crew: Crew;
 }
 
-const SavedCrewItem = ({ crew }: SavedCrewItemProps) => {
-  const { deleteCrew, editCrew } = useCrewContext();
-  if (!crew || !crew.boatType || !crew.boatType.seats) {
-    return <Typography color="error">Error: Invalid crew data</Typography>;
-  }
+const SavedCrewItem = forwardRef<HTMLDivElement, SavedCrewItemProps>(({ crew }, ref) => {
+  const { deleteCrew, setEditingCrew } = useCrewContext();
 
   return (
-    <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Stack>
-          <Typography variant="h6">{crew.clubName}</Typography>
-          <Typography variant="subtitle1">{crew.raceName}</Typography>
-          <Typography variant="subtitle1">
-            {crew.name} - {crew.boatType.value}
+    <Box 
+      ref={ref}
+      className="crew-item"
+      style={{ height: `${80 + crew.crewNames.length * 20}px` }}
+    >
+      <Typography variant="h6" className="crew-title">
+      {crew.name} ({crew.boatType.value})
+      </Typography>
+
+      <Box className="crew-members">
+        {crew.crewNames.map((name, index) => (
+          <Typography key={index} variant="body2" className="crew-member">
+            {getSeatLabel(crew.boatType.value, index, crew.boatType.seats)}: {name}
           </Typography>
-        </Stack>
-        <Stack direction="row" spacing={1}>
-          <Button variant="contained" color="primary" onClick={() => editCrew(crew.id)}>
-            Edit
-          </Button>
-          <Button variant="contained" color="error" onClick={() => deleteCrew(crew.id)}>
-            Delete
-          </Button>
-        </Stack>
+        ))}
       </Box>
 
-      <Box mt={2}>
-        <Typography variant="subtitle2" gutterBottom>
-          Crew Members:
-        </Typography>
-        <Stack spacing={1}>
-          {crew.crewNames.map((name, index) => (
-            <Typography key={index} variant="body2">
-              <strong>{getSeatLabel(crew.boatType.value, index, crew.boatType.seats)}:</strong> {name}
-            </Typography>
-          ))}
-        </Stack>
-      </Box>
-    </Paper>
+      <Stack direction="row" spacing={1} justifyContent="center">
+        <Button 
+          size="small" 
+          variant="contained" 
+          color="primary" 
+          onClick={() => setEditingCrew(crew)}
+        >
+          Edit
+        </Button>
+        <Button 
+          size="small" 
+          variant="contained" 
+          color="error" 
+          onClick={() => deleteCrew(crew.id)}
+        >
+          Delete
+        </Button>
+      </Stack>
+    </Box>
   );
-};
+});
 
 export default SavedCrewItem;
