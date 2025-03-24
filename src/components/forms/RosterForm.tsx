@@ -23,7 +23,6 @@ const RosterForm = ({
   selectedCrewId
 }: RosterFormProps) => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const hasCox = selectedBoat.value.includes('+');
   const totalSeats = hasCox ? selectedBoat.seats + 1 : selectedBoat.seats;
   const allFieldsFilled = names.length === totalSeats && names.every((name) => name.trim());
@@ -44,10 +43,6 @@ const RosterForm = ({
         if (!response.ok) {
             throw new Error("Failed to generate image");
         }
-
-        const imageBlob = await response.blob();
-        const imageUrl = URL.createObjectURL(imageBlob);
-        setImageSrc(imageUrl);
     } catch (error) {
         console.error("Error generating image:", error);
     }
@@ -108,13 +103,6 @@ const RosterForm = ({
           >
             Generate Crew Image
           </Button>
-        </Box>
-      )}
-
-      {imageSrc && (
-        <Box mt={3}>
-          <Typography variant="h5">Generated Crew Image:</Typography>
-          <img src={imageSrc} alt="Crew Image" style={{ width: "100%", maxWidth: "500px" }} />
         </Box>
       )}
     </form>

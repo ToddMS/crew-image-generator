@@ -3,8 +3,9 @@ import { useCrewContext } from "../context/CrewContext";
 import RosterForm from "./forms/RosterForm";
 import RaceForm from "./forms/RaceForm";
 import SavedCrewsList from "./SavedCrewsList";
+import TemplatePickerSidebar from "./TemplatePickerSidebar";
 import "../styles/BoatManager.css";
-import { BoatType, Crew } from "../types/crew.types";
+import { BoatType, Crew, Template } from "../types/crew.types";
 import { Button, Box } from "@mui/material";
 
 const boatClass: BoatType[] = [
@@ -30,10 +31,17 @@ const BoatManager = () => {
   const [boatName, setBoatName] = useState("");
   const [names, setNames] = useState<string[]>([]);
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
+  
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [expandedClubs, setExpandedClubs] = useState<Record<string, boolean>>({});
   const [expandedRaces, setExpandedRaces] = useState<Record<string, boolean>>({});
   const rosterFormRef = useRef<HTMLDivElement | null>(null);
   const crewRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const templates = [
+    { id: 1, image: 'template1.png' },
+    { id: 2, image: 'template2.png' },
+  ];
 
   useEffect(() => {
     fetchCrews();
@@ -53,14 +61,14 @@ const BoatManager = () => {
     }
   }, [editingCrew, setSelectedBoat]);
 
-  const handleGenerateImage = async () => {
-    if (!selectedCrew) return;
+  const handleGenerateImage = async (imageName: string) => {
+    if (!selectedCrew || !selectedTemplate) return;
 
     try {
       const response = await fetch("http://localhost:8080/api/crews/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ crewId: selectedCrew.id }),
+        body: JSON.stringify({ crewId: selectedCrew.id, templateId: selectedTemplate.id, imageName }),
       });
 
       if (!response.ok) throw new Error("Failed to generate image");
@@ -110,16 +118,13 @@ const BoatManager = () => {
       />
 
       {selectedCrew && (
-          <Box sx={{ position: "fixed", bottom: "20px", right: "20px" }}>
-              <Button 
-                  variant="contained" 
-                  color="secondary" 
-                  onClick={handleGenerateImage}
-                  sx={{ padding: "10px 20px", fontSize: "16px" }}
-              >
-                  Generate Crew Image
-              </Button>
-          </Box>
+        <TemplatePickerSidebar
+          crew={selectedCrew}
+          templates={templates}
+          onSelectTemplate={setSelectedTemplate}
+          selectedTemplate={selectedTemplate}
+          onGenerate={handleGenerateImage}
+        />
       )}
     </div>
   );
