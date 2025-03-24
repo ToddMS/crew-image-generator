@@ -13,3 +13,8 @@ export interface Crew {
     clubName: string;
     raceName: string;
 }
+
+  export interface Template {
+    id: number;
+    image: string;
+  }

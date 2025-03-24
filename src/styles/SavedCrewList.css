@@ -49,3 +49,7 @@
   gap: 15px;
   justify-content: center;
 }
+
+.crew-item.selected {
+  background-color: #444;
+}

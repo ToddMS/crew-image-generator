@@ -1,6 +1,6 @@
 import { useCrewContext } from "../context/CrewContext";
 import SavedCrewItem from "./SavedCrewItem";
-import { Typography, Box, Button } from "@mui/material";
+import { Typography, Box } from "@mui/material";
 import { Crew } from "../types/crew.types";
 import "../styles/SavedCrewList.css";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -12,24 +12,23 @@ interface SavedCrewsListProps {
     setExpandedClubs: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
     expandedRaces: Record<string, boolean>;
     setExpandedRaces: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+    onSelectCrew: (crew: Crew) => void;
+    selectedCrew: Crew | null;
 }
 
 const SavedCrewsList = ({ 
-    crewRefs, 
     expandedClubs, 
     setExpandedClubs, 
     expandedRaces, 
-    setExpandedRaces
+    setExpandedRaces,
+    onSelectCrew,
+    selectedCrew
 }: SavedCrewsListProps) => {
     const { crews } = useCrewContext();
 
     const groupedCrews = crews.reduce((acc, crew) => {
-        if (!acc[crew.clubName]) {
-            acc[crew.clubName] = {};
-        }
-        if (!acc[crew.clubName][crew.raceName]) {
-            acc[crew.clubName][crew.raceName] = [];
-        }
+        if (!acc[crew.clubName]) acc[crew.clubName] = {};
+        if (!acc[crew.clubName][crew.raceName]) acc[crew.clubName][crew.raceName] = [];
         acc[crew.clubName][crew.raceName].push(crew);
         return acc;
     }, {} as Record<string, Record<string, Crew[]>>);
@@ -38,9 +37,8 @@ const SavedCrewsList = ({
         setExpandedClubs((prev) => {
             const isExpanding = !prev[clubName];
             const newState = { ...prev, [clubName]: isExpanding };
-            
+
             if (!isExpanding) {
-                // If club is being closed, close all races within it
                 setExpandedRaces((racePrev) => {
                     const updatedRaces = { ...racePrev };
                     Object.keys(groupedCrews[clubName] || {}).forEach((race) => {
@@ -54,10 +52,10 @@ const SavedCrewsList = ({
     };
 
     const handleToggleRace = (clubName: string, raceName: string) => {
-        setExpandedRaces((prev) => {
-            const raceKey = `${clubName}-${raceName}`;
-            return { ...prev, [raceKey]: !prev[raceKey] };
-        });
+        setExpandedRaces((prev) => ({
+            ...prev,
+            [`${clubName}-${raceName}`]: !prev[`${clubName}-${raceName}`],
+        }));
     };
 
     return (
@@ -67,35 +65,33 @@ const SavedCrewsList = ({
 
                 {Object.entries(groupedCrews).map(([clubName, races]) => (
                     <Box key={clubName} className="club-section">
-                        <Button className="toggle-button" onClick={() => handleToggleClub(clubName)}>
+                        <Box className="toggle-button" onClick={() => handleToggleClub(clubName)}>
                             {expandedClubs[clubName] ? <ExpandLessIcon /> : <ExpandMoreIcon />} {clubName}
-                        </Button>
+                        </Box>
 
                         {expandedClubs[clubName] && Object.entries(races).map(([raceName, crews]) => (
                             <Box key={raceName} className="race-section">
-                                <Button className="toggle-button race-toggle" onClick={() => handleToggleRace(clubName, raceName)}>
+                                <Box className="toggle-button race-toggle" onClick={() => handleToggleRace(clubName, raceName)}>
                                     {expandedRaces[`${clubName}-${raceName}`] ? <ExpandLessIcon /> : <ExpandMoreIcon />} {raceName}
-                                </Button>
+                                </Box>
 
                                 {expandedRaces[`${clubName}-${raceName}`] && (
-                                    <Box className="crew-grid">
-                                        {crews.map((crew) => (
-                                            <SavedCrewItem 
-                                                key={crew.id} 
-                                                crew={crew} 
-                                                ref={(el) => {
-                                                    if (el) crewRefs.current[crew.id] = el;
-                                                }}
-                                            />
-                                        ))}
-                                    </Box>
+                                <Box className="crew-grid">
+                                    {crews.map((crew) => (
+                                        <Box 
+                                            key={crew.id} 
+                                            className={`crew-item ${selectedCrew?.id === crew.id ? "selected" : ""}`}
+                                            onClick={() => onSelectCrew(crew)}
+                                        >
+                                            <SavedCrewItem crew={crew} />
+                                        </Box>
+                                    ))}
+                                </Box>
                                 )}
                             </Box>
                         ))}
                     </Box>
                 ))}
-
-                {crews.length === 0 && <Typography>No saved crews</Typography>}
             </Box>
         </Box>
     );
