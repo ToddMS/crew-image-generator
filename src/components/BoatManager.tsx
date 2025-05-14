@@ -92,16 +92,25 @@ const BoatManager = () => {
       raceName,
     };
   
-    const { data, error } = await ApiService.createCrew(crewData);
+    let result;
+  
+    if (editingCrew) {
+      result = await ApiService.updateCrew(editingCrew.id, { ...crewData, id: editingCrew.id });
+    } else {
+      result = await ApiService.createCrew(crewData);
+    }
+  
+    const { data, error } = result;
   
     if (error) {
-      console.error("Error creating crew:", error);
+      console.error("Error saving crew:", error);
       return;
     }
   
     setSelectedCrew(data!);
     fetchCrews();
   };
+  
 
   
   return (
