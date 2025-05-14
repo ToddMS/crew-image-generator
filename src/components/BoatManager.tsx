@@ -6,7 +6,7 @@ import SavedCrewsList from "./SavedCrewsList";
 import TemplatePickerSidebar from "./TemplatePickerSidebar";
 import "../styles/BoatManager.css";
 import { BoatType, Crew, Template } from "../types/crew.types";
-import { Button, Box } from "@mui/material";
+import { ApiService } from "../services/api.service";
 
 const boatClass: BoatType[] = [
   { id: 1, value: "8+", seats: 8, name: "Eight" },
@@ -81,6 +81,29 @@ const BoatManager = () => {
     }
   };
 
+  const handleSubmitRoster = async () => {
+    if (!selectedBoat) return;
+  
+    const crewData = {
+      name: boatName,
+      crewNames: names,
+      boatType: selectedBoat,
+      clubName,
+      raceName,
+    };
+  
+    const { data, error } = await ApiService.createCrew(crewData);
+  
+    if (error) {
+      console.error("Error creating crew:", error);
+      return;
+    }
+  
+    setSelectedCrew(data!);
+    fetchCrews();
+  };
+
+  
   return (
     <div className="boat-manager">
       <RaceForm
@@ -96,14 +119,14 @@ const BoatManager = () => {
       <div ref={rosterFormRef}>
         {selectedBoat && (
           <RosterForm
-            clubName={clubName}
-            raceName={raceName}
-            crewName={boatName}
-            selectedBoat={selectedBoat}
-            names={names}
-            onNamesChange={setNames}
-            onSubmit={() => {}}
-          />
+          clubName={clubName}
+          raceName={raceName}
+          crewName={boatName}
+          selectedBoat={selectedBoat}
+          names={names}
+          onNamesChange={setNames}
+          onSubmit={handleSubmitRoster}
+        />        
         )}
       </div>
 
