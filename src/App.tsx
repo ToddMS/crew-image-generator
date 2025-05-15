@@ -2,16 +2,19 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import BoatManager from './components/BoatManager';
 import { CrewProvider } from './context/CrewContext';
+import HeaderComponent from './components/HeaderComponent/HeaderComponent';
 
-const darkTheme = createTheme({
+const lightTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
   },
 });
 
 function App() {
   return (
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={lightTheme}>
+      <HeaderComponent></HeaderComponent>
+
       <CrewProvider>
         <BoatManager />
       </CrewProvider>
