@@ -13,7 +13,7 @@ const HeaderComponent: React.FC = () => {
       <div className={styles.header}>
         <div className={styles.brand}>
           <img src={RowGramIcon} alt="RowGram Logo" className={styles.icon} />
-          <h1 className={styles.title}>RowGram</h1>
+          <h2 className={styles.title}>RowGram</h2>
         </div>
         <nav>
         <ul className={styles.navList}>
