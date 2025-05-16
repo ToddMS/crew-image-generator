@@ -1,0 +1,15 @@
+p {
+    margin: 0;
+}
+
+.title {
+    display: flex;
+    flex-direction: column;
+    text-align: center;  
+}
+
+.title1 {
+    font-size: 32px;
+    color: black;
+    margin: 60px 0 20px 0;
+}

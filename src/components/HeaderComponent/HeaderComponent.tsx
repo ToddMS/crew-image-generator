@@ -3,11 +3,7 @@ import styles from './HeaderComponent.module.css';
 import RowGramIcon from '../../assets/RowGramIcon.png';
 import { TbHelp } from "react-icons/tb";
 import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
-import { SlPicture } from "react-icons/sl";
 import { PiSquaresFourLight } from "react-icons/pi";
-
-
-
 
 const HeaderComponent: React.FC = () => {
   return (
@@ -29,7 +25,7 @@ const HeaderComponent: React.FC = () => {
             <a href="#templates">Templates</a>
           </li>
           <li className={styles.navItem}>
-            <IoPeopleOutline size={21} style={{marginTop: '2px'}} />
+            <IoPeopleOutline size={21} style={{marginTop: '5px'}} />
             <a href="#myCrews">My Crews</a>
           </li>
           <li className={styles.navItem} >

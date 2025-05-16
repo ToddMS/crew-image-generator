@@ -1,8 +1,8 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
-import BoatManager from './components/BoatManager';
-import { CrewProvider } from './context/CrewContext';
 import HeaderComponent from './components/HeaderComponent/HeaderComponent';
+import CrewInfoComponent from './components/CrewInfoComponent/CrewInfoComponent';
+import TitleComponent from './components/TitleComponent/TitleComponent';
 
 const lightTheme = createTheme({
   palette: {
@@ -14,10 +14,9 @@ function App() {
   return (
     <ThemeProvider theme={lightTheme}>
       <HeaderComponent></HeaderComponent>
+      <TitleComponent></TitleComponent>
+      <CrewInfoComponent></CrewInfoComponent>
 
-      <CrewProvider>
-        <BoatManager />
-      </CrewProvider>
     </ThemeProvider>
   );
 }
