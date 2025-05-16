@@ -4,6 +4,8 @@ import RowGramIcon from '../../assets/RowGramIcon.png';
 import { TbHelp } from "react-icons/tb";
 import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
 import { SlPicture } from "react-icons/sl";
+import { PiSquaresFourLight } from "react-icons/pi";
+
 
 
 
@@ -18,19 +20,20 @@ const HeaderComponent: React.FC = () => {
         <nav>
         <ul className={styles.navList}>
           <li className={styles.navItem}>
-            <IoHomeOutline className={styles.navIcon} />
+            <IoHomeOutline size={18} style={{ marginTop: '2px' }} />
             <a href="#home">Home</a>
           </li>
+
           <li className={styles.navItem}>
-            <SlPicture className={styles.navIcon} />
+            <PiSquaresFourLight size={25} style={{marginTop: '3px'}} />
             <a href="#templates">Templates</a>
           </li>
           <li className={styles.navItem}>
-            <IoPeopleOutline className={styles.navIcon} />
+            <IoPeopleOutline size={21} style={{marginTop: '2px'}} />
             <a href="#myCrews">My Crews</a>
           </li>
-          <li className={styles.navItem}>
-            <TbHelp className={styles.navIcon} />
+          <li className={styles.navItem} >
+            <TbHelp size={17} style={{marginTop: '3px'}} />
             <a href="#help">Help</a>
           </li>
         </ul>

@@ -4,7 +4,7 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: #333333 ;
+  color: #4B5563 ;
   background-color: #f5f5f5;
 
   font-synthesis: none;
@@ -15,11 +15,11 @@
 
 a {
   font-weight: 500;
-  color: #333333  ;
+  color: #4B5563  ;
   text-decoration: inherit;
 }
 a:hover {
-  color: #333333  ;
+  color: #6a7481  ;
 }
 
 button {
