@@ -27,29 +27,13 @@ const getSeatLabels = (boatClass: string): string[] => {
         'Bow',
       ];
     case '4+':
-      return [
-        'Cox',
-        'Stroke Seat',
-        '3 Seat',
-        '2 Seat',
-        'Bow',
-      ];
+      return ['Cox', 'Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
     case '4-':
-      return [
-        'Stroke Seat',
-        '3 Seat',
-        '2 Seat',
-        'Bow',
-      ];
+      return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
     case '2x':
-      return [
-        'Stroke Seat',
-        'Bow',
-      ];
+      return ['Stroke Seat', 'Bow'];
     case '1x':
-      return [
-        'Stroke Seat',
-      ];
+      return ['Stroke Seat'];
     default:
       return [];
   }
@@ -66,13 +50,16 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   const seatLabels = getSeatLabels(boatClass);
   const hasCox = boatClass === '8+' || boatClass === '4+';
 
-  // Temporary placeholders for boatClub, raceName, and boatName
-  const boatClub = "Oxford Boat Club"; // Replace with actual value from parent
-  const raceName = "Summer Eights 2024"; // Replace with actual value from parent
-  const boatName = "Blue Boat"; // Replace with actual value from parent
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const boatClub = 'Oxford Boat Club';
+    const raceName = 'Summer Eights 2024';
+    const boatName = 'Blue Boat';
+    onSaveCrew(boatClub, raceName, boatName);
+  };
 
   return (
-    <Box className={styles.container} sx={{ marginTop: 4 }}>
+    <Box component="form" className={styles.container} sx={{ marginTop: 4 }} onSubmit={handleFormSubmit}>
       <Typography variant="h6" gutterBottom>
         Enter Crew Names
       </Typography>
@@ -80,7 +67,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         <div>
           <Typography className={styles.label}>Cox</Typography>
           <TextField
-            label=""
+            name="coxName"
             placeholder="Enter Cox"
             value={coxName}
             onChange={e => onCoxNameChange(e.target.value)}
@@ -97,7 +84,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           <div key={idx}>
             <Typography className={styles.label}>{label}</Typography>
             <TextField
-              label=""
+              name={`crewName-${idx}`}
               placeholder={`Enter ${label.toLowerCase()} name`}
               value={name}
               onChange={e => onNameChange(idx, e.target.value)}
@@ -110,7 +97,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         );
       })}
       <Button
-        type="button"
+        type="submit"
         variant="contained"
         sx={{
           backgroundColor: '#5E98C2',
@@ -128,7 +115,6 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           justifyContent: 'center',
         }}
         endIcon={<MdSave size={22} />}
-        onClick={() => onSaveCrew(boatClub, raceName, boatName)}
       >
         Save Crew
       </Button>
