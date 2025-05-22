@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -12,15 +12,28 @@ import { SelectChangeEvent } from '@mui/material/Select';
 import styles from './CrewInfoComponent.module.css';
 import { MdChevronRight } from 'react-icons/md';
 
-const CrewInfoComponent: React.FC = () => {
-  const [boatClass, setBoatClass] = React.useState('');
+interface CrewInfoComponentProps {
+  boatClass: string;
+  onSubmit: (boatClass: string) => void;
+}
+
+const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
+  boatClass,
+  onSubmit,
+}) => {
+  const [localBoatClass, setLocalBoatClass] = useState(boatClass);
 
   const handleBoatClassChange = (event: SelectChangeEvent<string>) => {
-    setBoatClass(event.target.value as string);
+    setLocalBoatClass(event.target.value as string);
+  };
+
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    onSubmit(localBoatClass);
   };
 
   return (
-    <Box component="form" className={styles.container}>
+    <Box component="form" className={styles.container} onSubmit={handleFormSubmit}>
       <div>
         <Typography className={styles.label}>Club Name</Typography>
         <TextField
@@ -64,17 +77,17 @@ const CrewInfoComponent: React.FC = () => {
         <FormControl fullWidth required variant="outlined" className={styles.inputField}>
           <Select
             name="boatClass"
-            value={boatClass}
+            value={localBoatClass}
             onChange={handleBoatClassChange}
             displayEmpty
             sx={{
               '& .MuiSelect-select': {
-                color: boatClass ? 'inherit' : '#888',
+                color: localBoatClass ? 'inherit' : '#888',
               },
             }}
           >
             <MenuItem value="">
-              <span className={styles.select} >Select boat class</span>
+              <span className={styles.select}>Select boat class</span>
             </MenuItem>
             <MenuItem value="8+">8+</MenuItem>
             <MenuItem value="4+">4+</MenuItem>
@@ -97,6 +110,9 @@ const CrewInfoComponent: React.FC = () => {
           '&:hover': {
             backgroundColor: '#4177a6',
           },
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
         }}
       >
         Next Step
