@@ -10,6 +10,9 @@ interface CrewNamesComponentProps {
   onNameChange: (idx: number, value: string) => void;
   onCoxNameChange: (value: string) => void;
   onSaveCrew: (boatClub: string, raceName: string, boatName: string) => void;
+  clubName: string;
+  raceName: string;
+  boatName: string;
 }
 
 const getSeatLabels = (boatClass: string): string[] => {
@@ -46,16 +49,16 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   onNameChange,
   onCoxNameChange,
   onSaveCrew,
+  clubName,
+  raceName,
+  boatName,
 }) => {
   const seatLabels = getSeatLabels(boatClass);
   const hasCox = boatClass === '8+' || boatClass === '4+';
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const boatClub = 'Oxford Boat Club';
-    const raceName = 'Summer Eights 2024';
-    const boatName = 'Blue Boat';
-    onSaveCrew(boatClub, raceName, boatName);
+    onSaveCrew(clubName, raceName, boatName);
   };
 
   return (

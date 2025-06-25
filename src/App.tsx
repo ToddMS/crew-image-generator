@@ -22,14 +22,20 @@ const boatClassToSeats: Record<string, number> = {
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
 
 function App() {
-  const [submittedBoatClass, setSubmittedBoatClass] = useState('');
+  const [boatClass, setBoatClass] = useState('');
+  const [clubName, setClubName] = useState('');
+  const [raceName, setRaceName] = useState('');
+  const [boatName, setBoatName] = useState('');
   const [crewNames, setCrewNames] = useState<string[]>([]);
   const [coxName, setCoxName] = useState('');
   const [savedCrews, setSavedCrews] = useState<any[]>([]);
 
-  const handleCrewInfoSubmit = (boatClass: string) => {
-    setSubmittedBoatClass(boatClass);
-    setCrewNames(Array(boatClassToSeats[boatClass] || 0).fill(''));
+  const handleCrewInfoSubmit = (newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
+    setBoatClass(newBoatClass);
+    setClubName(newClubName);
+    setRaceName(newRaceName);
+    setBoatName(newBoatName);
+    setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
     setCoxName('');
   };
 
@@ -39,19 +45,19 @@ function App() {
 
   const handleCoxNameChange = (value: string) => setCoxName(value);
 
-  const handleSaveCrew = (boatClub: string, raceName: string, boatName: string) => {
+  const handleSaveCrew = () => {
     const seatLabels = ['Cox', 'Stroke Seat', '7 Seat', '6 Seat', '5 Seat', '4 Seat', '3 Seat', '2 Seat', 'Bow'];
     const crewMembers = [
-      ...(boatClassHasCox(submittedBoatClass) ? [{ seat: 'Cox', name: coxName }] : []),
-      ...crewNames.map((name, idx) => ({ seat: seatLabels[idx + (boatClassHasCox(submittedBoatClass) ? 1 : 0)], name })),
+      ...(boatClassHasCox(boatClass) ? [{ seat: 'Cox', name: coxName }] : []),
+      ...crewNames.map((name, idx) => ({ seat: seatLabels[idx + (boatClassHasCox(boatClass) ? 1 : 0)], name })),
     ];
 
     setSavedCrews(prev => [
       ...prev,
       {
-        boatClub,
-        raceName,
-        boatName,
+        boatClub: clubName,
+        raceName: raceName,
+        boatName: boatName,
         crewMembers,
       },
     ]);
@@ -61,17 +67,19 @@ function App() {
     <ThemeProvider theme={lightTheme}>
       <HeaderComponent />
       <CrewInfoComponent
-        boatClass={submittedBoatClass}
         onSubmit={handleCrewInfoSubmit}
       />
-      {submittedBoatClass && (
+      {boatClass && (
         <CrewNamesComponent
-          boatClass={submittedBoatClass}
+          boatClass={boatClass}
           crewNames={crewNames}
           coxName={coxName}
           onNameChange={handleNameChange}
           onCoxNameChange={handleCoxNameChange}
           onSaveCrew={handleSaveCrew}
+          clubName={clubName}
+          raceName={raceName}
+          boatName={boatName}
         />
       )}
       <SavedCrewsComponent savedCrews={savedCrews} />

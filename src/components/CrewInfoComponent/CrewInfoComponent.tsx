@@ -13,23 +13,24 @@ import styles from './CrewInfoComponent.module.css';
 import { MdChevronRight } from 'react-icons/md';
 
 interface CrewInfoComponentProps {
-  boatClass: string;
-  onSubmit: (boatClass: string) => void;
+  onSubmit: (boatClass: string, clubName: string, raceName: string, boatName: string) => void;
 }
 
 const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
-  boatClass,
   onSubmit,
 }) => {
-  const [localBoatClass, setLocalBoatClass] = useState(boatClass);
+  const [boatClass, setBoatClass] = useState('');
+  const [clubName, setClubName] = useState('');
+  const [raceName, setRaceName] = useState('');
+  const [boatName, setBoatName] = useState('');
 
   const handleBoatClassChange = (event: SelectChangeEvent<string>) => {
-    setLocalBoatClass(event.target.value as string);
+    setBoatClass(event.target.value as string);
   };
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onSubmit(localBoatClass);
+    onSubmit(boatClass, clubName, raceName, boatName);
   };
 
   return (
@@ -37,15 +38,16 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       <div>
         <Typography className={styles.label}>Club Name</Typography>
         <TextField
-          name="crewName"
+          name="clubName"
           placeholder="Enter club name"
           required
           fullWidth
           variant="outlined"
           className={styles.inputField}
+          value={clubName}
+          onChange={e => setClubName(e.target.value)}
         />
       </div>
-
       <div>
         <Typography className={styles.label}>Race Name</Typography>
         <TextField
@@ -55,10 +57,10 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           fullWidth
           variant="outlined"
           className={styles.inputField}
-          InputProps={{ classes: { notchedOutline: styles.noOutline } }}
+          value={raceName}
+          onChange={e => setRaceName(e.target.value)}
         />
       </div>
-
       <div>
         <Typography className={styles.label}>Boat Name</Typography>
         <TextField
@@ -68,21 +70,21 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           fullWidth
           variant="outlined"
           className={styles.inputField}
-          InputProps={{ classes: { notchedOutline: styles.noOutline } }}
+          value={boatName}
+          onChange={e => setBoatName(e.target.value)}
         />
       </div>
-
       <div>
         <Typography className={styles.label}>Boat Class</Typography>
         <FormControl fullWidth required variant="outlined" className={styles.inputField}>
           <Select
             name="boatClass"
-            value={localBoatClass}
+            value={boatClass}
             onChange={handleBoatClassChange}
             displayEmpty
             sx={{
               '& .MuiSelect-select': {
-                color: localBoatClass ? 'inherit' : '#888',
+                color: boatClass ? 'inherit' : '#888',
               },
             }}
           >
@@ -97,7 +99,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           </Select>
         </FormControl>
       </div>
-
       <Button
         type="submit"
         variant="contained"
