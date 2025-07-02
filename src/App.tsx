@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import HeaderComponent from './components/HeaderComponent/HeaderComponent';
 import CrewInfoComponent from './components/CrewInfoComponent/CrewInfoComponent';
@@ -22,6 +22,10 @@ const boatClassToSeats: Record<string, number> = {
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
 
 function App() {
+
+  const crewNameRef = useRef<HTMLInputElement | null>(null);
+  const savedCrewsRef = useRef<HTMLInputElement | null>(null);
+
   const [boatClass, setBoatClass] = useState('');
   const [clubName, setClubName] = useState('');
   const [raceName, setRaceName] = useState('');
@@ -37,6 +41,9 @@ function App() {
     setBoatName(newBoatName);
     setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
     setCoxName('');
+    setTimeout(() => {
+      crewNameRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
   };
 
   const handleNameChange = (idx: number, value: string) => {
@@ -61,6 +68,9 @@ function App() {
         crewMembers,
       },
     ]);
+    setTimeout(() => {
+      savedCrewsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
   };
 
   return (
@@ -70,19 +80,23 @@ function App() {
         onSubmit={handleCrewInfoSubmit}
       />
       {boatClass && (
-        <CrewNamesComponent
-          boatClass={boatClass}
-          crewNames={crewNames}
-          coxName={coxName}
-          onNameChange={handleNameChange}
-          onCoxNameChange={handleCoxNameChange}
-          onSaveCrew={handleSaveCrew}
-          clubName={clubName}
-          raceName={raceName}
-          boatName={boatName}
-        />
+        <div ref={crewNameRef}>
+          <CrewNamesComponent
+            boatClass={boatClass}
+            crewNames={crewNames}
+            coxName={coxName}
+            onNameChange={handleNameChange}
+            onCoxNameChange={handleCoxNameChange}
+            onSaveCrew={handleSaveCrew}
+            clubName={clubName}
+            raceName={raceName}
+            boatName={boatName}
+          />
+        </div>
       )}
-      <SavedCrewsComponent savedCrews={savedCrews} />
+      <div ref={savedCrewsRef}>
+        <SavedCrewsComponent savedCrews={savedCrews} />
+      </div>
     </ThemeProvider>
   );
 }
