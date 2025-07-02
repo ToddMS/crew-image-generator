@@ -22,7 +22,6 @@ const boatClassToSeats: Record<string, number> = {
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
 
 function App() {
-
   const crewNameRef = useRef<HTMLInputElement | null>(null);
   const savedCrewsRef = useRef<HTMLInputElement | null>(null);
 
@@ -33,6 +32,7 @@ function App() {
   const [crewNames, setCrewNames] = useState<string[]>([]);
   const [coxName, setCoxName] = useState('');
   const [savedCrews, setSavedCrews] = useState<any[]>([]);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const handleCrewInfoSubmit = (newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
     setBoatClass(newBoatClass);
@@ -41,6 +41,7 @@ function App() {
     setBoatName(newBoatName);
     setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
     setCoxName('');
+    setEditIndex(null);
     setTimeout(() => {
       crewNameRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 0);
@@ -59,17 +60,57 @@ function App() {
       ...crewNames.map((name, idx) => ({ seat: seatLabels[idx + (boatClassHasCox(boatClass) ? 1 : 0)], name })),
     ];
 
-    setSavedCrews(prev => [
-      ...prev,
-      {
+    if (editIndex !== null) {
+      setSavedCrews(prev => prev.map((crew, idx) => idx === editIndex ? {
         boatClub: clubName,
         raceName: raceName,
         boatName: boatName,
         crewMembers,
-      },
-    ]);
+      } : crew));
+      setEditIndex(null);
+    } else {
+      setSavedCrews(prev => [
+        ...prev,
+        {
+          boatClub: clubName,
+          raceName: raceName,
+          boatName: boatName,
+          crewMembers,
+        },
+      ]);
+    }
     setTimeout(() => {
       savedCrewsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
+  };
+
+  const handleDeleteCrew = (index: number) => {
+    setSavedCrews(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleEditCrew = (index: number) => {
+    const crew = savedCrews[index];
+    if (!crew) return;
+    let guessedBoatClass = '';
+    if (crew.crewMembers.length === 9) guessedBoatClass = '8+';
+    else if (crew.crewMembers.length === 5 && crew.crewMembers[0].seat === 'Cox') guessedBoatClass = '4+';
+    else if (crew.crewMembers.length === 4) guessedBoatClass = '4-';
+    else if (crew.crewMembers.length === 2) guessedBoatClass = '2x';
+    else if (crew.crewMembers.length === 1) guessedBoatClass = '1x';
+    setBoatClass(guessedBoatClass);
+    setClubName(crew.boatClub);
+    setRaceName(crew.raceName);
+    setBoatName(crew.boatName);
+    if (guessedBoatClass === '8+' || guessedBoatClass === '4+') {
+      setCoxName(crew.crewMembers[0]?.name || '');
+      setCrewNames(crew.crewMembers.slice(1).map((m: any) => m.name));
+    } else {
+      setCoxName('');
+      setCrewNames(crew.crewMembers.map((m: any) => m.name));
+    }
+    setEditIndex(index);
+    setTimeout(() => {
+      crewNameRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 0);
   };
 
@@ -95,7 +136,11 @@ function App() {
         </div>
       )}
       <div ref={savedCrewsRef}>
-        <SavedCrewsComponent savedCrews={savedCrews} />
+        <SavedCrewsComponent
+          savedCrews={savedCrews}
+          onDeleteCrew={handleDeleteCrew}
+          onEditCrew={handleEditCrew}
+        />
       </div>
     </ThemeProvider>
   );
