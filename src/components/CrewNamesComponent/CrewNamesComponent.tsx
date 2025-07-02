@@ -76,7 +76,6 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
             onChange={e => onCoxNameChange(e.target.value)}
             required
             fullWidth
-            margin="normal"
             className={styles.inputField}
           />
         </div>
@@ -93,7 +92,6 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
               onChange={e => onNameChange(idx, e.target.value)}
               required
               fullWidth
-              margin="normal"
               className={styles.inputField}
             />
           </div>
