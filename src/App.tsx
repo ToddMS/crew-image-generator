@@ -5,6 +5,7 @@ import CrewInfoComponent from './components/CrewInfoComponent/CrewInfoComponent'
 import CrewNamesComponent from './components/CrewNamesComponent/CrewNamesComponent';
 import SavedCrewsComponent from './components/SavedCrewsComponent/SavedCrewComponent';
 import ImageGenerator from './components/ImageGenerator/ImageGenerator';
+import FooterComponent from './components/FooterComponent/FooterComponent';
 import { ApiService } from './services/api.service';
 
 const lightTheme = createTheme({
@@ -42,6 +43,13 @@ function App() {
   const crewNameRef = useRef<HTMLInputElement | null>(null);
   const savedCrewsRef = useRef<HTMLInputElement | null>(null);
   const imageGeneratorRef = useRef<HTMLInputElement | null>(null);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const [boatClass, setBoatClass] = useState('');
   const [clubName, setClubName] = useState('');
@@ -350,6 +358,8 @@ function App() {
           </div>
         </div>
       </div>
+      
+      <FooterComponent scrollToSection={scrollToSection} />
     </ThemeProvider>
   );
 }
