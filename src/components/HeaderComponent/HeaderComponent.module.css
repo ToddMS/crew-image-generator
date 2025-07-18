@@ -41,3 +41,19 @@ a {
   padding-top: 5px;
   font-size: 18px;
 }
+
+.navButton {
+  background: none;
+  border: none;
+  padding-top: 5px;
+  font-size: 18px;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.navButton:hover {
+  color: #5E98C2;
+  text-decoration: underline;
+}

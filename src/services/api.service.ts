@@ -64,4 +64,29 @@ export class ApiService {
       method: 'DELETE'
     });
   }
+
+  static async generateImage(crewId: string, imageName: string, templateId: string): Promise<Blob | null> {
+    try {
+      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          crewId,
+          imageName,
+          templateId: parseInt(templateId)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate image');
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error('Error generating image:', error);
+      return null;
+    }
+  }
 }

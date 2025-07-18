@@ -91,11 +91,13 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             <MenuItem value="">
               <span className={styles.select}>Select boat class</span>
             </MenuItem>
-            <MenuItem value="8+">8+</MenuItem>
-            <MenuItem value="4+">4+</MenuItem>
-            <MenuItem value="4-">4-</MenuItem>
-            <MenuItem value="2x">2x</MenuItem>
-            <MenuItem value="1x">1x</MenuItem>
+            <MenuItem value="8+">8+ (Eight with Coxswain)</MenuItem>
+            <MenuItem value="4+">4+ (Four with Coxswain)</MenuItem>
+            <MenuItem value="4-">4- (Four without Coxswain)</MenuItem>
+            <MenuItem value="4x">4x (Quad Sculls)</MenuItem>
+            <MenuItem value="2-">2- (Coxless Pair)</MenuItem>
+            <MenuItem value="2x">2x (Double Sculls)</MenuItem>
+            <MenuItem value="1x">1x (Single Sculls)</MenuItem>
           </Select>
         </FormControl>
       </div>

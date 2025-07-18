@@ -6,6 +6,13 @@ import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
 import { PiSquaresFourLight } from "react-icons/pi";
 
 const HeaderComponent: React.FC = () => {
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header>
       <div className={styles.header}>
@@ -17,20 +24,20 @@ const HeaderComponent: React.FC = () => {
         <ul className={styles.navList}>
           <li className={styles.navItem}>
             <IoHomeOutline size={18} style={{ marginTop: '2px' }} />
-            <a href="#home">Home</a>
+            <button onClick={() => scrollToSection('home')} className={styles.navButton}>Home</button>
           </li>
 
           <li className={styles.navItem}>
             <PiSquaresFourLight size={25} style={{marginTop: '3px'}} />
-            <a href="#templates">Templates</a>
+            <button onClick={() => scrollToSection('crew-form')} className={styles.navButton}>Templates</button>
           </li>
           <li className={styles.navItem}>
             <IoPeopleOutline size={21} style={{marginTop: '5px'}} />
-            <a href="#myCrews">My Crews</a>
+            <button onClick={() => scrollToSection('saved-crews')} className={styles.navButton}>My Crews</button>
           </li>
           <li className={styles.navItem} >
             <TbHelp size={17} style={{marginTop: '3px'}} />
-            <a href="#help">Help</a>
+            <button onClick={() => scrollToSection('help')} className={styles.navButton}>Help</button>
           </li>
         </ul>
       </nav>
