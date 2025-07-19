@@ -262,17 +262,17 @@ function App() {
     }, 0);
   };
 
-  const handleGenerateImage = async (imageName: string, template: string) => {
+  const handleGenerateImage = async (imageName: string, template: string, colors?: { primary: string; secondary: string }) => {
     if (selectedCrewForImage === null) return;
     
     const selectedCrew = savedCrews[selectedCrewForImage];
     if (!selectedCrew) return;
 
     try {
-      console.log('Generating image:', imageName, 'with template:', template, 'for crew:', selectedCrew);
+      console.log('Generating image:', imageName, 'with template:', template, 'colors:', colors, 'for crew:', selectedCrew);
       
       // Call the backend API to generate the image
-      const imageBlob = await ApiService.generateImage(selectedCrew.id, imageName, template);
+      const imageBlob = await ApiService.generateImage(selectedCrew.id, imageName, template, colors);
       
       if (imageBlob) {
         // Create a download link for the generated image
@@ -327,9 +327,12 @@ function App() {
           onGenerateImage={handleShowImageGenerator}
         />
       </div>
-      {showImageGenerator && (
+      {showImageGenerator && selectedCrewForImage !== null && (
         <div ref={imageGeneratorRef}>
-          <ImageGenerator onGenerate={handleGenerateImage} />
+          <ImageGenerator 
+            onGenerate={handleGenerateImage} 
+            selectedCrew={savedCrews[selectedCrewForImage]}
+          />
         </div>
       )}
       

@@ -65,7 +65,7 @@ export class ApiService {
     });
   }
 
-  static async generateImage(crewId: string, imageName: string, templateId: string): Promise<Blob | null> {
+  static async generateImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }): Promise<Blob | null> {
     try {
       const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
         method: 'POST',
@@ -75,7 +75,8 @@ export class ApiService {
         body: JSON.stringify({
           crewId,
           imageName,
-          templateId: parseInt(templateId)
+          templateId: parseInt(templateId),
+          colors
         })
       });
 

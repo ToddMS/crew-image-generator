@@ -63,7 +63,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
 
   return (
     <Box component="form" className={styles.container} sx={{ marginTop: 4 }} onSubmit={handleFormSubmit}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
         Enter Crew Names
       </Typography>
       {hasCox && (

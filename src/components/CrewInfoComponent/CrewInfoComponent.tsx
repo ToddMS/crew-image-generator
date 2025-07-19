@@ -35,6 +35,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
 
   return (
     <Box component="form" className={styles.container} onSubmit={handleFormSubmit}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
+        Enter Crew Information
+      </Typography>
       <div>
         <Typography className={styles.label}>Club Name</Typography>
         <TextField
