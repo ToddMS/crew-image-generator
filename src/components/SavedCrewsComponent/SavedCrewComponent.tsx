@@ -230,9 +230,16 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                     fontWeight: 'bold',
                     display: 'inline-block'
                   }}>
-                    {boatClass} {crew.crewMembers.length === 1 ? 'Single' : 
-                     crew.crewMembers.length === 2 ? 'Double' : 
-                     crew.crewMembers.length === 4 ? 'Quad/Four' : 'Eight'}
+                    {boatClass} {
+                      boatClass === '8+' ? 'Eight' :
+                      boatClass === '4+' ? 'Four' :
+                      boatClass === '4-' ? 'Four' :
+                      boatClass === '4x' ? 'Quad' :
+                      boatClass === '2-' ? 'Pair' :
+                      boatClass === '2x' ? 'Double' :
+                      boatClass === '1x' ? 'Single' :
+                      'Boat'
+                    }
                   </Box>
                 </Box>
                 {boatClass === '8+' ? (
