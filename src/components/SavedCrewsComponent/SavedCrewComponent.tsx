@@ -51,6 +51,8 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
   }
 
   const getBoatClass = (crew: SavedCrew) => {
+    if (crew.boatClass) return crew.boatClass;
+    
     if (crew.crewMembers.length === 9) return '8+';
     if (crew.crewMembers.length === 5 && crew.crewMembers[0].seat === 'Cox') return '4+';
     if (crew.crewMembers.length === 4) return '4-';

@@ -96,6 +96,7 @@ function App() {
               ...crew,
               boatClub: crew.clubName,
               boatName: crew.name,
+              boatClass: crew.boatType.value,
               crewMembers: crew.crewNames.map((name, idx) => ({
                 seat: getSeatLabel(idx, totalRowers, hasCox),
                 name
@@ -231,17 +232,13 @@ function App() {
   const handleEditCrew = (index: number) => {
     const crew = savedCrews[index];
     if (!crew) return;
-    let guessedBoatClass = '';
-    if (crew.crewMembers.length === 9) guessedBoatClass = '8+';
-    else if (crew.crewMembers.length === 5 && crew.crewMembers[0].seat === 'Cox') guessedBoatClass = '4+';
-    else if (crew.crewMembers.length === 4) guessedBoatClass = '4-';
-    else if (crew.crewMembers.length === 2) guessedBoatClass = '2x';
-    else if (crew.crewMembers.length === 1) guessedBoatClass = '1x';
-    setBoatClass(guessedBoatClass);
+    // Use the saved boat class instead of guessing
+    const actualBoatClass = crew.boatClass || '';
+    setBoatClass(actualBoatClass);
     setClubName(crew.boatClub);
     setRaceName(crew.raceName);
     setBoatName(crew.boatName);
-    if (guessedBoatClass === '8+' || guessedBoatClass === '4+') {
+    if (actualBoatClass === '8+' || actualBoatClass === '4+') {
       setCoxName(crew.crewMembers[0]?.name || '');
       setCrewNames(crew.crewMembers.slice(1).map((m: any) => m.name));
     } else {

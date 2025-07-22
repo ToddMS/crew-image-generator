@@ -33,10 +33,14 @@ const getSeatLabels = (boatClass: string): string[] => {
       return ['Cox', 'Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
     case '4-':
       return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+    case '4x':
+      return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+    case '2-':
+      return ['Stroke Seat', 'Bow'];
     case '2x':
       return ['Stroke Seat', 'Bow'];
     case '1x':
-      return ['Stroke Seat'];
+      return ['Single'];
     default:
       return [];
   }
@@ -61,11 +65,52 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
     onSaveCrew(clubName, raceName, boatName);
   };
 
+  const getBoatInfo = () => {
+    const boatNames = {
+      '8+': 'Eight',
+      '4+': 'Coxed Four', 
+      '4-': 'Coxless Four',
+      '4x': 'Quad Sculls',
+      '2-': 'Pair',
+      '2x': 'Double Sculls',
+      '1x': 'Single Sculls'
+    };
+    return boatNames[boatClass as keyof typeof boatNames] || boatClass;
+  };
+
   return (
     <Box component="form" className={styles.container} sx={{ marginTop: 4 }} onSubmit={handleFormSubmit}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 1, letterSpacing: 1 }}>
         Enter Crew Names
       </Typography>
+      
+      <Box sx={{ 
+        textAlign: 'center', 
+        mb: 3, 
+        p: 2, 
+        backgroundColor: '#f5f7fa', 
+        borderRadius: 2,
+        border: '1px solid #e0e7ff'
+      }}>
+        <Typography variant="body1" sx={{ fontWeight: 600, color: '#5E98C2', mb: 1 }}>
+          {clubName} - {raceName}
+        </Typography>
+        <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+          {boatName}
+        </Typography>
+        <Box sx={{ 
+          display: 'inline-block',
+          backgroundColor: '#5E98C2', 
+          color: 'white', 
+          px: 2, 
+          py: 0.5, 
+          borderRadius: 2, 
+          fontSize: 14,
+          fontWeight: 'bold'
+        }}>
+          {boatClass} - {getBoatInfo()}
+        </Box>
+      </Box>
       {hasCox && (
         <div>
           <Typography className={styles.label}>Cox</Typography>
@@ -81,7 +126,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         </div>
       )}
       {crewNames.map((name, idx) => {
-        const label = seatLabels[hasCox ? idx + 1 : idx];
+        const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
         return (
           <div key={idx}>
             <Typography className={styles.label}>{label}</Typography>
