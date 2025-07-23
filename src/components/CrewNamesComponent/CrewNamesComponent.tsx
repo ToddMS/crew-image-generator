@@ -9,7 +9,7 @@ interface CrewNamesComponentProps {
   coxName: string;
   onNameChange: (idx: number, value: string) => void;
   onCoxNameChange: (value: string) => void;
-  onSaveCrew: (boatClub: string, raceName: string, boatName: string) => void;
+  onSaveCrew?: (boatClub: string, raceName: string, boatName: string) => void;
   clubName: string;
   raceName: string;
   boatName: string;
@@ -142,28 +142,30 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           </div>
         );
       })}
-      <Button
-        type="submit"
-        variant="contained"
-        sx={{
-          backgroundColor: '#5E98C2',
-          color: '#fff',
-          padding: '10px',
-          borderRadius: '6px',
-          boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
-          '&:hover': {
-            backgroundColor: '#4177a6',
-          },
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginTop: '16px',
-          justifyContent: 'center',
-        }}
-        endIcon={<MdSave size={22} />}
-      >
-        Save Crew
-      </Button>
+      {onSaveCrew && (
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{
+            backgroundColor: '#5E98C2',
+            color: '#fff',
+            padding: '10px',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
+            '&:hover': {
+              backgroundColor: '#4177a6',
+            },
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginTop: '16px',
+            justifyContent: 'center',
+          }}
+          endIcon={<MdSave size={22} />}
+        >
+          Save Crew
+        </Button>
+      )}
     </Box>
   );
 };

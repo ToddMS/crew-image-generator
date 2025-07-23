@@ -9,6 +9,11 @@ const API_CONFIG = {
 };
 
 export class ApiService {
+  static getAuthHeaders(): Record<string, string> {
+    const sessionId = localStorage.getItem('sessionId');
+    return sessionId ? { 'Authorization': `Bearer ${sessionId}` } : {};
+  }
+
   static async request<T>(
     endpoint: string,
     options?: RequestInit
@@ -18,6 +23,7 @@ export class ApiService {
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          ...this.getAuthHeaders(),
           ...options?.headers
         }
       });

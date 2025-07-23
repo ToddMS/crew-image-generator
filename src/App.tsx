@@ -6,7 +6,9 @@ import CrewNamesComponent from './components/CrewNamesComponent/CrewNamesCompone
 import SavedCrewsComponent from './components/SavedCrewsComponent/SavedCrewComponent';
 import ImageGenerator from './components/ImageGenerator/ImageGenerator';
 import FooterComponent from './components/FooterComponent/FooterComponent';
+import LoginPrompt from './components/Auth/LoginPrompt';
 import { ApiService } from './services/api.service';
+import { useAuth } from './context/AuthContext';
 
 const lightTheme = createTheme({
   palette: {
@@ -40,6 +42,7 @@ const boatClassToBoatType = (boatClass: string) => {
 };
 
 function App() {
+  const { user } = useAuth();
   const crewNameRef = useRef<HTMLInputElement | null>(null);
   const savedCrewsRef = useRef<HTMLInputElement | null>(null);
   const imageGeneratorRef = useRef<HTMLInputElement | null>(null);
@@ -62,9 +65,14 @@ function App() {
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [selectedCrewForImage, setSelectedCrewForImage] = useState<number | null>(null);
 
-  // Load crews from backend on component mount
+  // Load crews from backend when user is authenticated
   useEffect(() => {
     const loadCrews = async () => {
+      if (!user) {
+        setSavedCrews([]);
+        return;
+      }
+
       try {
         const result = await ApiService.getCrews();
         if (result.data) {
@@ -104,14 +112,19 @@ function App() {
             };
           });
           setSavedCrews(transformedCrews);
+        } else if (result.error) {
+          // Handle authentication errors
+          console.error('Error loading crews:', result.error);
+          setSavedCrews([]);
         }
       } catch (error) {
         console.error('Error loading crews:', error);
+        setSavedCrews([]);
       }
     };
 
     loadCrews();
-  }, []);
+  }, [user]);
 
   const handleCrewInfoSubmit = (newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
     setBoatClass(newBoatClass);
@@ -133,6 +146,12 @@ function App() {
   const handleCoxNameChange = (value: string) => setCoxName(value);
 
   const handleSaveCrew = async () => {
+    if (!user) {
+      // This should be prevented by UI, but handle edge case
+      console.error('User not authenticated');
+      return;
+    }
+
     // Proper rowing seat naming: Cox, Stroke, 7, 6, 5, 4, 3, 2, Bow for 8+
     // For 4+: Cox, Stroke, 3, 2, Bow
     const getSeatLabel = (idx: number, totalRowers: number, hasCox: boolean) => {
@@ -309,20 +328,36 @@ function App() {
             coxName={coxName}
             onNameChange={handleNameChange}
             onCoxNameChange={handleCoxNameChange}
-            onSaveCrew={handleSaveCrew}
+            onSaveCrew={user ? handleSaveCrew : undefined}
             clubName={clubName}
             raceName={raceName}
             boatName={boatName}
           />
+          {!user && (
+            <LoginPrompt 
+              message="Sign in to save crews to your account"
+              actionText="Save Crew"
+            />
+          )}
         </div>
       )}
       <div id="saved-crews" ref={savedCrewsRef}>
-        <SavedCrewsComponent
-          savedCrews={savedCrews}
-          onDeleteCrew={handleDeleteCrew}
-          onEditCrew={handleEditCrew}
-          onGenerateImage={handleShowImageGenerator}
-        />
+        {user ? (
+          <SavedCrewsComponent
+            savedCrews={savedCrews}
+            onDeleteCrew={handleDeleteCrew}
+            onEditCrew={handleEditCrew}
+            onGenerateImage={handleShowImageGenerator}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <h2 style={{ color: '#333', marginBottom: '20px' }}>My Crews</h2>
+            <LoginPrompt 
+              message="Sign in to view and manage your saved crews"
+              actionText="View My Crews"
+            />
+          </div>
+        )}
       </div>
       {showImageGenerator && selectedCrewForImage !== null && (
         <div ref={imageGeneratorRef}>
