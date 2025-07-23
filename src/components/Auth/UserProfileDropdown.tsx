@@ -10,7 +10,9 @@ import {
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useAuth } from '../../context/AuthContext';
+import ProfileModal from '../Profile/ProfileModal';
 
 interface User {
   id: number;
@@ -27,6 +29,7 @@ interface UserProfileDropdownProps {
 const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
   const { logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -117,11 +120,11 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
         
         <Divider />
         
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={() => { setShowProfileModal(true); handleClose(); }}>
           <Avatar sx={{ bgcolor: '#5E98C2' }}>
-            <PersonIcon />
+            <SettingsIcon />
           </Avatar>
-          Profile
+          Profile & Settings
         </MenuItem>
         
         <MenuItem onClick={handleLogout}>
@@ -131,6 +134,12 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
           Logout
         </MenuItem>
       </Menu>
+
+      {/* Profile Modal */}
+      <ProfileModal 
+        open={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
     </>
   );
 };

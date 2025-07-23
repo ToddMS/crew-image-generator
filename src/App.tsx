@@ -65,11 +65,21 @@ function App() {
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [selectedCrewForImage, setSelectedCrewForImage] = useState<number | null>(null);
 
-  // Load crews from backend when user is authenticated
+  // Clear all form data when user logs out and load crews when authenticated
   useEffect(() => {
     const loadCrews = async () => {
       if (!user) {
+        // Clear all form state when user logs out
         setSavedCrews([]);
+        setBoatClass('');
+        setClubName('');
+        setRaceName('');
+        setBoatName('');
+        setCrewNames([]);
+        setCoxName('');
+        setEditIndex(null);
+        setShowImageGenerator(false);
+        setSelectedCrewForImage(null);
         return;
       }
 
@@ -318,6 +328,12 @@ function App() {
       <div id="crew-form">
         <CrewInfoComponent
           onSubmit={handleCrewInfoSubmit}
+          initialValues={{
+            boatClass,
+            clubName,
+            raceName,
+            boatName
+          }}
         />
       </div>
       {boatClass && (
