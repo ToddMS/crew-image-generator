@@ -57,3 +57,17 @@ a {
   color: #5E98C2;
   text-decoration: underline;
 }
+
+.loginButton {
+  background-color: #5E98C2;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.loginButton:hover {
+  background-color: #4a7da3;
+  color: white;
+  text-decoration: none;
+}
