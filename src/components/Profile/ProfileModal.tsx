@@ -69,6 +69,32 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => {
     }
   }, [open, user]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!open) return;
+      
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (isCreating) {
+          setIsCreating(false);
+        } else {
+          onClose();
+        }
+      }
+      
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && isCreating) {
+        event.preventDefault();
+        if (formData.preset_name && formData.club_name) {
+          handleSave();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, isCreating, formData.preset_name, formData.club_name, onClose]);
+
   const loadPresets = async () => {
     try {
       setLoading(true);

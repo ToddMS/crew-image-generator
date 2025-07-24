@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import styles from './CrewNamesComponent.module.css';
 import { MdSave } from 'react-icons/md';
 
@@ -57,8 +58,28 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   raceName,
   boatName,
 }) => {
+  const theme = useTheme();
   const seatLabels = getSeatLabels(boatClass);
   const hasCox = boatClass === '8+' || boatClass === '4+';
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        const allNamesFilled = hasCox ? 
+          coxName.trim() && crewNames.every(name => name.trim()) :
+          crewNames.every(name => name.trim());
+        
+        if (allNamesFilled && onSaveCrew) {
+          onSaveCrew(clubName, raceName, boatName);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [coxName, crewNames, hasCox, onSaveCrew, clubName, raceName, boatName]);
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -79,7 +100,16 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   };
 
   return (
-    <Box component="form" className={styles.container} sx={{ marginTop: 4 }} onSubmit={handleFormSubmit}>
+    <Box 
+      component="form" 
+      className={styles.container} 
+      sx={{ 
+        marginTop: 4,
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary
+      }} 
+      onSubmit={handleFormSubmit}
+    >
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 1, letterSpacing: 1 }}>
         Enter Crew Names
       </Typography>
@@ -88,19 +118,19 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         textAlign: 'center', 
         mb: 3, 
         p: 2, 
-        backgroundColor: '#f5f7fa', 
+        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(125, 179, 211, 0.1)' : '#f5f7fa', 
         borderRadius: 2,
-        border: '1px solid #e0e7ff'
+        border: `1px solid ${theme.palette.divider}`
       }}>
-        <Typography variant="body1" sx={{ fontWeight: 600, color: '#5E98C2', mb: 1 }}>
+        <Typography variant="body1" sx={{ fontWeight: 600, color: theme.palette.primary.main, mb: 1 }}>
           {clubName} - {raceName}
         </Typography>
-        <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
           {boatName}
         </Typography>
         <Box sx={{ 
           display: 'inline-block',
-          backgroundColor: '#5E98C2', 
+          backgroundColor: theme.palette.primary.main, 
           color: 'white', 
           px: 2, 
           py: 0.5, 
@@ -147,13 +177,13 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           type="submit"
           variant="contained"
           sx={{
-            backgroundColor: '#5E98C2',
+            backgroundColor: theme.palette.primary.main,
             color: '#fff',
             padding: '10px',
             borderRadius: '6px',
-            boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
+            boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
             '&:hover': {
-              backgroundColor: '#4177a6',
+              backgroundColor: theme.palette.primary.dark || '#4177a6',
             },
             display: 'flex',
             alignItems: 'center',

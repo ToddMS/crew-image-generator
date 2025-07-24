@@ -15,6 +15,7 @@ import {
   RadioGroup,
   Chip,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
 import styles from './ImageGenerator.module.css';
 import { MdImage } from 'react-icons/md';
@@ -40,6 +41,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   selectedCrew,
 }) => {
   const { user } = useAuth();
+  const theme = useTheme();
   const [imageName, setImageName] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,6 +67,21 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       setImageName(`${selectedCrew.boatName}_${selectedCrew.raceName}`);
     }
   }, [selectedCrew]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        if (imageName && selectedTemplate && !isGenerating) {
+          handleFormSubmit(event as any);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [imageName, selectedTemplate, isGenerating]);
 
   // Handle preset selection changes
   const handlePresetModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +179,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   };
 
   return (
-    <Box component="form" className={styles.container} onSubmit={handleFormSubmit}>
+    <Box 
+      component="form" 
+      className={styles.container} 
+      onSubmit={handleFormSubmit}
+      sx={{
+        backgroundColor: theme.palette.background.paper,
+        borderColor: theme.palette.divider,
+        color: theme.palette.text.primary
+      }}
+    >
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
         Generate Image
       </Typography>
@@ -185,20 +211,33 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         <Typography className={styles.label}>Choose Template</Typography>
         <div className={styles.templateGrid}>
           {templates.map((template) => (
-            <div
+            <Box
               key={template.value}
               className={`${styles.templateCard} ${
                 selectedTemplate === template.value ? styles.selected : ''
               }`}
               onClick={() => handleTemplateClick(template.value)}
+              sx={{
+                backgroundColor: selectedTemplate === template.value 
+                  ? (theme.palette.mode === 'dark' ? 'rgba(125, 179, 211, 0.2)' : '#f0f7ff')
+                  : theme.palette.background.paper,
+                borderColor: selectedTemplate === template.value 
+                  ? theme.palette.primary.main 
+                  : theme.palette.divider,
+                color: theme.palette.text.primary,
+                '&:hover': {
+                  borderColor: theme.palette.primary.main,
+                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(125, 179, 211, 0.1)' : '#f0f7ff'
+                }
+              }}
             >
               <div className={styles.templateImage}>
-                <MdImage size={48} color="#5E98C2" />
+                <MdImage size={48} color={theme.palette.primary.main} />
               </div>
-              <Typography className={styles.templateLabel}>
+              <Typography sx={{ color: theme.palette.text.primary, fontSize: 14, fontWeight: 500 }}>
                 {template.label}
               </Typography>
-            </div>
+            </Box>
           ))}
         </div>
       </div>
@@ -275,66 +314,11 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                 ))}
               </Select>
             </FormControl>
-            
-            {/* Show selected preset info and logo */}
-            {selectedPresetId && (
-              <Box sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: '#f9f9f9' }}>
-                {(() => {
-                  const selectedPreset = presets.find(p => p.id === selectedPresetId);
-                  return selectedPreset ? (
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Box display="flex" gap={1}>
-                        <Box
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 1,
-                            backgroundColor: selectedPreset.primary_color,
-                            border: '1px solid #ddd'
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 1,
-                            backgroundColor: selectedPreset.secondary_color,
-                            border: '1px solid #ddd'
-                          }}
-                        />
-                      </Box>
-                      <Box flex={1}>
-                        <Typography variant="body2" fontWeight="bold">
-                          {selectedPreset.club_name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {selectedPreset.preset_name}
-                        </Typography>
-                      </Box>
-                      {selectedPreset.logo_filename && (
-                        <Box>
-                          <img
-                            src={getLogoUrl(selectedPreset.logo_filename) || ''}
-                            alt={`${selectedPreset.club_name} logo`}
-                            style={{
-                              maxWidth: 60,
-                              maxHeight: 40,
-                              objectFit: 'contain',
-                              borderRadius: 4
-                            }}
-                          />
-                        </Box>
-                      )}
-                    </Box>
-                  ) : null;
-                })()}
-              </Box>
-            )}
           </Box>
         ) : (
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ mb: 1, fontSize: 14, color: '#666' }}>
+              <Typography variant="body2" sx={{ mb: 1, fontSize: 14, color: theme.palette.text.secondary }}>
                 Primary Color
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -345,7 +329,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                   style={{
                     width: '50px',
                     height: '40px',
-                    border: '1px solid #ccc',
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '4px',
                     cursor: 'pointer'
                   }}
@@ -360,7 +344,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
               </Box>
             </Box>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ mb: 1, fontSize: 14, color: '#666' }}>
+              <Typography variant="body2" sx={{ mb: 1, fontSize: 14, color: theme.palette.text.secondary }}>
                 Secondary Color
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -371,7 +355,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                   style={{
                     width: '50px',
                     height: '40px',
-                    border: '1px solid #ccc',
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '4px',
                     cursor: 'pointer'
                   }}
@@ -400,16 +384,16 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         variant="contained"
         disabled={isGenerating || !imageName || !selectedTemplate}
         sx={{
-          backgroundColor: '#5E98C2',
+          backgroundColor: theme.palette.primary.main,
           color: '#fff',
           padding: '10px',
           borderRadius: '6px',
-          boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
+          boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
           '&:hover': {
-            backgroundColor: '#4177a6',
+            backgroundColor: theme.palette.primary.dark || '#4177a6',
           },
           '&:disabled': {
-            backgroundColor: '#ccc',
+            backgroundColor: theme.palette.mode === 'dark' ? '#555' : '#ccc',
           },
           display: 'flex',
           alignItems: 'center',

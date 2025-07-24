@@ -7,11 +7,14 @@ import {
   Typography,
   Divider,
   IconButton,
+  Switch,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { Brightness4, Brightness7 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import ProfileModal from '../Profile/ProfileModal';
 
 interface User {
@@ -28,6 +31,7 @@ interface UserProfileDropdownProps {
 
 const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
   const { logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const open = Boolean(anchorEl);
@@ -125,6 +129,35 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
             <SettingsIcon />
           </Avatar>
           Profile & Settings
+        </MenuItem>
+        
+        <MenuItem 
+          onClick={(e) => e.stopPropagation()}
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {isDarkMode ? <Brightness4 /> : <Brightness7 />}
+            <Typography>Dark Mode</Typography>
+          </Box>
+          <Switch
+            checked={isDarkMode}
+            onChange={toggleDarkMode}
+            size="small"
+            sx={{
+              '& .MuiSwitch-switchBase.Mui-checked': {
+                color: '#7DB3D3',
+              },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                backgroundColor: '#7DB3D3',
+              },
+            }}
+          />
         </MenuItem>
         
         <MenuItem onClick={handleLogout}>

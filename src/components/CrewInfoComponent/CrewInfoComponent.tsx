@@ -8,11 +8,11 @@ import {
   TextField,
   Typography,
   FormControlLabel,
-  Radio,
-  RadioGroup,
+  Checkbox,
   Chip,
   InputLabel,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
 import styles from './CrewInfoComponent.module.css';
 import { MdChevronRight } from 'react-icons/md';
@@ -43,6 +43,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   initialValues,
 }) => {
   const { user } = useAuth();
+  const theme = useTheme();
   const [boatClass, setBoatClass] = useState('');
   const [clubName, setClubName] = useState('');
   const [raceName, setRaceName] = useState('');
@@ -75,6 +76,21 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     }
   }, [initialValues]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        if (boatClass && clubName && raceName && boatName) {
+          handleFormSubmit(event as any);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [boatClass, clubName, raceName, boatName]);
+
   const loadPresets = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
@@ -105,7 +121,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   };
 
   const handlePresetModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const usePresetMode = event.target.value === 'preset';
+    const usePresetMode = event.target.checked;
     setUsePreset(usePresetMode);
     
     if (usePresetMode) {
@@ -142,35 +158,37 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   };
 
   return (
-    <Box component="form" className={styles.container} onSubmit={handleFormSubmit}>
+    <Box 
+      component="form" 
+      className={styles.container} 
+      onSubmit={handleFormSubmit}
+      sx={{
+        backgroundColor: theme.palette.background.paper,
+        color: theme.palette.text.primary
+      }}
+    >
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
         Enter Crew Information
       </Typography>
       
       {/* Club Name Section with Preset Option */}
       <div>
-        <Typography className={styles.label}>Club Name</Typography>
-        
-        {user && presets.length > 0 && (
-          <Box mb={2}>
-            <RadioGroup
-              row
-              value={usePreset ? 'preset' : 'manual'}
-              onChange={handlePresetModeChange}
-            >
-              <FormControlLabel
-                value="preset"
-                control={<Radio size="small" />}
-                label="Use Saved Preset"
-              />
-              <FormControlLabel
-                value="manual"
-                control={<Radio size="small" />}
-                label="Enter Manually"
-              />
-            </RadioGroup>
-          </Box>
-        )}
+        <Box display="flex" alignItems="center" gap={1} mb={1}>
+          <Typography className={styles.label}>Club Name</Typography>
+          {user && presets.length > 0 && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={usePreset}
+                  onChange={handlePresetModeChange}
+                />
+              }
+              label="Use saved preset"
+              sx={{ ml: 1 }}
+            />
+          )}
+        </Box>
         
         {usePreset ? (
           <FormControl fullWidth variant="outlined" className={styles.inputField}>
@@ -279,13 +297,13 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         type="submit"
         variant="contained"
         sx={{
-          backgroundColor: '#5E98C2',
+          backgroundColor: theme.palette.primary.main,
           color: '#fff',
           padding: '10px',
           borderRadius: '6px',
-          boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
+          boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
           '&:hover': {
-            backgroundColor: '#4177a6',
+            backgroundColor: theme.palette.primary.dark || '#4177a6',
           },
           display: 'flex',
           alignItems: 'center',

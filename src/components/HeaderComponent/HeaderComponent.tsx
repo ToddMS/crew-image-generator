@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import styles from './HeaderComponent.module.css';
+import { Box, AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import RowGramIcon from '../../assets/RowGramIcon.png';
 import { TbHelp } from "react-icons/tb";
 import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
@@ -10,6 +11,7 @@ import UserProfileDropdown from '../Auth/UserProfileDropdown';
 
 const HeaderComponent: React.FC = () => {
   const { user } = useAuth();
+  const theme = useTheme();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
@@ -21,49 +23,133 @@ const HeaderComponent: React.FC = () => {
 
   return (
     <>
-      <header>
-        <div className={styles.header}>
-          <div className={styles.brand}>
-            <img src={RowGramIcon} alt="RowGram Logo" className={styles.icon} />
-            <h2 className={styles.title}>RowGram</h2>
-          </div>
-          <nav>
-          <ul className={styles.navList}>
-            <li className={styles.navItem}>
-              <IoHomeOutline size={18} style={{ marginTop: '2px' }} />
-              <button onClick={() => scrollToSection('home')} className={styles.navButton}>Home</button>
-            </li>
+      <AppBar 
+        position="static" 
+        elevation={1}
+        sx={{ 
+          backgroundColor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#f9f9f9',
+          borderBottom: `1px solid ${theme.palette.mode === 'dark' ? '#333333' : '#e0e0e0'}`,
+          color: theme.palette.text.primary
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between', px: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <img 
+              src={RowGramIcon} 
+              alt="RowGram Logo" 
+              style={{ width: 50, height: 50 }}
+            />
+            <Typography 
+              variant="h5" 
+              component="h2"
+              sx={{ 
+                color: theme.palette.text.primary,
+                fontWeight: 500,
+                mt: 0.5
+              }}
+            >
+              RowGram
+            </Typography>
+          </Box>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <IoHomeOutline size={18} />
+              <Button 
+                onClick={() => scrollToSection('home')}
+                sx={{ 
+                  color: theme.palette.text.primary,
+                  textTransform: 'none',
+                  fontSize: 18,
+                  '&:hover': {
+                    color: theme.palette.primary.main,
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                Home
+              </Button>
+            </Box>
 
-            <li className={styles.navItem}>
-              <PiSquaresFourLight size={25} style={{marginTop: '3px'}} />
-              <button onClick={() => scrollToSection('crew-form')} className={styles.navButton}>Templates</button>
-            </li>
-            <li className={styles.navItem}>
-              <IoPeopleOutline size={21} style={{marginTop: '5px'}} />
-              <button onClick={() => scrollToSection('saved-crews')} className={styles.navButton}>My Crews</button>
-            </li>
-            <li className={styles.navItem} >
-              <TbHelp size={17} style={{marginTop: '3px'}} />
-              <button onClick={() => scrollToSection('help')} className={styles.navButton}>Help</button>
-            </li>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <PiSquaresFourLight size={25} />
+              <Button 
+                onClick={() => scrollToSection('crew-form')}
+                sx={{ 
+                  color: theme.palette.text.primary,
+                  textTransform: 'none',
+                  fontSize: 18,
+                  '&:hover': {
+                    color: theme.palette.primary.main,
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                Templates
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <IoPeopleOutline size={21} />
+              <Button 
+                onClick={() => scrollToSection('saved-crews')}
+                sx={{ 
+                  color: theme.palette.text.primary,
+                  textTransform: 'none',
+                  fontSize: 18,
+                  '&:hover': {
+                    color: theme.palette.primary.main,
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                My Crews
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <TbHelp size={17} />
+              <Button 
+                onClick={() => scrollToSection('help')}
+                sx={{ 
+                  color: theme.palette.text.primary,
+                  textTransform: 'none',
+                  fontSize: 18,
+                  '&:hover': {
+                    color: theme.palette.primary.main,
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                Help
+              </Button>
+            </Box>
             
             {/* Authentication Section */}
-            <li className={styles.navItem}>
-              {user ? (
-                <UserProfileDropdown user={user} />
-              ) : (
-                <button 
-                  onClick={() => setShowAuthModal(true)} 
-                  className={`${styles.navButton} ${styles.loginButton}`}
-                >
-                  Login
-                </button>
-              )}
-            </li>
-          </ul>
-        </nav>
-        </div>
-      </header>
+            {user ? (
+              <UserProfileDropdown user={user} />
+            ) : (
+              <Button 
+                onClick={() => setShowAuthModal(true)} 
+                variant="contained"
+                sx={{
+                  backgroundColor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  px: 2,
+                  py: 1,
+                  fontWeight: 500,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.dark || '#4a7da3',
+                  }
+                }}
+              >
+                Login
+              </Button>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
       
       {/* Auth Modal */}
       <AuthModal 

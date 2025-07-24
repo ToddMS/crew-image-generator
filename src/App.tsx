@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Box } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import HeaderComponent from './components/HeaderComponent/HeaderComponent';
 import CrewInfoComponent from './components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from './components/CrewNamesComponent/CrewNamesComponent';
@@ -9,12 +10,6 @@ import FooterComponent from './components/FooterComponent/FooterComponent';
 import LoginPrompt from './components/Auth/LoginPrompt';
 import { ApiService } from './services/api.service';
 import { useAuth } from './context/AuthContext';
-
-const lightTheme = createTheme({
-  palette: {
-    mode: 'light',
-  },
-});
 
 const boatClassToSeats: Record<string, number> = {
   '8+': 8,
@@ -43,6 +38,7 @@ const boatClassToBoatType = (boatClass: string) => {
 
 function App() {
   const { user } = useAuth();
+  const theme = useTheme();
   const crewNameRef = useRef<HTMLInputElement | null>(null);
   const savedCrewsRef = useRef<HTMLInputElement | null>(null);
   const imageGeneratorRef = useRef<HTMLInputElement | null>(null);
@@ -64,6 +60,59 @@ function App() {
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [selectedCrewForImage, setSelectedCrewForImage] = useState<number | null>(null);
+  const [recentCrews, setRecentCrews] = useState<number[]>([]); // Track recent crew indices
+
+  // Auto-save draft to localStorage
+  useEffect(() => {
+    if (user && (boatClass || clubName || raceName || boatName || crewNames.some(n => n) || coxName)) {
+      const draft = {
+        boatClass,
+        clubName,
+        raceName,
+        boatName,
+        crewNames,
+        coxName,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(`rowgram_draft_${user.id}`, JSON.stringify(draft));
+    }
+  }, [boatClass, clubName, raceName, boatName, crewNames, coxName, user]);
+
+  // Load draft on user login
+  useEffect(() => {
+    if (user && !editIndex) {
+      const draftKey = `rowgram_draft_${user.id}`;
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          // Only load draft if it's recent (within 24 hours) and not already filled
+          const isRecent = Date.now() - draft.timestamp < 24 * 60 * 60 * 1000;
+          const isEmpty = !boatClass && !clubName && !raceName && !boatName && 
+                         !crewNames.some(n => n) && !coxName;
+          
+          if (isRecent && isEmpty) {
+            setBoatClass(draft.boatClass || '');
+            setClubName(draft.clubName || '');
+            setRaceName(draft.raceName || '');
+            setBoatName(draft.boatName || '');
+            setCrewNames(draft.crewNames || []);
+            setCoxName(draft.coxName || '');
+          }
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+          localStorage.removeItem(draftKey);
+        }
+      }
+    }
+  }, [user, editIndex]);
+
+  // Clear draft when crew is saved or form is reset
+  const clearDraft = () => {
+    if (user) {
+      localStorage.removeItem(`rowgram_draft_${user.id}`);
+    }
+  };
 
   // Clear all form data when user logs out and load crews when authenticated
   useEffect(() => {
@@ -80,6 +129,8 @@ function App() {
         setEditIndex(null);
         setShowImageGenerator(false);
         setSelectedCrewForImage(null);
+        setRecentCrews([]);
+        clearDraft();
         return;
       }
 
@@ -135,6 +186,14 @@ function App() {
 
     loadCrews();
   }, [user]);
+
+  // Function to update recent crews (max 5)
+  const updateRecentCrews = (crewIndex: number) => {
+    setRecentCrews(prev => {
+      const filtered = prev.filter(idx => idx !== crewIndex);
+      return [crewIndex, ...filtered].slice(0, 5);
+    });
+  };
 
   const handleCrewInfoSubmit = (newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
     setBoatClass(newBoatClass);
@@ -221,6 +280,7 @@ function App() {
             crewMembers,
           } : crew));
           setEditIndex(null);
+          clearDraft();
         }
       } else {
         // Create new crew
@@ -237,6 +297,7 @@ function App() {
               crewMembers,
             },
           ]);
+          clearDraft();
         }
       }
       
@@ -261,6 +322,7 @@ function App() {
   const handleEditCrew = (index: number) => {
     const crew = savedCrews[index];
     if (!crew) return;
+    updateRecentCrews(index); // Track as recent
     // Use the saved boat class instead of guessing
     const actualBoatClass = crew.boatClass || '';
     setBoatClass(actualBoatClass);
@@ -280,7 +342,9 @@ function App() {
     }, 0);
   };
 
+
   const handleShowImageGenerator = (crewIndex: number) => {
+    updateRecentCrews(crewIndex); // Track as recent
     setSelectedCrewForImage(crewIndex);
     setShowImageGenerator(true);
     setTimeout(() => {
@@ -321,7 +385,7 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={lightTheme}>
+    <>
       <div id="home">
         <HeaderComponent />
       </div>
@@ -361,18 +425,29 @@ function App() {
         {user ? (
           <SavedCrewsComponent
             savedCrews={savedCrews}
+            recentCrews={recentCrews}
             onDeleteCrew={handleDeleteCrew}
             onEditCrew={handleEditCrew}
             onGenerateImage={handleShowImageGenerator}
           />
         ) : (
-          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <h2 style={{ color: '#333', marginBottom: '20px' }}>My Crews</h2>
+          <Box sx={{ textAlign: 'center', padding: '40px 20px' }}>
+            <Box 
+              component="h2" 
+              sx={{ 
+                color: theme.palette.text.primary, 
+                marginBottom: '20px',
+                fontSize: '1.5rem',
+                fontWeight: 400
+              }}
+            >
+              My Crews
+            </Box>
             <LoginPrompt 
               message="Sign in to view and manage your saved crews"
               actionText="View My Crews"
             />
-          </div>
+          </Box>
         )}
       </div>
       {showImageGenerator && selectedCrewForImage !== null && (
@@ -384,20 +459,57 @@ function App() {
         </div>
       )}
       
-      <div id="help" style={{ padding: '40px 20px', backgroundColor: '#f9f9f9', marginTop: '40px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ color: '#333', marginBottom: '20px' }}>Help & Guide</h2>
-          <div style={{ lineHeight: '1.6', color: '#666' }}>
-            <h3>How to Use RowGram:</h3>
-            <ol>
+      <Box 
+        id="help" 
+        sx={{ 
+          padding: '40px 20px', 
+          backgroundColor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#f9f9f9', 
+          marginTop: '40px' 
+        }}
+      >
+        <Box sx={{ maxWidth: '800px', margin: '0 auto' }}>
+          <Box 
+            component="h2" 
+            sx={{ 
+              color: theme.palette.text.primary, 
+              marginBottom: '20px',
+              fontSize: '1.5rem',
+              fontWeight: 500
+            }}
+          >
+            Help & Guide
+          </Box>
+          <Box sx={{ lineHeight: '1.6', color: theme.palette.text.secondary }}>
+            <Box 
+              component="h3" 
+              sx={{ 
+                color: theme.palette.text.primary,
+                fontSize: '1.25rem',
+                fontWeight: 500,
+                mb: 2
+              }}
+            >
+              How to Use RowGram:
+            </Box>
+            <Box component="ol" sx={{ mb: 3, pl: 3 }}>
               <li><strong>Create a Crew:</strong> Fill in club name, race name, boat name, and select boat class</li>
               <li><strong>Add Crew Members:</strong> Enter names for each seat position</li>
               <li><strong>Save Your Crew:</strong> Click "Save Crew" to store your lineup</li>
               <li><strong>Generate Images:</strong> Click "Generate Image" on any saved crew to create a downloadable PNG</li>
               <li><strong>Choose Templates:</strong> Select from 3 different image styles when generating</li>
-            </ol>
-            <h3>Boat Types Supported:</h3>
-            <ul>
+            </Box>
+            <Box 
+              component="h3" 
+              sx={{ 
+                color: theme.palette.text.primary,
+                fontSize: '1.25rem',
+                fontWeight: 500,
+                mb: 2
+              }}
+            >
+              Boat Types Supported:
+            </Box>
+            <Box component="ul" sx={{ pl: 3 }}>
               <li><strong>8+:</strong> Eight with Coxswain (8 rowers + 1 cox = 9 people)</li>
               <li><strong>4+:</strong> Four with Coxswain (4 rowers + 1 cox = 5 people)</li>
               <li><strong>4-:</strong> Four without Coxswain (4 rowers, no cox)</li>
@@ -405,13 +517,13 @@ function App() {
               <li><strong>2-:</strong> Coxless Pair (2 rowers, each with 1 oar)</li>
               <li><strong>2x:</strong> Double Sculls (2 scullers, each with 2 oars)</li>
               <li><strong>1x:</strong> Single Sculls (1 sculler with 2 oars)</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
       
       <FooterComponent scrollToSection={scrollToSection} />
-    </ThemeProvider>
+    </>
   );
 }
 

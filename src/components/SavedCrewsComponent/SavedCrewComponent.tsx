@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Card, CardContent, Typography, Button, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import styles from './SavedCrewsComponent.module.css';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 interface CrewMember {
   seat: string;
@@ -22,6 +24,7 @@ interface SavedCrew {
 
 interface SavedCrewsComponentProps {
   savedCrews: SavedCrew[];
+  recentCrews: number[];
   onDeleteCrew: (index: number) => void;
   onEditCrew: (index: number) => void;
   onGenerateImage: (index: number) => void;
@@ -43,8 +46,87 @@ const truncateName = (name: string) => {
   return name;
 };
 
-const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, onDeleteCrew, onEditCrew, onGenerateImage }) => {
+// Component to render mini crew thumbnail
+const CrewThumbnail: React.FC<{ crew: SavedCrew; boatClass: string; getBoatClassColor: (bc: string) => string }> = ({ crew, boatClass, getBoatClassColor }) => {
+
+  const rowers = crew.crewMembers.filter(m => m.seat !== 'Cox').slice(0, 4); // Show max 4 rowers
+  const hasCox = crew.crewMembers.some(m => m.seat === 'Cox');
+
+  return (
+    <Box 
+      sx={{ 
+        width: 60, 
+        height: 40, 
+        backgroundColor: getBoatClassColor(boatClass),
+        borderRadius: 1,
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        mb: 1,
+        opacity: 0.8
+      }}
+    >
+      {/* Cox indicator */}
+      {hasCox && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 2,
+            left: 2,
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.9)',
+            border: '1px solid rgba(0,0,0,0.2)'
+          }}
+        />
+      )}
+      
+      {/* Rower indicators */}
+      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+        {rowers.map((_, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              width: 8,
+              height: 20,
+              backgroundColor: 'rgba(255,255,255,0.7)',
+              borderRadius: 0.5,
+              border: '1px solid rgba(0,0,0,0.1)'
+            }}
+          />
+        ))}
+        {crew.crewMembers.length > 5 && (
+          <Typography variant="caption" sx={{ color: 'white', fontSize: 8, ml: 0.5 }}>
+            ...
+          </Typography>
+        )}
+      </Box>
+      
+      {/* Boat class label */}
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          position: 'absolute',
+          bottom: 1,
+          right: 2,
+          fontSize: 8,
+          fontWeight: 'bold',
+          color: 'white',
+          textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
+        }}
+      >
+        {boatClass}
+      </Typography>
+    </Box>
+  );
+};
+
+const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, recentCrews, onDeleteCrew, onEditCrew, onGenerateImage }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const theme = useTheme();
   
   if (savedCrews.length === 0) {
     return null;
@@ -111,14 +193,61 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
     setSearchTerm('');
   };
 
+  // Export crew list to CSV
+  const handleExportCSV = () => {
+    const headers = ['Club Name', 'Race Name', 'Boat Name', 'Boat Class', 'Crew Members'];
+    const csvContent = [
+      headers.join(','),
+      ...savedCrews.map(crew => {
+        const boatClass = crew.boatClass || getBoatClass(crew);
+        const crewMembersStr = crew.crewMembers.map(m => `${m.seat}: ${m.name}`).join('; ');
+        return [
+          `"${crew.boatClub}"`,
+          `"${crew.raceName}"`, 
+          `"${crew.boatName}"`,
+          `"${boatClass}"`,
+          `"${crewMembersStr}"`
+        ].join(',');
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `rowgram_crews_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Get recent crews that still exist
+  const validRecentCrews = recentCrews.filter(idx => idx < savedCrews.length).slice(0, 3);
+
+  // Shared function for boat class colors
+  const getBoatClassColor = (bc: string) => {
+    const colors: Record<string, string> = {
+      '8+': '#FF6B6B', // Red
+      '4+': '#4ECDC4', // Teal  
+      '4-': '#45B7D1', // Blue
+      '4x': '#96CEB4', // Green
+      '2-': '#F39C12', // Darker Orange-Yellow
+      '2x': '#DDA0DD', // Plum
+      '1x': '#FFB347', // Orange
+    };
+    return colors[bc] || '#5E98C2';
+  };
+
   return (
     <Box className={styles.container} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 6 }}>
       <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
         Saved Crews
       </Typography>
+
       
-      {/* Search Bar */}
-      <Box sx={{ width: '100%', maxWidth: 500, mb: 3 }}>
+      {/* Search Bar and Export Button */}
+      <Box sx={{ width: '100%', maxWidth: 800, mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
         <TextField
           fullWidth
           placeholder="Search crews by name, club, race, boat type, or crew members..."
@@ -127,7 +256,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: '#5E98C2' }} />
+                <SearchIcon sx={{ color: theme.palette.primary.main }} />
               </InputAdornment>
             ),
             endAdornment: searchTerm && (
@@ -135,7 +264,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                 <IconButton
                   size="small"
                   onClick={handleClearSearch}
-                  sx={{ color: '#666' }}
+                  sx={{ color: theme.palette.text.secondary }}
                 >
                   <ClearIcon fontSize="small" />
                 </IconButton>
@@ -147,22 +276,43 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
               borderRadius: 2,
               '&:hover': {
                 '& > fieldset': {
-                  borderColor: '#5E98C2',
+                  borderColor: theme.palette.primary.main,
                 },
               },
               '&.Mui-focused': {
                 '& > fieldset': {
-                  borderColor: '#5E98C2',
+                  borderColor: theme.palette.primary.main,
                 },
               },
             },
           }}
         />
+        
+        {/* Export Button */}
+        <Tooltip title="Export crew list to CSV">
+          <Button
+            variant="outlined"
+            onClick={handleExportCSV}
+            startIcon={<FileDownloadIcon />}
+            sx={{
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                borderColor: theme.palette.primary.dark || '#4177a6',
+                backgroundColor: `rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.1)`,
+              },
+            }}
+            disabled={savedCrews.length === 0}
+          >
+            Export CSV
+          </Button>
+        </Tooltip>
       </Box>
 
       {/* Results Info */}
       {searchTerm && (
-        <Typography variant="body2" sx={{ mb: 2, color: '#666', fontStyle: 'italic' }}>
+        <Typography variant="body2" sx={{ mb: 2, color: theme.palette.text.secondary, fontStyle: 'italic' }}>
           {sortedCrews.length === 0 
             ? `No crews found matching "${searchTerm}"` 
             : `Found ${sortedCrews.length} crew${sortedCrews.length === 1 ? '' : 's'} matching "${searchTerm}"`
@@ -210,19 +360,10 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
               }}>
                 {/* Header info wrapper for consistent spacing */}
                 <Box sx={{ width: '100%', textAlign: 'center' }}>
-                  <Typography variant="subtitle1" className={styles.boatClub} sx={{ fontWeight: 500, textAlign: 'center', mb: 0.5, color: '#2d5c88', fontSize: 18 }}>
-                    {crew.boatClub}
-                  </Typography>
-                  <Typography variant="body2" className={styles.raceName} sx={{ textAlign: 'center', color: '#5E98C2', mb: 0.5, fontSize: 15 }}>
-                    {crew.raceName}
-                  </Typography>
-                  <Typography variant="body2" className={styles.boatName} sx={{ textAlign: 'center', color: '#888', mb: 0.5, fontSize: 14 }}>
-                    {crew.boatName}
-                  </Typography>
                   
                   {/* Boat Type Badge */}
                   <Box sx={{ 
-                    backgroundColor: '#5E98C2', 
+                    backgroundColor: getBoatClassColor(boatClass), 
                     color: 'white', 
                     px: 2, 
                     py: 0.5, 
@@ -243,6 +384,16 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                       'Boat'
                     }
                   </Box>
+                  
+                  <Typography variant="subtitle1" className={styles.boatClub} sx={{ fontWeight: 500, textAlign: 'center', mb: 0.5, color: theme.palette.text.primary, fontSize: 18 }}>
+                    {crew.boatClub}
+                  </Typography>
+                  <Typography variant="body2" className={styles.raceName} sx={{ textAlign: 'center', color: theme.palette.primary.main, mb: 0.5, fontSize: 15 }}>
+                    {crew.raceName}
+                  </Typography>
+                  <Typography variant="body2" className={styles.boatName} sx={{ textAlign: 'center', color: theme.palette.text.secondary, mb: 0.5, fontSize: 14 }}>
+                    {crew.boatName}
+                  </Typography>
                 </Box>
                 {boatClass === '8+' ? (
                   <Box sx={{ width: '100%', mb: 1 }}>
@@ -268,7 +419,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                                 borderRadius: 1,
                                 transition: 'background 0.2s',
                                 '&:hover': {
-                                  backgroundColor: '#f5f7fa',
+                                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f7fa',
                                 },
                               }}
                             >
@@ -293,7 +444,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                                 borderRadius: 1,
                                 transition: 'background 0.2s',
                                 '&:hover': {
-                                  backgroundColor: '#f5f7fa',
+                                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f7fa',
                                 },
                               }}
                             >
@@ -329,7 +480,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                             borderRadius: 1,
                             transition: 'background 0.2s',
                             '&:hover': {
-                              backgroundColor: '#f5f7fa',
+                              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f7fa',
                             },
                           }}
                         >
@@ -345,13 +496,13 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                     startIcon={<EditIcon style={{ color: '#fff' }} />}
                     onClick={() => onEditCrew(originalIndex)}
                     sx={{
-                      backgroundColor: '#5E98C2',
+                      backgroundColor: theme.palette.primary.main,
                       color: '#fff',
                       padding: '10px',
                       borderRadius: '6px',
-                      boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
+                      boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
                       '&:hover': {
-                        backgroundColor: '#4177a6',
+                        backgroundColor: theme.palette.primary.dark || '#4177a6',
                       },
                       display: 'flex',
                       alignItems: 'center',
@@ -365,13 +516,13 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, o
                     startIcon={<AutoAwesomeIcon style={{ color: '#fff' }} />}
                     onClick={() => onGenerateImage(originalIndex)}
                     sx={{
-                      backgroundColor: '#5E98C2',
+                      backgroundColor: theme.palette.primary.main,
                       color: '#fff',
                       padding: '10px',
                       borderRadius: '6px',
-                      boxShadow: '0 2px 8px rgba(94,152,194,0.15)',
+                      boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
                       '&:hover': {
-                        backgroundColor: '#4177a6',
+                        backgroundColor: theme.palette.primary.dark || '#4177a6',
                       },
                       display: 'flex',
                       alignItems: 'center',
