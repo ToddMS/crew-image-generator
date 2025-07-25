@@ -18,6 +18,8 @@ import {
   InputAdornment,
   Collapse,
   Button,
+  Checkbox,
+  Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdExpandLess, MdExpandMore, MdDownload } from 'react-icons/md';
@@ -69,8 +71,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [crewFilter, setCrewFilter] = useState('');
   const [raceFilter, setRaceFilter] = useState('');
+  const [clubFilter, setClubFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [expanded, setExpanded] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
+  const [showBulkOptions, setShowBulkOptions] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const loadAllData = async () => {
     if (!user) return;
@@ -169,6 +175,69 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   };
 
+  // Handle bulk image selection
+  const handleImageSelection = (imageId: number, checked: boolean) => {
+    const newSelected = new Set(selectedImages);
+    if (checked) {
+      newSelected.add(imageId);
+    } else {
+      newSelected.delete(imageId);
+    }
+    setSelectedImages(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedImages.size === filteredImages.length) {
+      setSelectedImages(new Set());
+    } else {
+      setSelectedImages(new Set(filteredImages.map(img => img.id)));
+    }
+  };
+
+  // Bulk download function
+  const handleBulkDownload = async () => {
+    if (selectedImages.size === 0) return;
+    
+    setIsDownloading(true);
+    
+    try {
+      const selectedImageData = filteredImages.filter(img => selectedImages.has(img.id));
+      
+      for (let i = 0; i < selectedImageData.length; i++) {
+        const image = selectedImageData[i];
+        try {
+          const imageUrl = getImageUrl(image.image_url);
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${image.image_name}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          // Small delay between downloads to prevent overwhelming the browser
+          if (i < selectedImageData.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (error) {
+          console.error(`Error downloading image ${image.image_name}:`, error);
+        }
+      }
+      
+      // Clear selection after download
+      setSelectedImages(new Set());
+      setShowBulkOptions(false);
+    } catch (error) {
+      console.error('Error in bulk download:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedImage(null);
@@ -178,21 +247,39 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     return `${import.meta.env.VITE_API_URL}${imageUrl}`;
   };
 
-  // Get unique values for filters
+  // Get unique values for filters with counts
   const uniqueCrews = [...new Set(allImages.map(img => img.crew_name))].filter(Boolean);
   const uniqueRaces = [...new Set(allImages.map(img => img.race_name))].filter(Boolean);
+  const uniqueClubs = [...new Set(allImages.map(img => img.club_name))].filter(Boolean);
+
+  // Get counts for each filter option
+  const crewCounts = uniqueCrews.map(crew => ({
+    name: crew,
+    count: allImages.filter(img => img.crew_name === crew).length
+  }));
+
+  const raceCounts = uniqueRaces.map(race => ({
+    name: race,
+    count: allImages.filter(img => img.race_name === race).length
+  }));
+
+  const clubCounts = uniqueClubs.map(club => ({
+    name: club,
+    count: allImages.filter(img => img.club_name === club).length
+  }));
 
   // Filter images
   const filteredImages = allImages.filter(image => {
     const crewMatches = !crewFilter || image.crew_name === crewFilter;
     const raceMatches = !raceFilter || image.race_name === raceFilter;
+    const clubMatches = !clubFilter || image.club_name === clubFilter;
     const searchMatches = !searchTerm || 
       image.image_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       image.crew_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       image.race_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       image.club_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return crewMatches && raceMatches && searchMatches;
+    return crewMatches && raceMatches && clubMatches && searchMatches;
   });
 
   if (!user) {
@@ -246,6 +333,50 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
       <Collapse in={expanded}>
 
+      {/* Bulk Selection Toggle */}
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Button
+          variant={showBulkOptions ? "contained" : "outlined"}
+          onClick={() => {
+            const newBulkMode = !showBulkOptions;
+            setShowBulkOptions(newBulkMode);
+            setSelectedImages(new Set());
+          }}
+        >
+          {showBulkOptions ? 'Exit Bulk Mode' : 'Bulk Select Mode'}
+        </Button>
+        
+        {showBulkOptions && (
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleSelectAll}
+              disabled={filteredImages.length === 0}
+            >
+              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
+            </Button>
+            
+            {selectedImages.size > 0 && (
+              <Button
+                variant="contained"
+                startIcon={<MdDownload />}
+                onClick={handleBulkDownload}
+                disabled={isDownloading}
+                sx={{
+                  backgroundColor: theme.palette.primary.main,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.dark,
+                  }
+                }}
+              >
+                {isDownloading ? `Downloading...` : `Download ${selectedImages.size} Images`}
+              </Button>
+            )}
+          </Box>
+        )}
+      </Box>
+
       {/* Filters */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <TextField
@@ -274,7 +405,22 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           }}
         />
 
-        <FormControl sx={{ minWidth: 150 }}>
+        <FormControl sx={{ minWidth: 170 }}>
+          <InputLabel>Filter by Club</InputLabel>
+          <Select
+            value={clubFilter}
+            onChange={(e) => setClubFilter(e.target.value)}
+            label="Filter by Club"
+            size="small"
+          >
+            <MenuItem value="">All Clubs ({allImages.length})</MenuItem>
+            {clubCounts.map(({ name, count }) => (
+              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl sx={{ minWidth: 170 }}>
           <InputLabel>Filter by Race</InputLabel>
           <Select
             value={raceFilter}
@@ -282,14 +428,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
             label="Filter by Race"
             size="small"
           >
-            <MenuItem value="">All Races</MenuItem>
-            {uniqueRaces.map(race => (
-              <MenuItem key={race} value={race}>{race}</MenuItem>
+            <MenuItem value="">All Races ({allImages.length})</MenuItem>
+            {raceCounts.map(({ name, count }) => (
+              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        <FormControl sx={{ minWidth: 150 }}>
+        <FormControl sx={{ minWidth: 170 }}>
           <InputLabel>Filter by Crew</InputLabel>
           <Select
             value={crewFilter}
@@ -297,18 +443,19 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
             label="Filter by Crew"
             size="small"
           >
-            <MenuItem value="">All Crews</MenuItem>
-            {uniqueCrews.map(crew => (
-              <MenuItem key={crew} value={crew}>{crew}</MenuItem>
+            <MenuItem value="">All Crews ({allImages.length})</MenuItem>
+            {crewCounts.map(({ name, count }) => (
+              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
             ))}
           </Select>
         </FormControl>
 
-        {(crewFilter || raceFilter || searchTerm) && (
+        {(crewFilter || raceFilter || clubFilter || searchTerm) && (
           <IconButton
             onClick={() => {
               setCrewFilter('');
               setRaceFilter('');
+              setClubFilter('');
               setSearchTerm('');
             }}
             sx={{ color: theme.palette.text.secondary }}
@@ -348,14 +495,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   overflow: 'hidden',
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[8],
-                    '& .delete-button': {
+                    transform: showBulkOptions ? 'none' : 'translateY(-4px)',
+                    boxShadow: showBulkOptions ? 'none' : theme.shadows[8],
+                    '& .action-buttons': {
                       opacity: 1,
                     }
                   }
                 }}
-                onClick={() => handleImageClick(image)}
+                onClick={() => !showBulkOptions && handleImageClick(image)}
               >
                 <CardMedia
                   component="img"
@@ -368,19 +515,50 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   alt={image.image_name}
                 />
                 
+                {/* Bulk Selection Checkbox */}
+                {showBulkOptions && (
+                  <Checkbox
+                    checked={selectedImages.has(image.id)}
+                    onChange={(e) => handleImageSelection(image.id, e.target.checked)}
+                    onClick={(e) => e.stopPropagation()}
+                    size="small"
+                    sx={{ 
+                      position: 'absolute', 
+                      top: 6, 
+                      left: 6, 
+                      zIndex: 2,
+                      padding: '4px',
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      },
+                      '&.Mui-checked': {
+                        backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(25, 118, 210, 1)',
+                        },
+                      },
+                    }}
+                  />
+                )}
+                
                 {/* Action buttons */}
-                <Box
-                  className="action-buttons"
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    display: 'flex',
-                    gap: 1,
-                    opacity: 0,
-                    transition: 'opacity 0.2s ease',
-                  }}
-                >
+                {!showBulkOptions && (
+                  <Box
+                    className="action-buttons"
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      display: 'flex',
+                      gap: 1,
+                      opacity: 0,
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
                   <IconButton
                     size="small"
                     sx={{
@@ -408,7 +586,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   >
                     <MdDelete size={18} />
                   </IconButton>
-                </Box>
+                  </Box>
+                )}
                 
                 <Box sx={{ p: 2 }}>
                   <Typography 
