@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Card, CardContent, Typography, Button, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import styles from './SavedCrewsComponent.module.css';
@@ -15,11 +15,12 @@ interface CrewMember {
 }
 
 interface SavedCrew {
+  id: string;
   boatClub: string;
   raceName: string;
   boatName: string;
   crewMembers: CrewMember[];
-  boatClass?: string; 
+  boatClass?: string;
 }
 
 interface SavedCrewsComponentProps {
@@ -127,6 +128,7 @@ const CrewThumbnail: React.FC<{ crew: SavedCrew; boatClass: string; getBoatClass
 const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, recentCrews, onDeleteCrew, onEditCrew, onGenerateImage }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const theme = useTheme();
+
   
   if (savedCrews.length === 0) {
     return null;
@@ -394,6 +396,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
                   <Typography variant="body2" className={styles.boatName} sx={{ textAlign: 'center', color: theme.palette.text.secondary, mb: 0.5, fontSize: 14 }}>
                     {crew.boatName}
                   </Typography>
+
                 </Box>
                 {boatClass === '8+' ? (
                   <Box sx={{ width: '100%', mb: 1 }}>

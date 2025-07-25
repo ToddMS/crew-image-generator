@@ -14,6 +14,7 @@ import {
   Radio,
   RadioGroup,
   Chip,
+  Checkbox,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -32,7 +33,7 @@ interface ClubPreset {
 }
 
 interface ImageGeneratorProps {
-  onGenerate: (imageName: string, template: string, colors?: { primary: string; secondary: string }) => Promise<void>;
+  onGenerate: (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean) => Promise<void>;
   selectedCrew?: any;
 }
 
@@ -48,6 +49,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState('#5E98C2');
   const [secondaryColor, setSecondaryColor] = useState('#ffffff');
+  const [saveImage, setSaveImage] = useState(false);
   
   // Preset state
   const [presets, setPresets] = useState<ClubPreset[]>([]);
@@ -169,7 +171,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       setIsGenerating(true);
       setError(null);
       try {
-        await onGenerate(imageName, selectedTemplate, { primary: primaryColor, secondary: secondaryColor });
+        await onGenerate(imageName, selectedTemplate, { primary: primaryColor, secondary: secondaryColor }, saveImage);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate image');
       } finally {
@@ -378,6 +380,30 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
           {error}
         </Alert>
       )}
+
+      {/* Save Image Option */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={saveImage}
+              onChange={(e) => setSaveImage(e.target.checked)}
+              size="small"
+              sx={{
+                color: theme.palette.primary.main,
+                '&.Mui-checked': {
+                  color: theme.palette.primary.main,
+                },
+              }}
+            />
+          }
+          label={
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+              Save image to crew gallery
+            </Typography>
+          }
+        />
+      </Box>
 
       <Button
         type="submit"

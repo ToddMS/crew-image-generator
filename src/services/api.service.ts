@@ -96,4 +96,56 @@ export class ApiService {
       return null;
     }
   }
+
+  static async saveImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }, imageBlob?: Blob): Promise<ApiResponse<any>> {
+    try {
+      const formData = new FormData();
+      formData.append('crewId', crewId);
+      formData.append('imageName', imageName);
+      formData.append('templateId', templateId);
+      
+      if (colors) {
+        formData.append('colors', JSON.stringify(colors));
+      }
+      
+      if (imageBlob) {
+        formData.append('image', imageBlob, `${imageName}.png`);
+      }
+
+      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/save-image`, {
+        method: 'POST',
+        headers: {
+          ...this.getAuthHeaders()
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          error: data.message || 'Failed to save image',
+          message: data.error
+        };
+      }
+
+      return {
+        data: data
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'An error occurred while saving image'
+      };
+    }
+  }
+
+  static async getSavedImages(crewId: string): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>(`${API_CONFIG.endpoints.crews}/${crewId}/saved-images`);
+  }
+
+  static async deleteSavedImage(imageId: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`${API_CONFIG.endpoints.crews}/saved-images/${imageId}`, {
+      method: 'DELETE'
+    });
+  }
 }

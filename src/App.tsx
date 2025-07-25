@@ -6,6 +6,7 @@ import CrewInfoComponent from './components/CrewInfoComponent/CrewInfoComponent'
 import CrewNamesComponent from './components/CrewNamesComponent/CrewNamesComponent';
 import SavedCrewsComponent from './components/SavedCrewsComponent/SavedCrewComponent';
 import ImageGenerator from './components/ImageGenerator/ImageGenerator';
+import Gallery from './components/Gallery/Gallery';
 import FooterComponent from './components/FooterComponent/FooterComponent';
 import LoginPrompt from './components/Auth/LoginPrompt';
 import { ApiService } from './services/api.service';
@@ -61,6 +62,7 @@ function App() {
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [selectedCrewForImage, setSelectedCrewForImage] = useState<number | null>(null);
   const [recentCrews, setRecentCrews] = useState<number[]>([]); // Track recent crew indices
+  const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0); // To trigger gallery refresh
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -352,7 +354,7 @@ function App() {
     }, 0);
   };
 
-  const handleGenerateImage = async (imageName: string, template: string, colors?: { primary: string; secondary: string }) => {
+  const handleGenerateImage = async (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean) => {
     if (selectedCrewForImage === null) return;
     
     const selectedCrew = savedCrews[selectedCrewForImage];
@@ -376,6 +378,19 @@ function App() {
         URL.revokeObjectURL(url);
         
         console.log('Image generated and download started!');
+        
+        // If user wants to save the image, save it to the crew
+        if (saveImage && imageBlob) {
+          try {
+            await ApiService.saveImage(selectedCrew.id, imageName, template, colors, imageBlob);
+            console.log('Image saved to crew gallery!');
+            
+            // Trigger gallery refresh
+            setGalleryRefreshTrigger(prev => prev + 1);
+          } catch (error) {
+            console.error('Error saving image:', error);
+          }
+        }
       } else {
         console.error('Failed to generate image');
       }
@@ -452,10 +467,16 @@ function App() {
       </div>
       {showImageGenerator && selectedCrewForImage !== null && (
         <div ref={imageGeneratorRef}>
-          <ImageGenerator 
-            onGenerate={handleGenerateImage} 
-            selectedCrew={savedCrews[selectedCrewForImage]}
-          />
+          <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <ImageGenerator 
+              onGenerate={handleGenerateImage} 
+              selectedCrew={savedCrews[selectedCrewForImage]}
+            />
+            <Gallery 
+              crewId={savedCrews[selectedCrewForImage]?.id} 
+              refreshTrigger={galleryRefreshTrigger}
+            />
+          </Box>
         </div>
       )}
       
