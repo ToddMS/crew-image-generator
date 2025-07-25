@@ -4,12 +4,17 @@ import { useTheme } from '@mui/material/styles';
 import RowGramIcon from '../../assets/RowGramIcon.png';
 import { TbHelp } from "react-icons/tb";
 import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
+import { MdPhotoLibrary } from "react-icons/md";
 import { PiSquaresFourLight } from "react-icons/pi";
 import { useAuth } from '../../context/AuthContext';
 import AuthModal from '../Auth/AuthModal';
 import UserProfileDropdown from '../Auth/UserProfileDropdown';
 
-const HeaderComponent: React.FC = () => {
+interface HeaderComponentProps {
+  onGalleryClick?: () => void;
+}
+
+const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick }) => {
   const { user } = useAuth();
   const theme = useTheme();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -106,6 +111,26 @@ const HeaderComponent: React.FC = () => {
                 My Crews
               </Button>
             </Box>
+
+            {user && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <MdPhotoLibrary size={19} />
+                <Button 
+                  onClick={onGalleryClick}
+                  sx={{ 
+                    color: theme.palette.text.primary,
+                    textTransform: 'none',
+                    fontSize: 18,
+                    '&:hover': {
+                      color: theme.palette.primary.main,
+                      textDecoration: 'underline'
+                    }
+                  }}
+                >
+                  Gallery
+                </Button>
+              </Box>
+            )}
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <TbHelp size={17} />

@@ -49,7 +49,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState('#5E98C2');
   const [secondaryColor, setSecondaryColor] = useState('#ffffff');
-  const [saveImage, setSaveImage] = useState(false);
+  const [saveImage] = useState(true); // Always save images
   
   // Preset state
   const [presets, setPresets] = useState<ClubPreset[]>([]);
@@ -381,29 +381,6 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         </Alert>
       )}
 
-      {/* Save Image Option */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={saveImage}
-              onChange={(e) => setSaveImage(e.target.checked)}
-              size="small"
-              sx={{
-                color: theme.palette.primary.main,
-                '&.Mui-checked': {
-                  color: theme.palette.primary.main,
-                },
-              }}
-            />
-          }
-          label={
-            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Save image to crew gallery
-            </Typography>
-          }
-        />
-      </Box>
 
       <Button
         type="submit"

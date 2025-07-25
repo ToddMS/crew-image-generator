@@ -6,7 +6,7 @@ import CrewInfoComponent from './components/CrewInfoComponent/CrewInfoComponent'
 import CrewNamesComponent from './components/CrewNamesComponent/CrewNamesComponent';
 import SavedCrewsComponent from './components/SavedCrewsComponent/SavedCrewComponent';
 import ImageGenerator from './components/ImageGenerator/ImageGenerator';
-import Gallery from './components/Gallery/Gallery';
+import GalleryPage from './components/GalleryPage/GalleryPage';
 import FooterComponent from './components/FooterComponent/FooterComponent';
 import LoginPrompt from './components/Auth/LoginPrompt';
 import { ApiService } from './services/api.service';
@@ -63,6 +63,8 @@ function App() {
   const [selectedCrewForImage, setSelectedCrewForImage] = useState<number | null>(null);
   const [recentCrews, setRecentCrews] = useState<number[]>([]); // Track recent crew indices
   const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0); // To trigger gallery refresh
+  const [isBulkMode, setIsBulkMode] = useState(false); // Track if we're in bulk mode
+  const [showGalleryPage, setShowGalleryPage] = useState(true); // Track if gallery page is shown
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -349,9 +351,27 @@ function App() {
     updateRecentCrews(crewIndex); // Track as recent
     setSelectedCrewForImage(crewIndex);
     setShowImageGenerator(true);
+    setIsBulkMode(false); // Exit bulk mode when showing individual generator
     setTimeout(() => {
       imageGeneratorRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 0);
+  };
+
+  const handleBulkModeChange = (bulkMode: boolean) => {
+    setIsBulkMode(bulkMode);
+    if (bulkMode) {
+      setShowImageGenerator(false); // Exit individual generator when entering bulk mode
+    }
+  };
+
+  const handleGalleryClick = () => {
+    // Always scroll to gallery
+    setTimeout(() => {
+      const element = document.getElementById('gallery');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handleGenerateImage = async (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean) => {
@@ -367,29 +387,15 @@ function App() {
       const imageBlob = await ApiService.generateImage(selectedCrew.id, imageName, template, colors);
       
       if (imageBlob) {
-        // Create a download link for the generated image
-        const url = URL.createObjectURL(imageBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${imageName}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        console.log('Image generated and download started!');
-        
-        // If user wants to save the image, save it to the crew
-        if (saveImage && imageBlob) {
-          try {
-            await ApiService.saveImage(selectedCrew.id, imageName, template, colors, imageBlob);
-            console.log('Image saved to crew gallery!');
-            
-            // Trigger gallery refresh
-            setGalleryRefreshTrigger(prev => prev + 1);
-          } catch (error) {
-            console.error('Error saving image:', error);
-          }
+        // Always save the image (no download from generator)
+        try {
+          await ApiService.saveImage(selectedCrew.id, imageName, template, colors, imageBlob);
+          console.log('Image saved to crew gallery!');
+          
+          // Trigger gallery refresh
+          setGalleryRefreshTrigger(prev => prev + 1);
+        } catch (error) {
+          console.error('Error saving image:', error);
         }
       } else {
         console.error('Failed to generate image');
@@ -399,11 +405,56 @@ function App() {
     }
   };
 
+  const handleBulkGenerateImages = async (
+    crewIds: string[], 
+    template: string, 
+    colors?: { primary: string; secondary: string },
+    onProgress?: (current: number, total: number, crewName: string) => void
+  ) => {
+    console.log('Bulk generating images for crews:', crewIds, 'with template:', template);
+    
+    for (let i = 0; i < crewIds.length; i++) {
+      const crewId = crewIds[i];
+      const crew = savedCrews.find(c => c.id === crewId);
+      
+      if (!crew) continue;
+      
+      try {
+        const imageName = `${crew.boatName}_${crew.raceName}`;
+        console.log(`Generating image ${i + 1}/${crewIds.length}: ${imageName}`);
+        
+        // Update progress
+        onProgress?.(i + 1, crewIds.length, crew.boatName);
+        
+        // Generate image
+        const imageBlob = await ApiService.generateImage(crew.id, imageName, template, colors);
+        
+        if (imageBlob) {
+          // Always save to gallery (no individual downloads for bulk)
+          await ApiService.saveImage(crew.id, imageName, template, colors, imageBlob);
+          console.log(`Image ${i + 1}/${crewIds.length} saved to gallery`);
+        }
+      } catch (error) {
+        console.error(`Error generating image for crew ${crew.boatName}:`, error);
+      }
+      
+      // Small delay to prevent overwhelming the server
+      if (i < crewIds.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    // Trigger gallery refresh
+    setGalleryRefreshTrigger(prev => prev + 1);
+    console.log('Bulk generation completed!');
+  };
+
   return (
     <>
       <div id="home">
-        <HeaderComponent />
+        <HeaderComponent onGalleryClick={handleGalleryClick} />
       </div>
+      
       <div id="crew-form">
         <CrewInfoComponent
           onSubmit={handleCrewInfoSubmit}
@@ -444,6 +495,8 @@ function App() {
             onDeleteCrew={handleDeleteCrew}
             onEditCrew={handleEditCrew}
             onGenerateImage={handleShowImageGenerator}
+            onBulkGenerateImages={handleBulkGenerateImages}
+            onBulkModeChange={handleBulkModeChange}
           />
         ) : (
           <Box sx={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -465,20 +518,22 @@ function App() {
           </Box>
         )}
       </div>
-      {showImageGenerator && selectedCrewForImage !== null && (
+      
+      {showImageGenerator && selectedCrewForImage !== null && !isBulkMode && (
         <div ref={imageGeneratorRef}>
           <Box sx={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
             <ImageGenerator 
               onGenerate={handleGenerateImage} 
               selectedCrew={savedCrews[selectedCrewForImage]}
             />
-            <Gallery 
-              crewId={savedCrews[selectedCrewForImage]?.id} 
-              refreshTrigger={galleryRefreshTrigger}
-            />
           </Box>
         </div>
       )}
+      
+      {/* Gallery Section - Always show below ImageGenerator */}
+      <div id="gallery">
+        <GalleryPage refreshTrigger={galleryRefreshTrigger} />
+      </div>
       
       <Box 
         id="help" 

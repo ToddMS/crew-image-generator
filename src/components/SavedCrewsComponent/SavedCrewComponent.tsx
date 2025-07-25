@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Card, CardContent, Typography, Button, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, IconButton, Tooltip, TextField, InputAdornment, Checkbox, FormControl, InputLabel, Select, MenuItem, Chip, Divider } from '@mui/material';
+import BulkImageGenerator from '../BulkImageGenerator/BulkImageGenerator';
 import { useTheme } from '@mui/material/styles';
 import styles from './SavedCrewsComponent.module.css';
 import CloseIcon from '@mui/icons-material/Close';
@@ -29,6 +30,13 @@ interface SavedCrewsComponentProps {
   onDeleteCrew: (index: number) => void;
   onEditCrew: (index: number) => void;
   onGenerateImage: (index: number) => void;
+  onBulkGenerateImages?: (
+    crewIds: string[], 
+    template: string, 
+    colors?: { primary: string; secondary: string },
+    onProgress?: (current: number, total: number, crewName: string) => void
+  ) => void;
+  onBulkModeChange?: (isBulkMode: boolean) => void;
 }
 
 const formatSeatLabel = (seat: string) => {
@@ -125,11 +133,52 @@ const CrewThumbnail: React.FC<{ crew: SavedCrew; boatClass: string; getBoatClass
   );
 };
 
-const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, recentCrews, onDeleteCrew, onEditCrew, onGenerateImage }) => {
+const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, recentCrews, onDeleteCrew, onEditCrew, onGenerateImage, onBulkGenerateImages, onBulkModeChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
+  const [showBulkOptions, setShowBulkOptions] = useState(false);
+  const [raceFilter, setRaceFilter] = useState('');
   const theme = useTheme();
 
-  
+  // Get unique race names with counts for filtering
+  const raceWithCounts = [...new Set(savedCrews.map(crew => crew.raceName))].map(race => ({
+    name: race,
+    count: savedCrews.filter(crew => crew.raceName === race).length
+  }));
+
+  // Handle crew selection for bulk operations
+  const handleCrewSelection = (crewId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCrews);
+    if (checked) {
+      newSelected.add(crewId);
+    } else {
+      newSelected.delete(crewId);
+    }
+    setSelectedCrews(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCrews.size === filteredCrews.length) {
+      setSelectedCrews(new Set());
+    } else {
+      setSelectedCrews(new Set(filteredCrews.map(crew => crew.id)));
+    }
+  };
+
+  const handleBulkGenerate = async (
+    crewIds: string[], 
+    template: string, 
+    colors?: { primary: string; secondary: string },
+    onProgress?: (current: number, total: number, crewName: string) => void
+  ) => {
+    if (onBulkGenerateImages) {
+      await onBulkGenerateImages(crewIds, template, colors, onProgress);
+      setSelectedCrews(new Set());
+      setShowBulkOptions(false);
+      onBulkModeChange?.(false);
+    }
+  };
+
   if (savedCrews.length === 0) {
     return null;
   }
@@ -154,12 +203,16 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
       <>{children}</>
     );
 
-  // Filter crews based on search term
+  // Filter crews based on search term and race filter
   const filteredCrews = savedCrews.filter(crew => {
     const boatClass = crew.boatClass || getBoatClass(crew);
     const searchLower = searchTerm.toLowerCase();
     
-    return (
+    // Race filter
+    const raceMatches = !raceFilter || crew.raceName === raceFilter;
+    
+    // Search filter
+    const searchMatches = !searchTerm || (
       // Search club name
       crew.boatClub?.toLowerCase().includes(searchLower) ||
       // Search race name
@@ -174,6 +227,8 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
         member.seat.toLowerCase().includes(searchLower)
       )
     );
+    
+    return raceMatches && searchMatches;
   });
 
   // Sort filtered crews by boat size (largest first)
@@ -248,6 +303,39 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
       </Typography>
 
       
+      {/* Race Filter and Bulk Actions */}
+      <Box sx={{ width: '100%', maxWidth: 800, mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        {/* Race Filter */}
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel>Filter by Race</InputLabel>
+          <Select
+            value={raceFilter}
+            onChange={(e) => setRaceFilter(e.target.value)}
+            label="Filter by Race"
+            size="small"
+          >
+            <MenuItem value="">All Races ({savedCrews.length})</MenuItem>
+            {raceWithCounts.map(({ name, count }) => (
+              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Bulk Selection Toggle */}
+        <Button
+          variant={showBulkOptions ? "contained" : "outlined"}
+          onClick={() => {
+            const newBulkMode = !showBulkOptions;
+            setShowBulkOptions(newBulkMode);
+            setSelectedCrews(new Set());
+            onBulkModeChange?.(newBulkMode);
+          }}
+          sx={{ ml: 'auto' }}
+        >
+          {showBulkOptions ? 'Exit Bulk Mode' : 'Bulk Select Mode'}
+        </Button>
+      </Box>
+
       {/* Search Bar and Export Button */}
       <Box sx={{ width: '100%', maxWidth: 800, mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
         <TextField
@@ -348,6 +436,24 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
+              
+              {/* Bulk Selection Checkbox */}
+              {showBulkOptions && (
+                <Checkbox
+                  checked={selectedCrews.has(crew.id)}
+                  onChange={(e) => handleCrewSelection(crew.id, e.target.checked)}
+                  sx={{ 
+                    position: 'absolute', 
+                    top: 6, 
+                    left: 6, 
+                    zIndex: 2,
+                    color: theme.palette.primary.main,
+                    '&.Mui-checked': {
+                      color: theme.palette.primary.main,
+                    },
+                  }}
+                />
+              )}
               <CardContent sx={{ 
                 width: '100%', 
                 height: '100%',
@@ -540,6 +646,16 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
           );
         })}
       </Box>
+
+      {/* Bulk Generation Section */}
+      {showBulkOptions && selectedCrews.size > 0 && (
+        <BulkImageGenerator
+          selectedCrews={Array.from(selectedCrews)}
+          onGenerate={handleBulkGenerate}
+          onDeselectCrew={(crewId) => handleCrewSelection(crewId, false)}
+          savedCrews={savedCrews}
+        />
+      )}
     </Box>
   );
 };
