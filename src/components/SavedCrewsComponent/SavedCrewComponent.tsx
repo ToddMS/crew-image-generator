@@ -232,7 +232,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
       '4+': '#4ECDC4', // Teal  
       '4-': '#45B7D1', // Blue
       '4x': '#96CEB4', // Green
-      '2-': '#F39C12', // Darker Orange-Yellow
+      '2-': '#E67E22', // Burnt Orange
       '2x': '#DDA0DD', // Plum
       '1x': '#FFB347', // Orange
     };
@@ -463,7 +463,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center', // Center content for smaller crews
-                    gap: crew.crewMembers.length <= 2 ? 2 : 0 // No gap for 4s, spacing for 2s/1s
+                    gap: 0
                   }}>
                     {crew.crewMembers.map((member, idx) => (
                       <NameWithTooltip key={idx} name={member.name}>
