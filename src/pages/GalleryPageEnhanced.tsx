@@ -37,27 +37,11 @@ const GalleryPageEnhanced: React.FC = () => {
 
   return (
     <Box>
-      {/* Header Actions */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
         <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
           Browse and manage your generated images
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<MdGroup />}
-            onClick={() => navigate('/crews')}
-          >
-            My Crews
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<MdImage />}
-            onClick={() => navigate('/generate')}
-          >
-            Generate Images
-          </Button>
-        </Box>
       </Box>
 
       {/* Gallery Component */}

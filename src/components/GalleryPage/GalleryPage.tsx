@@ -21,7 +21,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react-icons/md';
+import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload, MdChecklist } from 'react-icons/md';
 import { ApiService } from '../../services/api.service';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalytics } from '../../context/AnalyticsContext';
@@ -392,13 +392,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button
           variant={showBulkOptions ? "contained" : "outlined"}
+          startIcon={<MdChecklist />}
           onClick={() => {
             const newBulkMode = !showBulkOptions;
             setShowBulkOptions(newBulkMode);
             setSelectedImages(new Set());
           }}
         >
-          {showBulkOptions ? 'Exit Bulk Mode' : 'Bulk Select Mode'}
+          Select Multiple
         </Button>
         
         {showBulkOptions && (
@@ -718,12 +719,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       <Dialog
         open={dialogOpen}
         onClose={handleCloseDialog}
-        maxWidth="lg"
-        fullWidth
+        maxWidth="md"
         PaperProps={{
           sx: {
             backgroundColor: theme.palette.background.paper,
-            borderRadius: 2
+            borderRadius: 2,
+            maxHeight: '80vh'
           }
         }}
       >
@@ -747,14 +748,19 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           
           <DialogContent sx={{ p: 0 }}>
             {selectedImage && (
-              <Box>
+              <Box
+                onClick={handleCloseDialog}
+                sx={{ cursor: 'pointer' }}
+              >
                 <img
                   src={getImageUrl(selectedImage.image_url)}
                   alt={selectedImage.image_name}
                   style={{
                     width: '100%',
                     height: 'auto',
-                    display: 'block'
+                    display: 'block',
+                    maxHeight: '60vh',
+                    objectFit: 'contain'
                   }}
                 />
                 <Box sx={{ p: 3 }}>

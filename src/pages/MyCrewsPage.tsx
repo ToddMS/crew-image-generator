@@ -167,8 +167,8 @@ const MyCrewsPage: React.FC = () => {
           clubName: crew.boatClub,
           raceName: crew.raceName,
           boatName: crew.boatName,
-          crewNames: crew.crewMembers.filter(member => member.seat !== 'Cox').map(member => member.name),
-          coxName: crew.crewMembers.find(member => member.seat === 'Cox')?.name || ''
+          crewNames: crew.crewMembers.filter((member: { seat: string; name: string }) => member.seat !== 'Cox').map((member: { seat: string; name: string }) => member.name),
+          coxName: crew.crewMembers.find((member: { seat: string; name: string }) => member.seat === 'Cox')?.name || ''
         }
       }
     });

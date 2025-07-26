@@ -5,8 +5,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Alert,
-  Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -192,7 +190,7 @@ const CreateCrewPage: React.FC = () => {
       let result;
       if (editingCrewId) {
         // Update existing crew
-        result = await ApiService.updateCrew(editingCrewId, crewData);
+        result = await ApiService.updateCrew(editingCrewId, { ...crewData, id: editingCrewId });
       } else {
         // Create new crew
         result = await ApiService.createCrew(crewData);
@@ -223,7 +221,7 @@ const CreateCrewPage: React.FC = () => {
   };
 
 
-  const canProceedToStep2 = boatClass && clubName && raceName && boatName;
+  const canProceedToStep2 = Boolean(boatClass && clubName && raceName && boatName);
   const canSave = canProceedToStep2 && crewNames.every(name => name.trim() !== '') && (!boatClassHasCox(boatClass) || coxName.trim() !== '');
 
 
