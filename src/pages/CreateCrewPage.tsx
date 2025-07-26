@@ -5,15 +5,12 @@ import {
   Card,
   CardContent,
   Typography,
-  Stepper,
-  Step,
-  StepLabel,
   Alert,
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-import { MdSave, MdArrowBack, MdArrowForward, MdCheckCircle } from 'react-icons/md';
+import { MdSave, MdArrowBack, MdCheckCircle } from 'react-icons/md';
 import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
@@ -52,7 +49,6 @@ const CreateCrewPage: React.FC = () => {
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
 
-  const [activeStep, setActiveStep] = useState(0);
   const [boatClass, setBoatClass] = useState('');
   const [clubName, setClubName] = useState('');
   const [raceName, setRaceName] = useState('');
@@ -62,7 +58,6 @@ const CreateCrewPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const steps = ['Crew Information', 'Crew Members'];
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -98,10 +93,7 @@ const CreateCrewPage: React.FC = () => {
             setCrewNames(draft.crewNames || []);
             setCoxName(draft.coxName || '');
             
-            // Set active step based on what's filled
-            if (draft.boatClass && draft.clubName && draft.raceName && draft.boatName) {
-              setActiveStep(1);
-            }
+            // Auto-populate form with saved data
           }
         } catch (error) {
           console.error('Failed to load draft:', error);
@@ -124,7 +116,6 @@ const CreateCrewPage: React.FC = () => {
     setBoatName(newBoatName);
     setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
     setCoxName('');
-    setActiveStep(1);
   };
 
   const handleNameChange = (idx: number, value: string) => {
@@ -133,14 +124,6 @@ const CreateCrewPage: React.FC = () => {
 
   const handleCoxNameChange = (value: string) => setCoxName(value);
 
-  const handleCrewReorder = (oldIndex: number, newIndex: number) => {
-    setCrewNames(names => {
-      const newNames = [...names];
-      const [reorderedItem] = newNames.splice(oldIndex, 1);
-      newNames.splice(newIndex, 0, reorderedItem);
-      return newNames;
-    });
-  };
 
   const handleSaveCrew = async () => {
     if (!user) {
@@ -212,13 +195,6 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
-    if (activeStep === 0) {
-      navigate('/');
-    } else {
-      setActiveStep(0);
-    }
-  };
 
   const canProceedToStep2 = boatClass && clubName && raceName && boatName;
   const canSave = canProceedToStep2 && crewNames.some(name => name.trim()) && (!boatClassHasCox(boatClass) || coxName.trim());
@@ -252,71 +228,87 @@ const CreateCrewPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      {/* Progress Stepper */}
+    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+      {/* Header */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Stepper activeStep={activeStep} sx={{ mb: 2 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-          
-          {activeStep === 0 && (
-            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, textAlign: 'center' }}>
-              Start by entering your crew's basic information
-            </Typography>
-          )}
-          
-          {activeStep === 1 && (
-            <Typography variant="body2" sx={{ color: theme.palette.text.secondary, textAlign: 'center' }}>
-              Add crew members to complete your lineup
-            </Typography>
-          )}
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, textAlign: 'center' }}>
+            Create New Crew
+          </Typography>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, textAlign: 'center' }}>
+            Enter your crew information and add members to create your lineup
+          </Typography>
         </CardContent>
       </Card>
 
-      {/* Step Content */}
-      {activeStep === 0 && (
-        <CrewInfoComponent
-          onSubmit={handleCrewInfoSubmit}
-          initialValues={{
-            boatClass,
-            clubName,
-            raceName,
-            boatName
-          }}
-        />
-      )}
+      {/* Side by Side Layout */}
+      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+        {/* Left Side - Crew Info */}
+        <Box sx={{ flex: 1 }}>
+          <Card sx={{ height: 'fit-content' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Crew Information
+              </Typography>
+              <CrewInfoComponent
+                onSubmit={handleCrewInfoSubmit}
+                initialValues={{
+                  boatClass,
+                  clubName,
+                  raceName,
+                  boatName
+                }}
+              />
+            </CardContent>
+          </Card>
+        </Box>
 
-      {activeStep === 1 && boatClass && (
-        <Card>
-          <CardContent>
-            <CrewNamesComponent
-              boatClass={boatClass}
-              crewNames={crewNames}
-              coxName={coxName}
-              onNameChange={handleNameChange}
-              onCoxNameChange={handleCoxNameChange}
-              onCrewReorder={handleCrewReorder}
-              clubName={clubName}
-              raceName={raceName}
-              boatName={boatName}
-            />
-            
-            {!user && (
-              <Box sx={{ mt: 3 }}>
-                <LoginPrompt 
-                  message="Sign in to save crews to your account"
-                  actionText="Save Crew"
+        {/* Right Side - Crew Names */}
+        <Box sx={{ flex: 1 }}>
+          <Card sx={{ height: 'fit-content' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Crew Members
+              </Typography>
+              
+              {!canProceedToStep2 ? (
+                <Box sx={{ 
+                  textAlign: 'center', 
+                  py: 8,
+                  color: theme.palette.text.secondary 
+                }}>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    👈 Please fill in the crew information first
+                  </Typography>
+                  <Typography variant="body2">
+                    Select a boat class, enter club name, race name, and boat name to start adding crew members
+                  </Typography>
+                </Box>
+              ) : (
+                <CrewNamesComponent
+                  boatClass={boatClass}
+                  crewNames={crewNames}
+                  coxName={coxName}
+                  onNameChange={handleNameChange}
+                  onCoxNameChange={handleCoxNameChange}
+                  clubName={clubName}
+                  raceName={raceName}
+                  boatName={boatName}
                 />
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      )}
+              )}
+              
+              {!user && canProceedToStep2 && (
+                <Box sx={{ mt: 3 }}>
+                  <LoginPrompt 
+                    message="Sign in to save crews to your account"
+                    actionText="Save Crew"
+                  />
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
 
       {/* Navigation */}
       <Box
@@ -330,15 +322,15 @@ const CreateCrewPage: React.FC = () => {
         }}
       >
         <Button
-          onClick={handleBack}
+          onClick={() => navigate('/dashboard')}
           startIcon={<MdArrowBack />}
           sx={{ color: theme.palette.text.secondary }}
         >
-          {activeStep === 0 ? 'Back to Dashboard' : 'Previous'}
+          Back to Dashboard
         </Button>
 
         <Box sx={{ display: 'flex', gap: 2 }}>
-          {activeStep === 1 && user && (
+          {canProceedToStep2 && user && (
             <Button
               variant="contained"
               onClick={handleSaveCrew}
@@ -352,16 +344,6 @@ const CreateCrewPage: React.FC = () => {
               }}
             >
               {saving ? 'Saving...' : 'Save Crew'}
-            </Button>
-          )}
-          
-          {activeStep === 0 && canProceedToStep2 && (
-            <Button
-              variant="contained"
-              onClick={() => setActiveStep(1)}
-              endIcon={<MdArrowForward />}
-            >
-              Next: Add Members
             </Button>
           )}
         </Box>

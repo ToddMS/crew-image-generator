@@ -37,6 +37,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme as useAppTheme } from '../context/ThemeContext';
 import AuthModal from '../components/Auth/AuthModal';
+import RowGramIcon from '../assets/RowGramIcon.png';
 
 const SIDEBAR_WIDTH = 280;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
@@ -161,17 +162,30 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
           borderBottom: `1px solid ${theme.palette.divider}`
         }}
       >
-        {open && (
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              color: theme.palette.primary.main,
-              letterSpacing: '0.5px'
-            }}
-          >
-            RowGram
-          </Typography>
+        {open ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <img 
+              src={RowGramIcon} 
+              alt="RowGram Logo" 
+              style={{ width: 32, height: 32 }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.primary.main,
+                letterSpacing: '0.5px'
+              }}
+            >
+              RowGram
+            </Typography>
+          </Box>
+        ) : (
+          <img 
+            src={RowGramIcon} 
+            alt="RowGram Logo" 
+            style={{ width: 32, height: 32 }}
+          />
         )}
         <IconButton
           onClick={onToggle}
