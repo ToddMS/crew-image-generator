@@ -1,8 +1,12 @@
 import React, { useEffect } from 'react';
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, TextField, Typography, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import styles from './CrewNamesComponent.module.css';
-import { MdSave } from 'react-icons/md';
+import { MdSave, MdDragIndicator } from 'react-icons/md';
 
 interface CrewNamesComponentProps {
   boatClass: string;
@@ -11,6 +15,7 @@ interface CrewNamesComponentProps {
   onNameChange: (idx: number, value: string) => void;
   onCoxNameChange: (value: string) => void;
   onSaveCrew?: (boatClub: string, raceName: string, boatName: string) => void;
+  onCrewReorder?: (oldIndex: number, newIndex: number) => void;
   clubName: string;
   raceName: string;
   boatName: string;
@@ -47,6 +52,77 @@ const getSeatLabels = (boatClass: string): string[] => {
   }
 };
 
+// Sortable crew member item component
+interface SortableCrewMemberProps {
+  id: string;
+  index: number;
+  name: string;
+  label: string;
+  onNameChange: (idx: number, value: string) => void;
+  theme: any;
+  disabled?: boolean;
+}
+
+const SortableCrewMember: React.FC<SortableCrewMemberProps> = ({
+  id,
+  index,
+  name,
+  label,
+  onNameChange,
+  theme,
+  disabled = false
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <IconButton
+          {...attributes}
+          {...listeners}
+          sx={{
+            cursor: disabled ? 'not-allowed' : 'grab',
+            color: theme.palette.text.secondary,
+            mr: 1,
+            opacity: disabled ? 0.3 : 1,
+            '&:active': {
+              cursor: disabled ? 'not-allowed' : 'grabbing',
+            }
+          }}
+          disabled={disabled}
+        >
+          <MdDragIndicator />
+        </IconButton>
+        <Box sx={{ flex: 1 }}>
+          <Typography className={styles.label}>{label}</Typography>
+          <TextField
+            name={`crewName-${index}`}
+            placeholder={`Enter ${label.toLowerCase()} name`}
+            value={name}
+            onChange={e => onNameChange(index, e.target.value)}
+            required
+            fullWidth
+            className={styles.inputField}
+          />
+        </Box>
+      </Box>
+    </div>
+  );
+};
+
 const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   boatClass,
   crewNames,
@@ -54,6 +130,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   onNameChange,
   onCoxNameChange,
   onSaveCrew,
+  onCrewReorder,
   clubName,
   raceName,
   boatName,
@@ -61,6 +138,27 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   const theme = useTheme();
   const seatLabels = getSeatLabels(boatClass);
   const hasCox = boatClass === '8+' || boatClass === '4+';
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id && onCrewReorder) {
+      const oldIndex = crewNames.findIndex((_, idx) => `crew-${idx}` === active.id);
+      const newIndex = crewNames.findIndex((_, idx) => `crew-${idx}` === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        onCrewReorder(oldIndex, newIndex);
+      }
+    }
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -155,23 +253,52 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           />
         </div>
       )}
-      {crewNames.map((name, idx) => {
-        const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
-        return (
-          <div key={idx}>
-            <Typography className={styles.label}>{label}</Typography>
-            <TextField
-              name={`crewName-${idx}`}
-              placeholder={`Enter ${label.toLowerCase()} name`}
-              value={name}
-              onChange={e => onNameChange(idx, e.target.value)}
-              required
-              fullWidth
-              className={styles.inputField}
-            />
-          </div>
-        );
-      })}
+      {onCrewReorder ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext 
+            items={crewNames.map((_, idx) => `crew-${idx}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            {crewNames.map((name, idx) => {
+              const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
+              return (
+                <SortableCrewMember
+                  key={`crew-${idx}`}
+                  id={`crew-${idx}`}
+                  index={idx}
+                  name={name}
+                  label={label}
+                  onNameChange={onNameChange}
+                  theme={theme}
+                />
+              );
+            })}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        // Fallback for when drag and drop is not enabled
+        crewNames.map((name, idx) => {
+          const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
+          return (
+            <div key={idx}>
+              <Typography className={styles.label}>{label}</Typography>
+              <TextField
+                name={`crewName-${idx}`}
+                placeholder={`Enter ${label.toLowerCase()} name`}
+                value={name}
+                onChange={e => onNameChange(idx, e.target.value)}
+                required
+                fullWidth
+                className={styles.inputField}
+              />
+            </div>
+          );
+        })
+      )}
       {onSaveCrew && (
         <Button
           type="submit"

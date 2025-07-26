@@ -71,26 +71,72 @@ export class ApiService {
     });
   }
 
-  static async generateImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }): Promise<Blob | null> {
+  static async generateImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }, clubIcon?: any): Promise<Blob | null> {
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      console.log('API: generateImage called with clubIcon:', clubIcon);
+      
+      // Check if we need to upload a file
+      const hasFileUpload = clubIcon?.type === 'upload' && clubIcon?.file;
+      
+      if (hasFileUpload) {
+        console.log('API: Using FormData for file upload');
+        // Use FormData for file uploads
+        const formData = new FormData();
+        formData.append('crewId', crewId);
+        formData.append('imageName', imageName);
+        formData.append('templateId', templateId);
+        
+        if (colors) {
+          formData.append('colors', JSON.stringify(colors));
+        }
+        
+        // Add club icon data
+        formData.append('clubIconType', 'upload');
+        formData.append('clubIconFile', clubIcon.file);
+
+        const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
+          method: 'POST',
+          headers: {
+            ...this.getAuthHeaders()
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate image');
+        }
+
+        return await response.blob();
+      } else {
+        console.log('API: Using JSON for preset logo or no club icon');
+        // Use JSON for preset logos or no club icon
+        const payload: any = {
           crewId,
           imageName,
           templateId: parseInt(templateId),
           colors
-        })
-      });
+        };
 
-      if (!response.ok) {
-        throw new Error('Failed to generate image');
+        // Add club icon information if provided (preset type)
+        if (clubIcon) {
+          payload.clubIcon = clubIcon;
+        }
+
+        const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...this.getAuthHeaders()
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate image');
+        }
+
+        return await response.blob();
       }
-
-      return await response.blob();
     } catch (error) {
       console.error('Error generating image:', error);
       return null;

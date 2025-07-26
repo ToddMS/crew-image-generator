@@ -6,6 +6,7 @@ interface User {
   name: string;
   profile_picture?: string;
   club_name?: string;
+  role?: 'admin' | 'user';
 }
 
 interface ClubSettings {
@@ -27,6 +28,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateClubSettings: (settings: Partial<ClubSettings>) => void;
   loading: boolean;
+  isAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -196,6 +198,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setClubSettings(prev => prev ? { ...prev, ...settings } : null);
   };
 
+  const isAdmin = () => {
+    return user?.email === 'toddsandlerwasd@gmail.com' || user?.role === 'admin';
+  };
+
   const value: AuthContextType = {
     user,
     clubSettings,
@@ -206,6 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     updateClubSettings,
     loading,
+    isAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

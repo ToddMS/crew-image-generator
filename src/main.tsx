@@ -4,12 +4,18 @@ import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext'
 import { CustomThemeProvider } from './context/ThemeContext'
+import { AnalyticsProvider } from './context/AnalyticsContext'
+import { OnboardingProvider } from './context/OnboardingContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <CustomThemeProvider>
       <AuthProvider>
-        <App />
+        <AnalyticsProvider>
+          <OnboardingProvider>
+            <App />
+          </OnboardingProvider>
+        </AnalyticsProvider>
       </AuthProvider>
     </CustomThemeProvider>
   </StrictMode>,

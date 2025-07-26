@@ -32,8 +32,14 @@ interface ClubPreset {
   is_default: boolean;
 }
 
+interface ClubIconData {
+  type: 'preset' | 'upload';
+  filename?: string;
+  file?: File;
+}
+
 interface ImageGeneratorProps {
-  onGenerate: (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean) => Promise<void>;
+  onGenerate: (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean, clubIcon?: ClubIconData | null) => Promise<void>;
   selectedCrew?: any;
 }
 
@@ -55,6 +61,11 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   const [presets, setPresets] = useState<ClubPreset[]>([]);
   const [usePresetColors, setUsePresetColors] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  
+  // Club icon state
+  const [clubIcon, setClubIcon] = useState<File | null>(null);
+  const [clubIconPreview, setClubIconPreview] = useState<string | null>(null);
+  const [useClubIcon, setUseClubIcon] = useState(false);
 
   // Load presets when component mounts and user is authenticated
   useEffect(() => {
@@ -97,10 +108,18 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         setSelectedPresetId(defaultPreset.id);
         setPrimaryColor(defaultPreset.primary_color);
         setSecondaryColor(defaultPreset.secondary_color);
+        // Enable club icon if preset has one
+        if (defaultPreset.logo_filename) {
+          setUseClubIcon(true);
+        }
       } else if (presets.length > 0) {
         setSelectedPresetId(presets[0].id);
         setPrimaryColor(presets[0].primary_color);
         setSecondaryColor(presets[0].secondary_color);
+        // Enable club icon if preset has one
+        if (presets[0].logo_filename) {
+          setUseClubIcon(true);
+        }
       }
     } else {
       // Switching to manual mode
@@ -118,6 +137,12 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
     if (selectedPreset) {
       setPrimaryColor(selectedPreset.primary_color);
       setSecondaryColor(selectedPreset.secondary_color);
+      // Enable club icon if preset has one
+      if (selectedPreset.logo_filename) {
+        setUseClubIcon(true);
+      } else {
+        setUseClubIcon(false);
+      }
     }
   };
 
@@ -165,13 +190,66 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
     setSelectedTemplate(templateValue);
   };
 
+  // Handle club icon upload
+  const handleClubIconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size must be less than 5MB');
+        return;
+      }
+      
+      setClubIcon(file);
+      setUseClubIcon(true);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setClubIconPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeClubIcon = () => {
+    setClubIcon(null);
+    setClubIconPreview(null);
+    setUseClubIcon(false);
+  };
+
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (imageName && selectedTemplate) {
       setIsGenerating(true);
       setError(null);
       try {
-        await onGenerate(imageName, selectedTemplate, { primary: primaryColor, secondary: secondaryColor }, saveImage);
+        const colors = { primary: primaryColor, secondary: secondaryColor };
+        
+        // Prepare club icon data
+        let clubIconData = null;
+        if (usePresetColors && selectedPresetId) {
+          const selectedPreset = presets.find(p => p.id === selectedPresetId);
+          if (selectedPreset?.logo_filename) {
+            clubIconData = {
+              type: 'preset',
+              filename: selectedPreset.logo_filename
+            };
+          }
+        } else if (useClubIcon && clubIcon) {
+          clubIconData = {
+            type: 'upload',
+            file: clubIcon
+          };
+        }
+        
+        await onGenerate(imageName, selectedTemplate, colors, saveImage, clubIconData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate image');
       } finally {
@@ -282,6 +360,13 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                 {presets.map((preset) => (
                   <MenuItem key={preset.id} value={preset.id}>
                     <Box display="flex" alignItems="center" gap={1} width="100%">
+                      {preset.logo_filename && (
+                        <img 
+                          src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${preset.logo_filename}`}
+                          alt="Club logo"
+                          style={{ width: '20px', height: '20px', objectFit: 'contain', borderRadius: '2px' }}
+                        />
+                      )}
                       <Box
                         sx={{
                           width: 16,
@@ -371,6 +456,113 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
                 />
               </Box>
             </Box>
+          </Box>
+        )}
+      </div>
+
+      {/* Club Icon Section */}
+      <div>
+        <Typography className={styles.label}>Club Icon (Optional)</Typography>
+        <Typography variant="body2" sx={{ mb: 2, fontSize: 12, color: theme.palette.text.secondary }}>
+          Add your club logo to appear in the bottom-right corner of generated images
+        </Typography>
+        
+        {/* Show preset club icon if using preset */}
+        {usePresetColors && selectedPresetId && (
+          <Box sx={{ mb: 2 }}>
+            {(() => {
+              const selectedPreset = presets.find(p => p.id === selectedPresetId);
+              return selectedPreset?.logo_filename ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
+                  <img 
+                    src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${selectedPreset.logo_filename}`}
+                    alt="Club logo"
+                    style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                  />
+                  <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                    Using club logo from preset: {selectedPreset.preset_name}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
+                  Selected preset doesn't have a club logo
+                </Typography>
+              );
+            })()}
+          </Box>
+        )}
+        
+        {/* Manual club icon upload for manual color mode */}
+        {!usePresetColors && (
+          <Box>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={useClubIcon}
+                  onChange={(e) => setUseClubIcon(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Add club icon to image"
+              sx={{ mb: 1 }}
+            />
+            
+            {useClubIcon && (
+              <Box sx={{ mt: 2 }}>
+                {!clubIconPreview ? (
+                  <Box>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleClubIconUpload}
+                      style={{ display: 'none' }}
+                      id="club-icon-upload"
+                    />
+                    <label htmlFor="club-icon-upload">
+                      <Button
+                        variant="outlined"
+                        component="span"
+                        sx={{
+                          borderColor: theme.palette.divider,
+                          color: theme.palette.text.primary,
+                          '&:hover': {
+                            borderColor: theme.palette.primary.main,
+                          }
+                        }}
+                      >
+                        Choose Club Logo
+                      </Button>
+                    </label>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 1, color: theme.palette.text.secondary }}>
+                      Supported: PNG, JPG, GIF (max 5MB)
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
+                    <img 
+                      src={clubIconPreview} 
+                      alt="Club logo preview" 
+                      style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                    />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                        {clubIcon?.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                        {clubIcon && (clubIcon.size / 1024).toFixed(1)} KB
+                      </Typography>
+                    </Box>
+                    <Button
+                      size="small"
+                      onClick={removeClubIcon}
+                      sx={{ color: theme.palette.error.main }}
+                    >
+                      Remove
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            )}
           </Box>
         )}
       </div>

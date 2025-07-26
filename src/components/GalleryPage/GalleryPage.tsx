@@ -25,6 +25,7 @@ import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdExpandLess, MdExpandMore, MdDownload } from 'react-icons/md';
 import { ApiService } from '../../services/api.service';
 import { useAuth } from '../../context/AuthContext';
+import { useAnalytics } from '../../context/AnalyticsContext';
 
 interface SavedImage {
   id: number;
@@ -63,6 +64,7 @@ interface GalleryPageProps {
 
 const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const { user } = useAuth();
+  const { trackEvent } = useAnalytics();
   const theme = useTheme();
   const [allImages, setAllImages] = useState<SavedImage[]>([]);
   const [crews, setCrews] = useState<Crew[]>([]);
@@ -170,6 +172,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      // Track single image download
+      trackEvent('gallery_download', {
+        type: 'single',
+        imageName: image.image_name,
+        crewName: image.crew_name,
+        raceName: image.race_name
+      });
     } catch (error) {
       console.error('Error downloading image:', error);
     }
@@ -194,7 +204,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   };
 
-  // Bulk download function
+  // Bulk download function with auto-zip
   const handleBulkDownload = async () => {
     if (selectedImages.size === 0) return;
     
@@ -203,6 +213,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     try {
       const selectedImageData = filteredImages.filter(img => selectedImages.has(img.id));
       
+      // Import JSZip dynamically
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      
+      // Add all images to zip
       for (let i = 0; i < selectedImageData.length; i++) {
         const image = selectedImageData[i];
         try {
@@ -210,23 +225,43 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           const response = await fetch(imageUrl);
           const blob = await response.blob();
           
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `${image.image_name}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
+          // Create a clean filename with crew and race info
+          const cleanFileName = `${image.crew_name}_${image.race_name}_${image.image_name}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+          zip.file(`${cleanFileName}.png`, blob);
           
-          // Small delay between downloads to prevent overwhelming the browser
-          if (i < selectedImageData.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
         } catch (error) {
-          console.error(`Error downloading image ${image.image_name}:`, error);
+          console.error(`Error adding image ${image.image_name} to zip:`, error);
         }
       }
+      
+      // Generate zip file
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Create download link for zip
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Create zip filename with timestamp
+      const timestamp = new Date().toISOString().split('T')[0];
+      const clubNames = [...new Set(selectedImageData.map(img => img.club_name))];
+      const zipFileName = clubNames.length === 1 
+        ? `${clubNames[0]}_images_${timestamp}.zip`
+        : `crew_images_${timestamp}.zip`;
+      
+      link.download = zipFileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Track bulk ZIP download
+      trackEvent('gallery_download', {
+        type: 'bulk_zip',
+        imageCount: selectedImageData.length,
+        zipFileName: zipFileName,
+        clubs: [...new Set(selectedImageData.map(img => img.club_name))]
+      });
       
       // Clear selection after download
       setSelectedImages(new Set());
@@ -370,7 +405,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   }
                 }}
               >
-                {isDownloading ? `Downloading...` : `Download ${selectedImages.size} Images`}
+                {isDownloading ? `Creating ZIP...` : `Download ZIP (${selectedImages.size} images)`}
               </Button>
             )}
           </Box>

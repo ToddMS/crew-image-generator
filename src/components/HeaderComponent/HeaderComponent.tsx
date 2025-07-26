@@ -4,7 +4,7 @@ import { useTheme } from '@mui/material/styles';
 import RowGramIcon from '../../assets/RowGramIcon.png';
 import { TbHelp } from "react-icons/tb";
 import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
-import { MdPhotoLibrary } from "react-icons/md";
+import { MdPhotoLibrary, MdInsights } from "react-icons/md";
 import { PiSquaresFourLight } from "react-icons/pi";
 import { useAuth } from '../../context/AuthContext';
 import AuthModal from '../Auth/AuthModal';
@@ -12,10 +12,11 @@ import UserProfileDropdown from '../Auth/UserProfileDropdown';
 
 interface HeaderComponentProps {
   onGalleryClick?: () => void;
+  onAnalyticsClick?: () => void;
 }
 
-const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick }) => {
-  const { user } = useAuth();
+const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick, onAnalyticsClick }) => {
+  const { user, isAdmin } = useAuth();
   const theme = useTheme();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -128,6 +129,26 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick }) => 
                   }}
                 >
                   Gallery
+                </Button>
+              </Box>
+            )}
+
+            {user && isAdmin() && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <MdInsights size={19} />
+                <Button 
+                  onClick={onAnalyticsClick}
+                  sx={{ 
+                    color: theme.palette.text.primary,
+                    textTransform: 'none',
+                    fontSize: 18,
+                    '&:hover': {
+                      color: theme.palette.primary.main,
+                      textDecoration: 'underline'
+                    }
+                  }}
+                >
+                  Analytics
                 </Button>
               </Box>
             )}

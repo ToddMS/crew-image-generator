@@ -7,10 +7,14 @@ import CrewNamesComponent from './components/CrewNamesComponent/CrewNamesCompone
 import SavedCrewsComponent from './components/SavedCrewsComponent/SavedCrewComponent';
 import ImageGenerator from './components/ImageGenerator/ImageGenerator';
 import GalleryPage from './components/GalleryPage/GalleryPage';
+import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
+import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 import FooterComponent from './components/FooterComponent/FooterComponent';
 import LoginPrompt from './components/Auth/LoginPrompt';
 import { ApiService } from './services/api.service';
 import { useAuth } from './context/AuthContext';
+import { useAnalytics } from './context/AnalyticsContext';
+import { useOnboarding } from './context/OnboardingContext';
 
 const boatClassToSeats: Record<string, number> = {
   '8+': 8,
@@ -38,7 +42,9 @@ const boatClassToBoatType = (boatClass: string) => {
 };
 
 function App() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { trackEvent } = useAnalytics();
+  const { shouldShowOnboarding, completeOnboarding } = useOnboarding();
   const theme = useTheme();
   const crewNameRef = useRef<HTMLInputElement | null>(null);
   const savedCrewsRef = useRef<HTMLInputElement | null>(null);
@@ -65,6 +71,7 @@ function App() {
   const [galleryRefreshTrigger, setGalleryRefreshTrigger] = useState(0); // To trigger gallery refresh
   const [isBulkMode, setIsBulkMode] = useState(false); // Track if we're in bulk mode
   const [showGalleryPage, setShowGalleryPage] = useState(true); // Track if gallery page is shown
+  const [showAnalytics, setShowAnalytics] = useState(false); // Track if analytics page is shown
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -218,6 +225,15 @@ function App() {
 
   const handleCoxNameChange = (value: string) => setCoxName(value);
 
+  const handleCrewReorder = (oldIndex: number, newIndex: number) => {
+    setCrewNames(names => {
+      const newNames = [...names];
+      const [reorderedItem] = newNames.splice(oldIndex, 1);
+      newNames.splice(newIndex, 0, reorderedItem);
+      return newNames;
+    });
+  };
+
   const handleSaveCrew = async () => {
     if (!user) {
       // This should be prevented by UI, but handle edge case
@@ -285,6 +301,14 @@ function App() {
           } : crew));
           setEditIndex(null);
           clearDraft();
+          
+          // Track crew update
+          trackEvent('crew_updated', {
+            boatClass,
+            crewSize: allNames.length,
+            clubName,
+            raceName
+          });
         }
       } else {
         // Create new crew
@@ -302,6 +326,14 @@ function App() {
             },
           ]);
           clearDraft();
+          
+          // Track crew creation
+          trackEvent('crew_created', {
+            boatClass,
+            crewSize: allNames.length,
+            clubName,
+            raceName
+          });
         }
       }
       
@@ -366,6 +398,7 @@ function App() {
 
   const handleGalleryClick = () => {
     // Always scroll to gallery
+    setShowAnalytics(false);
     setTimeout(() => {
       const element = document.getElementById('gallery');
       if (element) {
@@ -374,23 +407,65 @@ function App() {
     }, 100);
   };
 
-  const handleGenerateImage = async (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean) => {
+  const handleAnalyticsClick = () => {
+    if (!isAdmin()) {
+      console.log('Access denied: User is not admin');
+      return;
+    }
+    console.log('Analytics clicked! Current state:', showAnalytics, 'User:', user);
+    setShowAnalytics(!showAnalytics);
+    trackEvent('analytics_viewed');
+    
+    // Scroll to analytics section when showing
+    if (!showAnalytics) {
+      setTimeout(() => {
+        const element = document.getElementById('analytics');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    completeOnboarding();
+    trackEvent('onboarding_completed');
+    // Scroll to crew form to help user get started
+    setTimeout(() => {
+      const element = document.getElementById('crew-form');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 500);
+  };
+
+  const handleGenerateImage = async (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean, clubIcon?: any) => {
     if (selectedCrewForImage === null) return;
     
     const selectedCrew = savedCrews[selectedCrewForImage];
     if (!selectedCrew) return;
 
     try {
-      console.log('Generating image:', imageName, 'with template:', template, 'colors:', colors, 'for crew:', selectedCrew);
+      console.log('Generating image:', imageName, 'with template:', template, 'colors:', colors, 'clubIcon:', clubIcon, 'for crew:', selectedCrew);
       
       // Call the backend API to generate the image
-      const imageBlob = await ApiService.generateImage(selectedCrew.id, imageName, template, colors);
+      const imageBlob = await ApiService.generateImage(selectedCrew.id, imageName, template, colors, clubIcon);
       
       if (imageBlob) {
         // Always save the image (no download from generator)
         try {
           await ApiService.saveImage(selectedCrew.id, imageName, template, colors, imageBlob);
           console.log('Image saved to crew gallery!');
+          
+          // Track image generation
+          trackEvent('image_generated', {
+            template,
+            primaryColor: colors?.primary,
+            secondaryColor: colors?.secondary,
+            crewName: selectedCrew.boatName,
+            raceName: selectedCrew.raceName,
+            boatClass: selectedCrew.boatClass
+          });
           
           // Trigger gallery refresh
           setGalleryRefreshTrigger(prev => prev + 1);
@@ -409,7 +484,8 @@ function App() {
     crewIds: string[], 
     template: string, 
     colors?: { primary: string; secondary: string },
-    onProgress?: (current: number, total: number, crewName: string) => void
+    onProgress?: (current: number, total: number, crewName: string) => void,
+    clubIcon?: any
   ) => {
     console.log('Bulk generating images for crews:', crewIds, 'with template:', template);
     
@@ -427,7 +503,7 @@ function App() {
         onProgress?.(i + 1, crewIds.length, crew.boatName);
         
         // Generate image
-        const imageBlob = await ApiService.generateImage(crew.id, imageName, template, colors);
+        const imageBlob = await ApiService.generateImage(crew.id, imageName, template, colors, clubIcon);
         
         if (imageBlob) {
           // Always save to gallery (no individual downloads for bulk)
@@ -444,6 +520,14 @@ function App() {
       }
     }
     
+    // Track bulk generation
+    trackEvent('bulk_generation', {
+      template,
+      crewCount: crewIds.length,
+      primaryColor: colors?.primary,
+      secondaryColor: colors?.secondary
+    });
+    
     // Trigger gallery refresh
     setGalleryRefreshTrigger(prev => prev + 1);
     console.log('Bulk generation completed!');
@@ -452,7 +536,7 @@ function App() {
   return (
     <>
       <div id="home">
-        <HeaderComponent onGalleryClick={handleGalleryClick} />
+        <HeaderComponent onGalleryClick={handleGalleryClick} onAnalyticsClick={handleAnalyticsClick} />
       </div>
       
       <div id="crew-form">
@@ -475,6 +559,7 @@ function App() {
             onNameChange={handleNameChange}
             onCoxNameChange={handleCoxNameChange}
             onSaveCrew={user ? handleSaveCrew : undefined}
+            onCrewReorder={handleCrewReorder}
             clubName={clubName}
             raceName={raceName}
             boatName={boatName}
@@ -530,10 +615,19 @@ function App() {
         </div>
       )}
       
+      {/* Analytics Dashboard */}
+      {showAnalytics && user && isAdmin() && (
+        <div id="analytics">
+          <AnalyticsDashboard />
+        </div>
+      )}
+      
       {/* Gallery Section - Always show below ImageGenerator */}
-      <div id="gallery">
-        <GalleryPage refreshTrigger={galleryRefreshTrigger} />
-      </div>
+      {!showAnalytics && (
+        <div id="gallery">
+          <GalleryPage refreshTrigger={galleryRefreshTrigger} />
+        </div>
+      )}
       
       <Box 
         id="help" 
@@ -599,6 +693,13 @@ function App() {
       </Box>
       
       <FooterComponent scrollToSection={scrollToSection} />
+      
+      {/* Onboarding Flow */}
+      <OnboardingFlow
+        open={shouldShowOnboarding}
+        onClose={() => completeOnboarding()}
+        onComplete={handleOnboardingComplete}
+      />
     </>
   );
 }

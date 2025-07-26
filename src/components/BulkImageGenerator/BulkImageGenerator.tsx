@@ -12,6 +12,7 @@ import {
   Radio,
   RadioGroup,
   Chip,
+  Checkbox,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -34,7 +35,8 @@ interface BulkImageGeneratorProps {
     crewIds: string[], 
     template: string, 
     colors?: { primary: string; secondary: string },
-    onProgress?: (current: number, total: number, crewName: string) => void
+    onProgress?: (current: number, total: number, crewName: string) => void,
+    clubIcon?: any
   ) => Promise<void>;
   onDeselectCrew: (crewId: string) => void;
   savedCrews: any[];
@@ -58,6 +60,11 @@ const BulkImageGenerator: React.FC<BulkImageGeneratorProps> = ({
   const [presets, setPresets] = useState<ClubPreset[]>([]);
   const [usePresetColors, setUsePresetColors] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  
+  // Club icon state
+  const [clubIcon, setClubIcon] = useState<File | null>(null);
+  const [clubIconPreview, setClubIconPreview] = useState<string | null>(null);
+  const [useClubIcon, setUseClubIcon] = useState(false);
 
   // Load presets when component mounts and user is authenticated
   useEffect(() => {
@@ -135,6 +142,40 @@ const BulkImageGenerator: React.FC<BulkImageGeneratorProps> = ({
     }
   };
 
+  // Handle club icon upload
+  const handleClubIconUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        console.error('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        console.error('File size must be less than 5MB');
+        return;
+      }
+      
+      setClubIcon(file);
+      setUseClubIcon(true);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setClubIconPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeClubIcon = () => {
+    setClubIcon(null);
+    setClubIconPreview(null);
+    setUseClubIcon(false);
+  };
+
   const handleBulkGenerate = async () => {
     if (selectedCrews.length === 0 || !selectedTemplate) return;
     
@@ -143,9 +184,27 @@ const BulkImageGenerator: React.FC<BulkImageGeneratorProps> = ({
     
     try {
       const colors = { primary: primaryColor, secondary: secondaryColor };
+      
+      // Prepare club icon data for bulk generation
+      let clubIconData = null;
+      if (usePresetColors && selectedPresetId) {
+        const selectedPreset = presets.find(p => p.id === selectedPresetId);
+        if (selectedPreset?.logo_filename) {
+          clubIconData = {
+            type: 'preset',
+            filename: selectedPreset.logo_filename
+          };
+        }
+      } else if (useClubIcon && clubIcon) {
+        clubIconData = {
+          type: 'upload',
+          file: clubIcon
+        };
+      }
+      
       await onGenerate(selectedCrews, selectedTemplate, colors, (current, total, crewName) => {
         setGenerationProgress({ current, total });
-      });
+      }, clubIconData);
     } catch (error) {
       console.error('Error in bulk generation:', error);
     } finally {
@@ -276,6 +335,13 @@ const BulkImageGenerator: React.FC<BulkImageGeneratorProps> = ({
                 {presets.map((preset) => (
                   <MenuItem key={preset.id} value={preset.id}>
                     <Box display="flex" alignItems="center" gap={1} width="100%">
+                      {preset.logo_filename && (
+                        <img 
+                          src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${preset.logo_filename}`}
+                          alt="Club logo"
+                          style={{ width: '20px', height: '20px', objectFit: 'contain', borderRadius: '2px' }}
+                        />
+                      )}
                       <Box
                         sx={{
                           width: 16,
@@ -374,6 +440,115 @@ const BulkImageGenerator: React.FC<BulkImageGeneratorProps> = ({
                   </Box>
                 </Box>
               </Box>
+            </Box>
+          )}
+        </Box>
+
+        {/* Club Icon Section */}
+        <Box sx={{ mb: 3 }}>
+          <Typography sx={{ mb: 2, fontWeight: 500, color: theme.palette.text.primary }}>
+            Club Icon (Optional)
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, fontSize: 12, color: theme.palette.text.secondary }}>
+            Add your club logo to appear in the bottom-right corner of all generated images
+          </Typography>
+          
+          {/* Show preset club icon if using preset */}
+          {usePresetColors && selectedPresetId && (
+            <Box sx={{ mb: 2 }}>
+              {(() => {
+                const selectedPreset = presets.find(p => p.id === selectedPresetId);
+                return selectedPreset?.logo_filename ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${selectedPreset.logo_filename}`}
+                      alt="Club logo"
+                      style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                    />
+                    <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                      Using club logo from preset: {selectedPreset.preset_name}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
+                    Selected preset doesn't have a club logo
+                  </Typography>
+                );
+              })()}
+            </Box>
+          )}
+          
+          {/* Manual club icon upload for manual color mode */}
+          {!usePresetColors && (
+            <Box>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={useClubIcon}
+                    onChange={(e) => setUseClubIcon(e.target.checked)}
+                    size="small"
+                  />
+                }
+                label="Add club icon to images"
+                sx={{ mb: 1 }}
+              />
+              
+              {useClubIcon && (
+                <Box sx={{ mt: 2 }}>
+                  {!clubIconPreview ? (
+                    <Box>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleClubIconUpload}
+                        style={{ display: 'none' }}
+                        id="bulk-club-icon-upload"
+                      />
+                      <label htmlFor="bulk-club-icon-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          sx={{
+                            borderColor: theme.palette.divider,
+                            color: theme.palette.text.primary,
+                            '&:hover': {
+                              borderColor: theme.palette.primary.main,
+                            }
+                          }}
+                        >
+                          Choose Club Logo
+                        </Button>
+                      </label>
+                      <Typography variant="caption" sx={{ display: 'block', mt: 1, color: theme.palette.text.secondary }}>
+                        Supported: PNG, JPG, GIF (max 5MB)
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
+                      <img 
+                        src={clubIconPreview} 
+                        alt="Club logo preview" 
+                        style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                      />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
+                          {clubIcon?.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                          {clubIcon && (clubIcon.size / 1024).toFixed(1)} KB
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        onClick={removeClubIcon}
+                        sx={{ color: theme.palette.error.main }}
+                      >
+                        Remove
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              )}
             </Box>
           )}
         </Box>
