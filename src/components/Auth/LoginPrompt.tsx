@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import LoginIcon from '@mui/icons-material/Login';
 import SaveIcon from '@mui/icons-material/Save';
 import AuthModal from './AuthModal';
@@ -19,6 +20,7 @@ const LoginPrompt: React.FC<LoginPromptProps> = ({
   message = "Sign in to save crews to your account",
   actionText = "Save Crew"
 }) => {
+  const theme = useTheme();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
@@ -29,17 +31,18 @@ const LoginPrompt: React.FC<LoginPromptProps> = ({
         mt: 4, 
         p: 2, 
         textAlign: 'center',
-        backgroundColor: '#f8f9ff',
-        border: '1px solid #e8eaff'
+        backgroundColor: theme.palette.background.paper,
+        border: `1px solid ${theme.palette.divider}`,
+        boxShadow: theme.shadows[3]
       }}>
         <CardContent>
-          <SaveIcon sx={{ fontSize: 48, color: '#5E98C2', mb: 2 }} />
+          <SaveIcon sx={{ fontSize: 48, color: theme.palette.primary.main, mb: 2 }} />
           
-          <Typography variant="h6" sx={{ mb: 2, color: '#1a1a1a' }}>
+          <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
             {message}
           </Typography>
           
-          <Typography variant="body2" sx={{ mb: 3, color: '#666' }}>
+          <Typography variant="body2" sx={{ mb: 3, color: theme.palette.text.secondary }}>
             Create an account or sign in to save and manage your crew lineups across all your devices.
           </Typography>
           
@@ -48,7 +51,7 @@ const LoginPrompt: React.FC<LoginPromptProps> = ({
             startIcon={<LoginIcon />}
             onClick={() => setShowAuthModal(true)}
             sx={{
-              backgroundColor: '#5E98C2',
+              backgroundColor: theme.palette.primary.main,
               py: 1.5,
               px: 3,
               borderRadius: 2,
@@ -56,7 +59,7 @@ const LoginPrompt: React.FC<LoginPromptProps> = ({
               fontSize: '16px',
               fontWeight: 600,
               '&:hover': {
-                backgroundColor: '#4a7da3',
+                backgroundColor: theme.palette.primary.dark,
               },
             }}
           >

@@ -1,0 +1,309 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Typography,
+  Alert,
+  Card,
+  CardContent
+} from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
+import { MdPersonAdd, MdImage } from 'react-icons/md';
+import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
+import LoginPrompt from '../components/Auth/LoginPrompt';
+import { useAuth } from '../context/AuthContext';
+import { useAnalytics } from '../context/AnalyticsContext';
+import { ApiService } from '../services/api.service';
+
+const boatClassToSeats: Record<string, number> = {
+  '8+': 8,
+  '4+': 4,
+  '4-': 4,
+  '4x': 4,
+  '2-': 2,
+  '2x': 2,
+  '1x': 1,
+};
+
+const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
+
+const boatClassToBoatType = (boatClass: string) => {
+  const mapping: Record<string, any> = {
+    '8+': { id: 1, value: '8+', seats: 8, name: 'Eight with Coxswain' },
+    '4+': { id: 2, value: '4+', seats: 4, name: 'Four with Coxswain' },
+    '4-': { id: 3, value: '4-', seats: 4, name: 'Four without Coxswain' },
+    '4x': { id: 6, value: '4x', seats: 4, name: 'Quad Sculls' },
+    '2-': { id: 7, value: '2-', seats: 2, name: 'Coxless Pair' },
+    '2x': { id: 4, value: '2x', seats: 2, name: 'Double Sculls' },
+    '1x': { id: 5, value: '1x', seats: 1, name: 'Single Sculls' },
+  };
+  return mapping[boatClass];
+};
+
+const MyCrewsPage: React.FC = () => {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { trackEvent } = useAnalytics();
+
+  const [savedCrews, setSavedCrews] = useState<any[]>([]);
+  const [recentCrews, setRecentCrews] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadCrews();
+  }, [user]);
+
+  const loadCrews = async () => {
+    if (!user) {
+      setSavedCrews([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await ApiService.getCrews();
+      if (result.data) {
+        const transformedCrews = result.data.map(crew => {
+          const getSeatLabel = (idx: number, totalRowers: number, hasCox: boolean) => {
+            if (hasCox && idx === 0) return 'Cox';
+            const rowerIdx = hasCox ? idx - 1 : idx;
+            
+            if (totalRowers === 8) {
+              const seats = ['Stroke Seat', '7 Seat', '6 Seat', '5 Seat', '4 Seat', '3 Seat', '2 Seat', 'Bow'];
+              return seats[rowerIdx];
+            } else if (totalRowers === 4) {
+              const seats = ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+              return seats[rowerIdx];
+            } else if (totalRowers === 2) {
+              const seats = ['Stroke Seat', 'Bow'];
+              return seats[rowerIdx];
+            } else if (totalRowers === 1) {
+              return 'Single';
+            }
+            return `${rowerIdx + 1} Seat`;
+          };
+          
+          const totalRowers = crew.boatType.seats;
+          const hasCox = boatClassHasCox(crew.boatType.value);
+          
+          return {
+            ...crew,
+            boatClub: crew.clubName,
+            boatName: crew.name,
+            boatClass: crew.boatType.value,
+            crewMembers: crew.crewNames.map((name, idx) => ({
+              seat: getSeatLabel(idx, totalRowers, hasCox),
+              name
+            }))
+          };
+        });
+        setSavedCrews(transformedCrews);
+      } else if (result.error) {
+        setError('Failed to load crews. Please try again.');
+        setSavedCrews([]);
+      }
+    } catch (error) {
+      console.error('Error loading crews:', error);
+      setError('Failed to load crews. Please try again.');
+      setSavedCrews([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateRecentCrews = (crewIndex: number) => {
+    setRecentCrews(prev => {
+      const filtered = prev.filter(idx => idx !== crewIndex);
+      return [crewIndex, ...filtered].slice(0, 5);
+    });
+  };
+
+  const handleDeleteCrew = async (index: number) => {
+    const crew = savedCrews[index];
+    try {
+      await ApiService.deleteCrew(crew.id);
+      setSavedCrews(prev => prev.filter((_, idx) => idx !== index));
+      
+      trackEvent('crew_deleted', {
+        crewName: crew.boatName,
+        boatClass: crew.boatClass
+      });
+    } catch (error) {
+      console.error('Error deleting crew:', error);
+      setError('Failed to delete crew. Please try again.');
+    }
+  };
+
+  const handleEditCrew = (index: number) => {
+    updateRecentCrews(index);
+    // For now, navigate to create page - we could enhance this later
+    navigate('/create');
+  };
+
+  const handleGenerateImage = (index: number) => {
+    updateRecentCrews(index);
+    // Navigate to generate page with crew context
+    navigate('/generate', { state: { selectedCrewIndex: index, selectedCrew: savedCrews[index] } });
+  };
+
+  const handleBulkGenerateImages = async (
+    crewIds: string[], 
+    template: string, 
+    colors?: { primary: string; secondary: string },
+    onProgress?: (current: number, total: number, crewName: string) => void,
+    clubIcon?: any
+  ) => {
+    console.log('Bulk generating images for crews:', crewIds, 'with template:', template);
+    
+    for (let i = 0; i < crewIds.length; i++) {
+      const crewId = crewIds[i];
+      const crew = savedCrews.find(c => c.id === crewId);
+      
+      if (!crew) continue;
+      
+      try {
+        const imageName = `${crew.boatName}_${crew.raceName}`;
+        console.log(`Generating image ${i + 1}/${crewIds.length}: ${imageName} with clubIcon:`, clubIcon);
+        
+        onProgress?.(i + 1, crewIds.length, crew.boatName);
+        
+        const imageBlob = await ApiService.generateImage(crew.id, imageName, template, colors, clubIcon);
+        
+        if (imageBlob) {
+          await ApiService.saveImage(crew.id, imageName, template, colors, imageBlob);
+          console.log(`Image ${i + 1}/${crewIds.length} saved to gallery`);
+        }
+      } catch (error) {
+        console.error(`Error generating image for crew ${crew.boatName}:`, error);
+      }
+      
+      if (i < crewIds.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    trackEvent('bulk_generation', {
+      template,
+      crewCount: crewIds.length,
+      primaryColor: colors?.primary,
+      secondaryColor: colors?.secondary
+    });
+    
+    console.log('Bulk generation completed!');
+  };
+
+  const handleBulkModeChange = (isBulkMode: boolean) => {
+    // Handle bulk mode state if needed
+  };
+
+  if (!user) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
+          My Crews
+        </Typography>
+        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
+          Sign in to view and manage your saved crew lineups
+        </Typography>
+        <LoginPrompt 
+          message="Sign in to view and manage your saved crews"
+          actionText="View My Crews"
+        />
+      </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
+          Loading your crews...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+        <Box sx={{ textAlign: 'center' }}>
+          <Button onClick={loadCrews} variant="contained">
+            Retry
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (savedCrews.length === 0) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
+          No Crews Yet
+        </Typography>
+        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
+          Create your first crew lineup to get started
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+          <Button
+            variant="contained"
+            startIcon={<MdPersonAdd />}
+            onClick={() => navigate('/create')}
+          >
+            Create Your First Crew
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box>
+      {/* Header Actions */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
+            {savedCrews.length} crew{savedCrews.length !== 1 ? 's' : ''} in your account
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<MdPersonAdd />}
+            onClick={() => navigate('/create')}
+          >
+            New Crew
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<MdImage />}
+            onClick={() => navigate('/generate')}
+          >
+            Generate Images
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Crews List */}
+      <SavedCrewsComponent
+        savedCrews={savedCrews}
+        recentCrews={recentCrews}
+        onDeleteCrew={handleDeleteCrew}
+        onEditCrew={handleEditCrew}
+        onGenerateImage={handleGenerateImage}
+        onBulkGenerateImages={handleBulkGenerateImages}
+        onBulkModeChange={handleBulkModeChange}
+      />
+    </Box>
+  );
+};
+
+export default MyCrewsPage;

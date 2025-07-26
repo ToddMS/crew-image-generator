@@ -173,7 +173,6 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
     onProgress?: (current: number, total: number, crewName: string) => void,
     clubIcon?: any
   ) => {
-    console.log('SavedCrewsComponent handleBulkGenerate called with clubIcon:', clubIcon);
     if (onBulkGenerateImages) {
       await onBulkGenerateImages(crewIds, template, colors, onProgress, clubIcon);
       setSelectedCrews(new Set());

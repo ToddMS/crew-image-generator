@@ -16,13 +16,12 @@ import {
   Chip,
   TextField,
   InputAdornment,
-  Collapse,
   Button,
   Checkbox,
   Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdExpandLess, MdExpandMore, MdDownload } from 'react-icons/md';
+import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react-icons/md';
 import { ApiService } from '../../services/api.service';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalytics } from '../../context/AnalyticsContext';
@@ -75,7 +74,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const [raceFilter, setRaceFilter] = useState('');
   const [clubFilter, setClubFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expanded, setExpanded] = useState(false);
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
   const [showBulkOptions, setShowBulkOptions] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -352,7 +350,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   if (!user) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
+      <Box sx={{ 
+        textAlign: 'center', 
+        py: 8,
+        backgroundColor: theme.palette.background.default
+      }}>
         <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
           Please sign in to view your gallery
         </Typography>
@@ -373,33 +375,18 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Collapsible Header */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        mb: 2,
-        cursor: 'pointer',
-        py: 2
-      }}
-      onClick={() => setExpanded(!expanded)}
-      >
+      {/* Gallery Header */}
+      <Box sx={{ mb: 3 }}>
         <Typography 
-          variant="h4" 
+          variant="h6" 
           sx={{ 
-            color: theme.palette.text.primary,
-            fontWeight: 500,
-            mr: 2
+            color: theme.palette.text.secondary,
+            fontWeight: 500
           }}
         >
-          My Gallery ({filteredImages.length} images)
+          {filteredImages.length} image{filteredImages.length !== 1 ? 's' : ''} in your gallery
         </Typography>
-        <IconButton size="large">
-          {expanded ? <MdExpandLess size={32} /> : <MdExpandMore size={32} />}
-        </IconButton>
       </Box>
-
-      <Collapse in={expanded}>
 
       {/* Bulk Selection Toggle */}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -821,7 +808,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           </DialogContent>
         </Box>
       </Dialog>
-      </Collapse>
     </Box>
   );
 };

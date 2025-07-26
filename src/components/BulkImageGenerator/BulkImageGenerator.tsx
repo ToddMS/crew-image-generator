@@ -133,29 +133,21 @@ const BulkImageGenerator: React.FC<BulkImageGeneratorProps> = ({
       
       // Prepare club icon data for bulk generation
       let clubIconData = null;
-      console.log('Bulk generation state:', { usePresetColors, selectedPresetId, useClubIcon, clubIcon });
       
       if (usePresetColors && selectedPresetId) {
         const selectedPreset = presets.find(p => p.id === selectedPresetId);
-        console.log('Selected preset:', selectedPreset);
         if (selectedPreset?.logo_filename) {
           clubIconData = {
             type: 'preset',
             filename: selectedPreset.logo_filename
           };
-          console.log('Bulk generation using preset club icon:', clubIconData);
-        } else {
-          console.log('Selected preset has no logo_filename');
         }
       } else if (useClubIcon && clubIcon) {
         clubIconData = {
           type: 'upload',
           file: clubIcon
         };
-        console.log('Bulk generation using uploaded club icon:', clubIconData);
       }
-      
-      console.log('Final bulk generation club icon data:', clubIconData);
       
       await onGenerate(selectedCrews, selectedTemplate, colors, (current, total, crewName) => {
         setGenerationProgress({ current, total });

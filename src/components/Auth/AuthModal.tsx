@@ -12,6 +12,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import GoogleIcon from '@mui/icons-material/Google';
 import EmailIcon from '@mui/icons-material/Email';
@@ -24,6 +25,7 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
+  const theme = useTheme();
   const { login, emailSignUp, emailSignIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -165,6 +167,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           borderRadius: 3,
           p: 0,
           maxWidth: 450,
+          backgroundColor: theme.palette.background.paper,
         },
       }}
     >
@@ -172,19 +175,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
       <Box sx={{ 
         p: 3, 
         pb: 1,
-        borderBottom: '1px solid #f0f0f0',
+        borderBottom: `1px solid ${theme.palette.divider}`,
         position: 'relative'
       }}>
         <Typography variant="h4" sx={{ 
           fontWeight: 700, 
-          color: '#1a1a1a', 
+          color: theme.palette.text.primary, 
           textAlign: 'center',
           mb: 1 
         }}>
           Welcome to RowGram
         </Typography>
         <Typography variant="body2" sx={{ 
-          color: '#666', 
+          color: theme.palette.text.secondary, 
           textAlign: 'center' 
         }}>
           Sign in to save crews and customize settings
@@ -196,7 +199,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
             position: 'absolute',
             right: 16,
             top: 16,
-            color: '#666',
+            color: theme.palette.text.secondary,
           }}
         >
           <CloseIcon />
@@ -245,7 +248,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
             
             <Typography variant="body2" sx={{ 
               mt: 2, 
-              color: '#666', 
+              color: theme.palette.text.secondary, 
               textAlign: 'center',
               fontSize: '13px'
             }}>
@@ -257,7 +260,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         {/* Email Sign-In Tab */}
         {tabValue === 1 && (
           <Box component="form" onSubmit={handleEmailAuth}>
-            <Typography variant="h6" sx={{ mb: 2, color: '#1a1a1a' }}>
+            <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
               {isSignUp ? 'Create Account' : 'Sign In'}
             </Typography>
             
@@ -300,12 +303,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               disabled={loading}
               sx={{
                 py: 1.5,
-                backgroundColor: '#5E98C2',
+                backgroundColor: theme.palette.primary.main,
                 textTransform: 'none',
                 fontSize: '16px',
                 fontWeight: 600,
                 '&:hover': {
-                  backgroundColor: '#4a7da3',
+                  backgroundColor: theme.palette.primary.dark,
                 },
               }}
             >
@@ -318,7 +321,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                 onClick={toggleSignUpMode}
                 sx={{ 
                   textTransform: 'none',
-                  color: '#5E98C2'
+                  color: theme.palette.primary.main
                 }}
               >
                 {isSignUp 
@@ -334,13 +337,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         <Box sx={{ 
           mt: 4, 
           p: 2, 
-          backgroundColor: '#f8f9ff', 
+          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(94, 152, 194, 0.1)' : '#f8f9ff', 
           borderRadius: 2,
-          border: '1px solid #e8eaff'
+          border: `1px solid ${theme.palette.divider}`
         }}>
           <Typography variant="subtitle2" sx={{ 
             mb: 1, 
-            color: '#5E98C2', 
+            color: theme.palette.primary.main, 
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
@@ -352,7 +355,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           <Box component="ul" sx={{ 
             m: 0, 
             pl: 2, 
-            color: '#666',
+            color: theme.palette.text.secondary,
             '& li': { mb: 0.5, fontSize: '14px' }
           }}>
             <li>Save and manage your crew lineups</li>
