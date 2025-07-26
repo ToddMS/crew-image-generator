@@ -195,6 +195,9 @@ const MyCrewsPage: React.FC = () => {
     });
     
     console.log('Bulk generation completed!');
+    
+    // Navigate to gallery after bulk generation completion
+    navigate('/gallery');
   };
 
   const handleBulkModeChange = (isBulkMode: boolean) => {

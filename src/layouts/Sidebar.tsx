@@ -330,7 +330,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
             }}
           >
             <Avatar
-              src={user.picture}
+              src={user.profile_picture}
               alt={user.name}
               sx={{
                 width: 36,

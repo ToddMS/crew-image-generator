@@ -22,6 +22,7 @@ interface AnalyticsStats {
 interface AnalyticsContextType {
   trackEvent: (event: string, metadata?: Record<string, any>) => void;
   getStats: () => AnalyticsStats;
+  getEventsByType: (eventType: string) => AnalyticsEvent[];
   exportData: () => string;
   clearData: () => void;
 }
@@ -114,13 +115,17 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return JSON.stringify(exportData, null, 2);
   };
 
+  const getEventsByType = (eventType: string): AnalyticsEvent[] => {
+    return events.filter(event => event.event === eventType);
+  };
+
   const clearData = () => {
     setEvents([]);
     localStorage.removeItem('rowgram_analytics');
   };
 
   return (
-    <AnalyticsContext.Provider value={{ trackEvent, getStats, exportData, clearData }}>
+    <AnalyticsContext.Provider value={{ trackEvent, getStats, getEventsByType, exportData, clearData }}>
       {children}
     </AnalyticsContext.Provider>
   );

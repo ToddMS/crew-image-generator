@@ -76,9 +76,13 @@ const DashboardPage: React.FC = () => {
       // Load images count
       let totalImages = 0;
       for (const crew of crews) {
-        const imagesResponse = await ApiService.getSavedImages(crew.id);
-        if (imagesResponse.data) {
-          totalImages += imagesResponse.data.length;
+        try {
+          const imagesResponse = await ApiService.getSavedImages(crew.id);
+          if (imagesResponse.data) {
+            totalImages += imagesResponse.data.length;
+          }
+        } catch (imageError) {
+          console.error(`Error loading images for crew ${crew.id}:`, imageError);
         }
       }
 
@@ -209,7 +213,7 @@ const DashboardPage: React.FC = () => {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar
-            src={user.picture}
+            src={user.profile_picture}
             alt={user.name}
             sx={{ width: 56, height: 56 }}
           >

@@ -147,7 +147,7 @@ const SettingsPage: React.FC = () => {
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Avatar
-              src={user.picture}
+              src={user.profile_picture}
               alt={user.name}
               sx={{ width: 80, height: 80 }}
             >

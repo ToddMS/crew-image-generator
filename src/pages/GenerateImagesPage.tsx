@@ -121,8 +121,8 @@ const GenerateImagesPage: React.FC = () => {
           
           setGalleryRefreshTrigger(prev => prev + 1);
           
-          // Show success and offer to view gallery
-          setError(null);
+          // Navigate to gallery after successful generation
+          navigate('/gallery');
         } catch (error) {
           console.error('Error saving image:', error);
           setError('Image generated but failed to save. Please try again.');
@@ -181,6 +181,9 @@ const GenerateImagesPage: React.FC = () => {
     
     setGalleryRefreshTrigger(prev => prev + 1);
     console.log('Bulk generation completed!');
+    
+    // Navigate to gallery after bulk generation completion
+    navigate('/gallery');
   };
 
   const handleCrewSelection = (crewId: string, selected: boolean) => {
