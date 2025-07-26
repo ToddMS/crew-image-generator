@@ -432,7 +432,7 @@ const HomePage: React.FC = () => {
     onProgress?: (current: number, total: number, crewName: string) => void,
     clubIcon?: any
   ) => {
-    console.log('Bulk generating images for crews:', crewIds, 'with template:', template);
+    console.log('Bulk generating images for crews:', crewIds, 'with template:', template, 'clubIcon:', clubIcon);
     
     for (let i = 0; i < crewIds.length; i++) {
       const crewId = crewIds[i];
@@ -446,6 +446,7 @@ const HomePage: React.FC = () => {
         
         onProgress?.(i + 1, crewIds.length, crew.boatName);
         
+        console.log(`Generating image ${i + 1}/${crewIds.length}: ${imageName} with clubIcon:`, clubIcon);
         const imageBlob = await ApiService.generateImage(crew.id, imageName, template, colors, clubIcon);
         
         if (imageBlob) {

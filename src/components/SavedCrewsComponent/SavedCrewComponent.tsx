@@ -34,7 +34,8 @@ interface SavedCrewsComponentProps {
     crewIds: string[], 
     template: string, 
     colors?: { primary: string; secondary: string },
-    onProgress?: (current: number, total: number, crewName: string) => void
+    onProgress?: (current: number, total: number, crewName: string) => void,
+    clubIcon?: any
   ) => void;
   onBulkModeChange?: (isBulkMode: boolean) => void;
 }
@@ -169,10 +170,12 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
     crewIds: string[], 
     template: string, 
     colors?: { primary: string; secondary: string },
-    onProgress?: (current: number, total: number, crewName: string) => void
+    onProgress?: (current: number, total: number, crewName: string) => void,
+    clubIcon?: any
   ) => {
+    console.log('SavedCrewsComponent handleBulkGenerate called with clubIcon:', clubIcon);
     if (onBulkGenerateImages) {
-      await onBulkGenerateImages(crewIds, template, colors, onProgress);
+      await onBulkGenerateImages(crewIds, template, colors, onProgress, clubIcon);
       setSelectedCrews(new Set());
       setShowBulkOptions(false);
       onBulkModeChange?.(false);

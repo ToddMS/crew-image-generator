@@ -156,6 +156,39 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   };
 
+  // Bulk delete function
+  const handleBulkDelete = async () => {
+    if (selectedImages.size === 0) return;
+    
+    const selectedCount = selectedImages.size;
+    if (!window.confirm(`Are you sure you want to delete ${selectedCount} selected image${selectedCount > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const deletePromises = Array.from(selectedImages).map(imageId => 
+        ApiService.deleteSavedImage(imageId)
+      );
+      
+      await Promise.all(deletePromises);
+      
+      // Remove deleted images from the state
+      setAllImages(prev => prev.filter(img => !selectedImages.has(img.id)));
+      
+      // Clear selection and exit bulk mode
+      setSelectedImages(new Set());
+      setShowBulkOptions(false);
+      
+      // Track bulk delete
+      trackEvent('gallery_bulk_delete', {
+        imageCount: selectedCount
+      });
+      
+    } catch (error) {
+      console.error('Error in bulk delete:', error);
+    }
+  };
+
   const handleDownloadImage = async (image: SavedImage, event: React.MouseEvent) => {
     event.stopPropagation();
     
@@ -393,20 +426,40 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
             </Button>
             
             {selectedImages.size > 0 && (
-              <Button
-                variant="contained"
-                startIcon={<MdDownload />}
-                onClick={handleBulkDownload}
-                disabled={isDownloading}
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.dark,
-                  }
-                }}
-              >
-                {isDownloading ? `Creating ZIP...` : `Download ZIP (${selectedImages.size} images)`}
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  startIcon={<MdDownload />}
+                  onClick={handleBulkDownload}
+                  disabled={isDownloading}
+                  sx={{
+                    backgroundColor: theme.palette.primary.main,
+                    '&:hover': {
+                      backgroundColor: theme.palette.primary.dark,
+                    }
+                  }}
+                >
+                  {isDownloading ? `Creating ZIP...` : `Download ZIP (${selectedImages.size})`}
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  startIcon={<MdDelete />}
+                  onClick={handleBulkDelete}
+                  color="error"
+                  sx={{
+                    borderColor: theme.palette.error.main,
+                    color: theme.palette.error.main,
+                    '&:hover': {
+                      borderColor: theme.palette.error.dark,
+                      backgroundColor: theme.palette.error.main,
+                      color: 'white'
+                    }
+                  }}
+                >
+                  Delete ({selectedImages.size})
+                </Button>
+              </>
             )}
           </Box>
         )}
