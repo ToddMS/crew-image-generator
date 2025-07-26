@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdPersonAdd, MdImage } from 'react-icons/md';
+import { MdPersonAdd, MdImage, MdChecklist } from 'react-icons/md';
 import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
@@ -53,6 +53,8 @@ const MyCrewsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadCrews();
@@ -215,7 +217,37 @@ const MyCrewsPage: React.FC = () => {
   };
 
   const handleBulkModeChange = (isBulkMode: boolean) => {
-    // Handle bulk mode state if needed
+    setBulkMode(isBulkMode);
+    setSelectedCrews(new Set());
+  };
+
+  const handleCrewSelection = (crewId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCrews);
+    if (checked) {
+      newSelected.add(crewId);
+    } else {
+      newSelected.delete(crewId);
+    }
+    setSelectedCrews(newSelected);
+  };
+
+  const handleBulkDelete = () => {
+    const indicesToDelete = Array.from(selectedCrews)
+      .map(crewId => savedCrews.findIndex(crew => crew.id === crewId))
+      .filter(index => index !== -1)
+      .sort((a, b) => b - a); // Delete from highest index first
+    
+    indicesToDelete.forEach(index => handleDeleteCrew(index));
+    setSelectedCrews(new Set());
+  };
+
+  const handleBulkGenerate = () => {
+    // Navigate to generate page with selected crews
+    navigate('/generate', { 
+      state: { 
+        selectedCrewIds: Array.from(selectedCrews) 
+      } 
+    });
   };
 
   if (!user) {
@@ -302,7 +334,31 @@ const MyCrewsPage: React.FC = () => {
             {savedCrews.length} crew{savedCrews.length !== 1 ? 's' : ''} in your account
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {bulkMode && selectedCrews.size > 0 && (
+            <>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleBulkDelete}
+              >
+                Delete {selectedCrews.size}
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleBulkGenerate}
+              >
+                Generate {selectedCrews.size}
+              </Button>
+            </>
+          )}
+          <Button
+            variant={bulkMode ? "contained" : "outlined"}
+            startIcon={<MdChecklist />}
+            onClick={() => handleBulkModeChange(!bulkMode)}
+          >
+            Select Multiple
+          </Button>
           <Button
             variant="outlined"
             startIcon={<MdPersonAdd />}
@@ -329,6 +385,11 @@ const MyCrewsPage: React.FC = () => {
         onGenerateImage={handleGenerateImage}
         onBulkGenerateImages={handleBulkGenerateImages}
         onBulkModeChange={handleBulkModeChange}
+        bulkMode={bulkMode}
+        selectedCrews={selectedCrews}
+        onCrewSelection={handleCrewSelection}
+        onBulkDelete={handleBulkDelete}
+        onBulkGenerate={handleBulkGenerate}
       />
     </Box>
   );

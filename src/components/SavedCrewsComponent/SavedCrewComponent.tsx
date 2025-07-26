@@ -1,14 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Card, CardContent, Typography, Button, IconButton, Tooltip, TextField, InputAdornment, Checkbox, FormControl, InputLabel, Select, MenuItem, Chip, Divider } from '@mui/material';
-import BulkImageGenerator from '../BulkImageGenerator/BulkImageGenerator';
+import React, { useState } from 'react';
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Button, 
+  IconButton, 
+  TextField, 
+  InputAdornment,
+  Chip,
+  Checkbox
+} from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import styles from './SavedCrewsComponent.module.css';
-import CloseIcon from '@mui/icons-material/Close';
-import EditIcon from '@mui/icons-material/Edit';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { 
+  MdDelete, 
+  MdEdit, 
+  MdImage, 
+  MdSearch, 
+  MdClear 
+} from 'react-icons/md';
 
 interface CrewMember {
   seat: string;
@@ -38,152 +48,26 @@ interface SavedCrewsComponentProps {
     clubIcon?: any
   ) => void;
   onBulkModeChange?: (isBulkMode: boolean) => void;
+  bulkMode?: boolean;
+  selectedCrews?: Set<string>;
+  onCrewSelection?: (crewId: string, checked: boolean) => void;
+  onBulkDelete?: () => void;
+  onBulkGenerate?: () => void;
 }
 
-const formatSeatLabel = (seat: string) => {
-  if (seat === 'Cox') return <span style={{ fontWeight: 700 }}>Cox:</span>;
-  if (seat === 'Stroke Seat') return <span style={{ fontWeight: 700 }}>S:</span>;
-  if (seat === 'Bow') return <span style={{ fontWeight: 700 }}>B:</span>;
-  const match = seat.match(/(\d+)/);
-  if (match) return <span style={{ fontWeight: 700 }}>{match[1]}:</span>;
-  return <span style={{ fontWeight: 700 }}>{seat}:</span>;
-};
-
-const truncateName = (name: string) => {
-  if (name.length > 12) {
-    return name.slice(0, 12).trimEnd() + '...';
-  }
-  return name;
-};
-
-// Component to render mini crew thumbnail
-const CrewThumbnail: React.FC<{ crew: SavedCrew; boatClass: string; getBoatClassColor: (bc: string) => string }> = ({ crew, boatClass, getBoatClassColor }) => {
-
-  const rowers = crew.crewMembers.filter(m => m.seat !== 'Cox').slice(0, 4); // Show max 4 rowers
-  const hasCox = crew.crewMembers.some(m => m.seat === 'Cox');
-
-  return (
-    <Box 
-      sx={{ 
-        width: 60, 
-        height: 40, 
-        backgroundColor: getBoatClassColor(boatClass),
-        borderRadius: 1,
-        position: 'relative',
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        mb: 1,
-        opacity: 0.8
-      }}
-    >
-      {/* Cox indicator */}
-      {hasCox && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 2,
-            left: 2,
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            border: '1px solid rgba(0,0,0,0.2)'
-          }}
-        />
-      )}
-      
-      {/* Rower indicators */}
-      <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-        {rowers.map((_, idx) => (
-          <Box
-            key={idx}
-            sx={{
-              width: 8,
-              height: 20,
-              backgroundColor: 'rgba(255,255,255,0.7)',
-              borderRadius: 0.5,
-              border: '1px solid rgba(0,0,0,0.1)'
-            }}
-          />
-        ))}
-        {crew.crewMembers.length > 5 && (
-          <Typography variant="caption" sx={{ color: 'white', fontSize: 8, ml: 0.5 }}>
-            ...
-          </Typography>
-        )}
-      </Box>
-      
-      {/* Boat class label */}
-      <Typography 
-        variant="caption" 
-        sx={{ 
-          position: 'absolute',
-          bottom: 1,
-          right: 2,
-          fontSize: 8,
-          fontWeight: 'bold',
-          color: 'white',
-          textShadow: '1px 1px 1px rgba(0,0,0,0.5)'
-        }}
-      >
-        {boatClass}
-      </Typography>
-    </Box>
-  );
-};
-
-const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, recentCrews, onDeleteCrew, onEditCrew, onGenerateImage, onBulkGenerateImages, onBulkModeChange }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
-  const [showBulkOptions, setShowBulkOptions] = useState(false);
-  const [raceFilter, setRaceFilter] = useState('');
+const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ 
+  savedCrews, 
+  onDeleteCrew, 
+  onEditCrew, 
+  onGenerateImage,
+  bulkMode = false,
+  selectedCrews = new Set(),
+  onCrewSelection,
+  onBulkDelete,
+  onBulkGenerate
+}) => {
   const theme = useTheme();
-
-  // Get unique race names with counts for filtering
-  const raceWithCounts = [...new Set(savedCrews.map(crew => crew.raceName))].map(race => ({
-    name: race,
-    count: savedCrews.filter(crew => crew.raceName === race).length
-  }));
-
-  // Handle crew selection for bulk operations
-  const handleCrewSelection = (crewId: string, checked: boolean) => {
-    const newSelected = new Set(selectedCrews);
-    if (checked) {
-      newSelected.add(crewId);
-    } else {
-      newSelected.delete(crewId);
-    }
-    setSelectedCrews(newSelected);
-  };
-
-  const handleSelectAll = () => {
-    if (selectedCrews.size === filteredCrews.length) {
-      setSelectedCrews(new Set());
-    } else {
-      setSelectedCrews(new Set(filteredCrews.map(crew => crew.id)));
-    }
-  };
-
-  const handleBulkGenerate = async (
-    crewIds: string[], 
-    template: string, 
-    colors?: { primary: string; secondary: string },
-    onProgress?: (current: number, total: number, crewName: string) => void,
-    clubIcon?: any
-  ) => {
-    if (onBulkGenerateImages) {
-      await onBulkGenerateImages(crewIds, template, colors, onProgress, clubIcon);
-      setSelectedCrews(new Set());
-      setShowBulkOptions(false);
-      onBulkModeChange?.(false);
-    }
-  };
-
-  if (savedCrews.length === 0) {
-    return null;
-  }
+  const [searchTerm, setSearchTerm] = useState('');
 
   const getBoatClass = (crew: SavedCrew) => {
     if (crew.boatClass) return crew.boatClass;
@@ -196,169 +80,56 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
     return '';
   };
 
-  const NameWithTooltip = ({ name, children }: { name: string; children: React.ReactNode }) =>
-    name.length > 12 ? (
-      <Tooltip title={name} arrow>
-        <span>{children}</span>
-      </Tooltip>
-    ) : (
-      <>{children}</>
-    );
-
-  // Filter crews based on search term and race filter
+  // Filter crews based on search
   const filteredCrews = savedCrews.filter(crew => {
-    const boatClass = crew.boatClass || getBoatClass(crew);
+    if (!searchTerm) return true;
+    
     const searchLower = searchTerm.toLowerCase();
-    
-    // Race filter
-    const raceMatches = !raceFilter || crew.raceName === raceFilter;
-    
-    // Search filter
-    const searchMatches = !searchTerm || (
-      // Search club name
+    return (
       crew.boatClub?.toLowerCase().includes(searchLower) ||
-      // Search race name
       crew.raceName?.toLowerCase().includes(searchLower) ||
-      // Search boat name
       crew.boatName?.toLowerCase().includes(searchLower) ||
-      // Search boat class
-      boatClass.toLowerCase().includes(searchLower) ||
-      // Search crew member names
-      crew.crewMembers.some(member => 
-        member.name.toLowerCase().includes(searchLower) ||
-        member.seat.toLowerCase().includes(searchLower)
-      )
+      getBoatClass(crew).toLowerCase().includes(searchLower)
     );
-    
-    return raceMatches && searchMatches;
   });
 
-  // Sort filtered crews by boat size (largest first)
-  const sortedCrews = [...filteredCrews].sort((a, b) => {
-    const boatClassA = a.boatClass || getBoatClass(a);
-    const boatClassB = b.boatClass || getBoatClass(b);
-    
-    const sizeA = a.crewMembers.length;
-    const sizeB = b.crewMembers.length;
-    
-    // Sort by size descending, then by boat class
-    if (sizeA !== sizeB) {
-      return sizeB - sizeA;
-    }
-    return boatClassA.localeCompare(boatClassB);
-  });
-
-  const handleClearSearch = () => {
-    setSearchTerm('');
-  };
-
-  // Export crew list to CSV
-  const handleExportCSV = () => {
-    const headers = ['Club Name', 'Race Name', 'Boat Name', 'Boat Class', 'Crew Members'];
-    const csvContent = [
-      headers.join(','),
-      ...savedCrews.map(crew => {
-        const boatClass = crew.boatClass || getBoatClass(crew);
-        const crewMembersStr = crew.crewMembers.map(m => `${m.seat}: ${m.name}`).join('; ');
-        return [
-          `"${crew.boatClub}"`,
-          `"${crew.raceName}"`, 
-          `"${crew.boatName}"`,
-          `"${boatClass}"`,
-          `"${crewMembersStr}"`
-        ].join(',');
-      })
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `rowgram_crews_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Get recent crews that still exist
-  const validRecentCrews = recentCrews.filter(idx => idx < savedCrews.length).slice(0, 3);
-
-  // Shared function for boat class colors
-  const getBoatClassColor = (bc: string) => {
+  const getBoatClassColor = (boatClass: string) => {
     const colors: Record<string, string> = {
-      '8+': '#FF6B6B', // Red
-      '4+': '#4ECDC4', // Teal  
-      '4-': '#45B7D1', // Blue
-      '4x': '#96CEB4', // Green
-      '2-': '#E67E22', // Burnt Orange
-      '2x': '#DDA0DD', // Plum
-      '1x': '#FFB347', // Orange
+      '8+': '#FF6B6B',
+      '4+': '#4ECDC4', 
+      '4-': '#45B7D1',
+      '4x': '#96CEB4',
+      '2-': '#E67E22',
+      '2x': '#DDA0DD',
+      '1x': '#FFB347',
     };
-    return colors[bc] || '#5E98C2';
+    return colors[boatClass] || '#9E9E9E';
   };
+
 
   return (
-    <Box className={styles.container} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 6 }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
-        Saved Crews
-      </Typography>
+    <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 
-      
-      {/* Race Filter and Bulk Actions */}
-      <Box sx={{ width: '100%', maxWidth: 800, mb: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-        {/* Race Filter */}
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Filter by Race</InputLabel>
-          <Select
-            value={raceFilter}
-            onChange={(e) => setRaceFilter(e.target.value)}
-            label="Filter by Race"
-            size="small"
-          >
-            <MenuItem value="">All Races ({savedCrews.length})</MenuItem>
-            {raceWithCounts.map(({ name, count }) => (
-              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {/* Bulk Selection Toggle */}
-        <Button
-          variant={showBulkOptions ? "contained" : "outlined"}
-          onClick={() => {
-            const newBulkMode = !showBulkOptions;
-            setShowBulkOptions(newBulkMode);
-            setSelectedCrews(new Set());
-            onBulkModeChange?.(newBulkMode);
-          }}
-          sx={{ ml: 'auto' }}
-        >
-          {showBulkOptions ? 'Exit Bulk Mode' : 'Bulk Select Mode'}
-        </Button>
-      </Box>
-
-      {/* Search Bar and Export Button */}
-      <Box sx={{ width: '100%', maxWidth: 800, mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+      {/* Search Bar */}
+      <Box sx={{ mb: 4 }}>
         <TextField
           fullWidth
-          placeholder="Search crews by name, club, race, boat type, or crew members..."
+          placeholder="Search crews by name, club, race, or boat type..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: theme.palette.primary.main }} />
+                <MdSearch size={20} color={theme.palette.text.secondary} />
               </InputAdornment>
             ),
             endAdornment: searchTerm && (
               <InputAdornment position="end">
                 <IconButton
                   size="small"
-                  onClick={handleClearSearch}
-                  sx={{ color: theme.palette.text.secondary }}
+                  onClick={() => setSearchTerm('')}
                 >
-                  <ClearIcon fontSize="small" />
+                  <MdClear size={16} />
                 </IconButton>
               </InputAdornment>
             ),
@@ -366,281 +137,214 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
-              '&:hover': {
-                '& > fieldset': {
-                  borderColor: theme.palette.primary.main,
-                },
-              },
-              '&.Mui-focused': {
-                '& > fieldset': {
-                  borderColor: theme.palette.primary.main,
-                },
-              },
-            },
+            }
           }}
         />
         
-        {/* Export Button */}
-        <Tooltip title="Export crew list to CSV">
-          <Button
-            variant="outlined"
-            onClick={handleExportCSV}
-            startIcon={<FileDownloadIcon />}
-            sx={{
-              borderColor: theme.palette.primary.main,
-              color: theme.palette.primary.main,
-              whiteSpace: 'nowrap',
-              '&:hover': {
-                borderColor: theme.palette.primary.dark || '#4177a6',
-                backgroundColor: `rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.1)`,
-              },
-            }}
-            disabled={savedCrews.length === 0}
-          >
-            Export CSV
-          </Button>
-        </Tooltip>
+        {searchTerm && (
+          <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
+            {filteredCrews.length === 0 
+              ? `No crews found matching "${searchTerm}"` 
+              : `Found ${filteredCrews.length} crew${filteredCrews.length === 1 ? '' : 's'}`
+            }
+          </Typography>
+        )}
       </Box>
 
-      {/* Results Info */}
-      {searchTerm && (
-        <Typography variant="body2" sx={{ mb: 2, color: theme.palette.text.secondary, fontStyle: 'italic' }}>
-          {sortedCrews.length === 0 
-            ? `No crews found matching "${searchTerm}"` 
-            : `Found ${sortedCrews.length} crew${sortedCrews.length === 1 ? '' : 's'} matching "${searchTerm}"`
-          }
-        </Typography>
-      )}
-      <Box className={styles.crewsGrid} sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', alignItems: 'flex-start', width: '100%' }}>
-        {sortedCrews.map((crew) => {
+      {/* Crews Grid */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+        gap: 3 
+      }}>
+        {filteredCrews.map((crew, index) => {
           const originalIndex = savedCrews.findIndex(c => c === crew);
-          const boatClass = crew.boatClass || getBoatClass(crew);
+          const boatClass = getBoatClass(crew);
+          
           return (
-            <Card key={originalIndex} className={styles.crewCard} sx={{ 
-              minWidth: crew.crewMembers.length <= 2 ? 200 : 240, 
-              maxWidth: crew.crewMembers.length <= 2 ? 220 : 270, 
-              height: crew.crewMembers.length <= 2 ? 320 : 420, // 8s and 4s same height, 2s and 1s same height
-              mx: 1, 
-              my: 1, 
-              boxShadow: 3, 
-              borderRadius: 3, 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              p: 2, 
-              position: 'relative' 
-            }}>
-              <IconButton
-                aria-label="delete"
-                size="small"
-                onClick={() => onDeleteCrew(originalIndex)}
-                sx={{ position: 'absolute', top: 6, right: 6, zIndex: 2 }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-              
-              {/* Bulk Selection Checkbox */}
-              {showBulkOptions && (
-                <Checkbox
-                  checked={selectedCrews.has(crew.id)}
-                  onChange={(e) => handleCrewSelection(crew.id, e.target.checked)}
+            <Card 
+              key={crew.id} 
+              sx={{ 
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                height: 280,
+                display: 'flex',
+                flexDirection: 'column',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: theme.shadows[8]
+                }
+              }}
+            >
+              {/* Delete button (single mode) */}
+              {!bulkMode && (
+                <IconButton
+                  onClick={() => onDeleteCrew(originalIndex)}
                   sx={{ 
                     position: 'absolute', 
-                    top: 6, 
-                    left: 6, 
-                    zIndex: 2,
-                    color: theme.palette.primary.main,
-                    '&.Mui-checked': {
-                      color: theme.palette.primary.main,
-                    },
-                  }}
-                />
-              )}
-              <CardContent sx={{ 
-                width: '100%', 
-                height: '100%',
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'space-between', // Keep buttons at bottom
-                p: 0,
-                '&:last-child': {
-                  paddingBottom: 0
-                }
-              }}>
-                {/* Header info wrapper for consistent spacing */}
-                <Box sx={{ width: '100%', textAlign: 'center' }}>
-                  
-                  {/* Boat Type Badge */}
-                  <Box sx={{ 
-                    backgroundColor: getBoatClassColor(boatClass), 
-                    color: 'white', 
-                    px: 2, 
-                    py: 0.5, 
-                    borderRadius: 2, 
-                    mb: 1,
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    display: 'inline-block'
-                  }}>
-                    {boatClass} {
-                      boatClass === '8+' ? 'Eight' :
-                      boatClass === '4+' ? 'Four' :
-                      boatClass === '4-' ? 'Four' :
-                      boatClass === '4x' ? 'Quad' :
-                      boatClass === '2-' ? 'Pair' :
-                      boatClass === '2x' ? 'Double' :
-                      boatClass === '1x' ? 'Single' :
-                      'Boat'
+                    top: 8, 
+                    right: 8, 
+                    zIndex: 1,
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    color: theme.palette.text.secondary,
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                      color: theme.palette.error.main
                     }
-                  </Box>
-                  
-                  <Typography variant="subtitle1" className={styles.boatClub} sx={{ fontWeight: 500, textAlign: 'center', mb: 0.5, color: theme.palette.text.primary, fontSize: 18 }}>
-                    {crew.boatClub}
-                  </Typography>
-                  <Typography variant="body2" className={styles.raceName} sx={{ textAlign: 'center', color: theme.palette.primary.main, mb: 0.5, fontSize: 15 }}>
-                    {crew.raceName}
-                  </Typography>
-                  <Typography variant="body2" className={styles.boatName} sx={{ textAlign: 'center', color: theme.palette.text.secondary, mb: 0.5, fontSize: 14 }}>
-                    {crew.boatName}
-                  </Typography>
+                  }}
+                  size="small"
+                >
+                  <MdDelete size={16} />
+                </IconButton>
+              )}
 
+              <CardContent sx={{ 
+                pb: 2, 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                {/* Boat Type Badge with optional checkbox */}
+                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, minHeight: 32 }}>
+                  <Chip
+                    label={boatClass}
+                    size="small"
+                    sx={{
+                      backgroundColor: getBoatClassColor(boatClass),
+                      color: 'white',
+                      fontWeight: 600
+                    }}
+                  />
+                  <Box sx={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {bulkMode && onCrewSelection && (
+                      <Checkbox
+                        checked={selectedCrews.has(crew.id)}
+                        onChange={(e) => onCrewSelection(crew.id, e.target.checked)}
+                        sx={{ 
+                          color: theme.palette.primary.main,
+                          '&.Mui-checked': {
+                            color: theme.palette.primary.main,
+                          },
+                          p: 0
+                        }}
+                        size="small"
+                      />
+                    )}
+                  </Box>
                 </Box>
-                {boatClass === '8+' ? (
-                  <Box sx={{ width: '100%', mb: 1 }}>
-                    <NameWithTooltip name={crew.crewMembers[0]?.name || ''}>
-                      <Typography variant="subtitle2" sx={{ textAlign: 'center', fontWeight: 500, mb: 1, fontSize: 15 }}>
-                        {formatSeatLabel('Cox')} {truncateName(crew.crewMembers[0]?.name || '')}
+
+                {/* Split Layout: Club Info + Crew Members */}
+                <Box sx={{ display: 'flex', gap: 2, mb: 3, flex: 1 }}>
+                  {/* Left Half - Club Info */}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                      {crew.boatClub}
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Typography variant="body1" sx={{ color: theme.palette.primary.main }}>
+                        {crew.raceName}
                       </Typography>
-                    </NameWithTooltip>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                      <Box>
-                        {[1, 3, 5, 7].map((i, idx) => (
-                          <NameWithTooltip key={idx} name={crew.crewMembers[i]?.name || ''}>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontSize: 13,
-                                textAlign: 'left',
-                                py: 0.5,
-                                px: 1,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                borderRadius: 1,
-                                transition: 'background 0.2s',
-                                '&:hover': {
-                                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f7fa',
-                                },
-                              }}
-                            >
-                              {formatSeatLabel(crew.crewMembers[i]?.seat || '')} {truncateName(crew.crewMembers[i]?.name || '')}
-                            </Typography>
-                          </NameWithTooltip>
-                        ))}
-                      </Box>
-                      <Box>
-                        {[2, 4, 6, 8].map((i, idx) => (
-                          <NameWithTooltip key={idx} name={crew.crewMembers[i]?.name || ''}>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontSize: 13,
-                                textAlign: 'left',
-                                py: 0.5,
-                                px: 1,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                borderRadius: 1,
-                                transition: 'background 0.2s',
-                                '&:hover': {
-                                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f7fa',
-                                },
-                              }}
-                            >
-                              {formatSeatLabel(crew.crewMembers[i]?.seat || '')} {truncateName(crew.crewMembers[i]?.name || '')}
-                            </Typography>
-                          </NameWithTooltip>
-                        ))}
-                      </Box>
+                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                        •
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                        {crew.boatName}
+                      </Typography>
                     </Box>
                   </Box>
-                ) : (
-                  <Box className={styles.crewList} sx={{ 
-                    width: '100%', 
-                    mb: 1,
-                    flex: 1, // Take up available space
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center', // Center content for smaller crews
-                    gap: 0
-                  }}>
-                    {crew.crewMembers.map((member, idx) => (
-                      <NameWithTooltip key={idx} name={member.name}>
-                        <Typography
-                          variant="body2"
+
+                  {/* Right Half - Crew Members */}
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      gap: 0.5,
+                      maxHeight: 140,
+                      overflow: 'auto',
+                      '&::-webkit-scrollbar': {
+                        width: '4px',
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                        borderRadius: '2px',
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '2px',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        },
+                      },
+                    }}>
+                      {crew.crewMembers.map((member, idx) => (
+                        <Box
+                          key={idx}
                           sx={{
-                            textAlign: 'center',
-                            fontSize: 13,
-                            py: 0.5,
-                            px: 1,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            borderRadius: 1,
-                            transition: 'background 0.2s',
-                            '&:hover': {
-                              backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#f5f7fa',
-                            },
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
                           }}
                         >
-                          {formatSeatLabel(member.seat)} {truncateName(member.name)}
-                        </Typography>
-                      </NameWithTooltip>
-                    ))}
+                          {/* Seat Badge */}
+                          <Box
+                            sx={{
+                              backgroundColor: member.seat === 'Cox' ? '#FFB347' : theme.palette.primary.main,
+                              color: 'white',
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 1,
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              minWidth: 24,
+                              textAlign: 'center'
+                            }}
+                          >
+                            {member.seat === 'Cox' ? 'Cox' : 
+                             member.seat === 'Stroke Seat' ? 'S' :
+                             member.seat === 'Bow' ? 'B' :
+                             member.seat.match(/(\d+)/) ? member.seat.match(/(\d+)/)?.[1] : 
+                             member.seat}
+                          </Box>
+                          
+                          {/* Member Name */}
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontSize: '0.875rem',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1
+                            }}
+                          >
+                            {member.name}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
-                )}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mt: 1 }}>
+                </Box>
+
+                {/* Actions - Always at bottom */}
+                <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
                   <Button
-                    variant="contained"
-                    startIcon={<EditIcon style={{ color: '#fff' }} />}
+                    variant="outlined"
+                    startIcon={<MdEdit size={16} />}
                     onClick={() => onEditCrew(originalIndex)}
-                    sx={{
-                      backgroundColor: theme.palette.primary.main,
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.dark || '#4177a6',
-                      },
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
+                    size="small"
+                    sx={{ flex: 1 }}
                   >
-                    Edit Crew
+                    Edit
                   </Button>
                   <Button
                     variant="contained"
-                    startIcon={<AutoAwesomeIcon style={{ color: '#fff' }} />}
+                    startIcon={<MdImage size={16} />}
                     onClick={() => onGenerateImage(originalIndex)}
-                    sx={{
-                      backgroundColor: theme.palette.primary.main,
-                      color: '#fff',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.dark || '#4177a6',
-                      },
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
+                    size="small"
+                    sx={{ flex: 1 }}
                   >
-                    Generate Image
+                    Generate
                   </Button>
                 </Box>
               </CardContent>
@@ -649,14 +353,16 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ savedCrews, r
         })}
       </Box>
 
-      {/* Bulk Generation Section */}
-      {showBulkOptions && selectedCrews.size > 0 && (
-        <BulkImageGenerator
-          selectedCrews={Array.from(selectedCrews)}
-          onGenerate={handleBulkGenerate}
-          onDeselectCrew={(crewId) => handleCrewSelection(crewId, false)}
-          savedCrews={savedCrews}
-        />
+      {/* Empty State */}
+      {filteredCrews.length === 0 && !searchTerm && (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h6" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
+            No crews yet
+          </Typography>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+            Create your first crew to get started
+          </Typography>
+        </Box>
       )}
     </Box>
   );
