@@ -9,7 +9,7 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MdSave, MdArrowBack, MdCheckCircle } from 'react-icons/md';
 import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
@@ -46,6 +46,7 @@ const boatClassToBoatType = (boatClass: string) => {
 const CreateCrewPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
 
@@ -57,7 +58,25 @@ const CreateCrewPage: React.FC = () => {
   const [coxName, setCoxName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
 
+  // Load editing data if present
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.editingCrew) {
+      const crew = state.editingCrew;
+      setEditingCrewId(crew.id);
+      setBoatClass(crew.boatClass);
+      setClubName(crew.clubName);
+      setRaceName(crew.raceName);
+      setBoatName(crew.boatName);
+      setCrewNames(crew.crewNames);
+      setCoxName(crew.coxName);
+      
+      // Clear the navigation state to prevent re-loading on refresh
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -170,12 +189,19 @@ const CreateCrewPage: React.FC = () => {
         crewNames: allCrewNames
       };
 
-      const result = await ApiService.createCrew(crewData);
+      let result;
+      if (editingCrewId) {
+        // Update existing crew
+        result = await ApiService.updateCrew(editingCrewId, crewData);
+      } else {
+        // Create new crew
+        result = await ApiService.createCrew(crewData);
+      }
       
       if (result.data) {
         clearDraft();
         
-        trackEvent('crew_created', {
+        trackEvent(editingCrewId ? 'crew_updated' : 'crew_created', {
           boatClass,
           crewSize: allNames.length,
           clubName,
@@ -185,7 +211,7 @@ const CreateCrewPage: React.FC = () => {
         // Navigate immediately with success message
         navigate('/crews', { 
           state: { 
-            successMessage: `Crew "${boatName}" saved successfully!` 
+            successMessage: `Crew "${boatName}" ${editingCrewId ? 'updated' : 'saved'} successfully!` 
           } 
         });
       }
@@ -207,10 +233,10 @@ const CreateCrewPage: React.FC = () => {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, textAlign: 'center' }}>
-            Create New Crew
+            {editingCrewId ? 'Edit Crew' : 'Create New Crew'}
           </Typography>
           <Typography variant="body2" sx={{ color: theme.palette.text.secondary, textAlign: 'center' }}>
-            Enter your crew information and add members to create your lineup
+            {editingCrewId ? 'Update your crew information and members' : 'Enter your crew information and add members to create your lineup'}
           </Typography>
         </CardContent>
       </Card>
@@ -272,6 +298,7 @@ const CreateCrewPage: React.FC = () => {
                   saving={saving}
                   canSave={canSave}
                   user={user}
+                  isEditing={!!editingCrewId}
                 />
               )}
               

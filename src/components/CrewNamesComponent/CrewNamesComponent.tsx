@@ -17,6 +17,7 @@ interface CrewNamesComponentProps {
   saving?: boolean;
   canSave?: boolean;
   user?: any;
+  isEditing?: boolean;
 }
 
 const getSeatLabels = (boatClass: string): string[] => {
@@ -64,6 +65,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   saving = false,
   canSave = false,
   user,
+  isEditing = false,
 }) => {
   const theme = useTheme();
   const seatLabels = getSeatLabels(boatClass);
@@ -164,7 +166,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           }}
           startIcon={saving ? undefined : <MdSave size={20} />}
         >
-          {saving ? 'Saving...' : 'Save Crew'}
+          {saving ? 'Saving...' : (isEditing ? 'Update Crew' : 'Save Crew')}
         </Button>
       )}
     </Box>

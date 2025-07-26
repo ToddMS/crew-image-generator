@@ -35,11 +35,15 @@ interface ClubIconData {
 interface ImageGeneratorProps {
   onGenerate: (imageName: string, template: string, colors?: { primary: string; secondary: string }, saveImage?: boolean, clubIcon?: ClubIconData | null) => Promise<void>;
   selectedCrew?: any;
+  generating?: boolean;
+  buttonText?: string;
 }
 
 const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   onGenerate,
   selectedCrew,
+  generating = false,
+  buttonText = 'Generate Image'
 }) => {
   const { user } = useAuth();
   const theme = useTheme();
@@ -267,7 +271,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
       <Button
         type="submit"
         variant="contained"
-        disabled={isGenerating || !imageName || !selectedTemplate}
+        disabled={generating || isGenerating || !imageName || !selectedTemplate}
         sx={{
           backgroundColor: theme.palette.primary.main,
           color: '#fff',
@@ -285,14 +289,14 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
           gap: '8px',
         }}
       >
-        {isGenerating ? (
+        {(generating || isGenerating) ? (
           <>
             <CircularProgress size={20} color="inherit" />
             Generating...
           </>
         ) : (
           <>
-            Generate Image
+            {buttonText}
             <MdImage size={24} />
           </>
         )}

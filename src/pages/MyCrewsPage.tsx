@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdPersonAdd, MdImage, MdChecklist } from 'react-icons/md';
+import { MdChecklist, MdPersonAdd } from 'react-icons/md';
 import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
@@ -157,8 +157,21 @@ const MyCrewsPage: React.FC = () => {
 
   const handleEditCrew = (index: number) => {
     updateRecentCrews(index);
-    // For now, navigate to create page - we could enhance this later
-    navigate('/create');
+    const crew = savedCrews[index];
+    // Navigate to create page with crew data for editing
+    navigate('/create', {
+      state: {
+        editingCrew: {
+          id: crew.id,
+          boatClass: crew.boatClass,
+          clubName: crew.boatClub,
+          raceName: crew.raceName,
+          boatName: crew.boatName,
+          crewNames: crew.crewMembers.filter(member => member.seat !== 'Cox').map(member => member.name),
+          coxName: crew.crewMembers.find(member => member.seat === 'Cox')?.name || ''
+        }
+      }
+    });
   };
 
   const handleGenerateImage = (index: number) => {
@@ -348,7 +361,7 @@ const MyCrewsPage: React.FC = () => {
                 variant="contained"
                 onClick={handleBulkGenerate}
               >
-                Generate {selectedCrews.size}
+                Generate Crews ({selectedCrews.size})
               </Button>
             </>
           )}
@@ -358,20 +371,6 @@ const MyCrewsPage: React.FC = () => {
             onClick={() => handleBulkModeChange(!bulkMode)}
           >
             Select Multiple
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<MdPersonAdd />}
-            onClick={() => navigate('/create')}
-          >
-            New Crew
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<MdImage />}
-            onClick={() => navigate('/generate')}
-          >
-            Generate Images
           </Button>
         </Box>
       </Box>
