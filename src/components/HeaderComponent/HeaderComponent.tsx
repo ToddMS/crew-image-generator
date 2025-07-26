@@ -1,30 +1,68 @@
 import React, { useState } from 'react';
 import { Box, AppBar, Toolbar, Typography, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate, useLocation } from 'react-router-dom';
 import RowGramIcon from '../../assets/RowGramIcon.png';
 import { TbHelp } from "react-icons/tb";
 import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
 import { MdPhotoLibrary, MdInsights } from "react-icons/md";
 import { PiSquaresFourLight } from "react-icons/pi";
 import { useAuth } from '../../context/AuthContext';
+import { useAnalytics } from '../../context/AnalyticsContext';
 import AuthModal from '../Auth/AuthModal';
 import UserProfileDropdown from '../Auth/UserProfileDropdown';
 
-interface HeaderComponentProps {
-  onGalleryClick?: () => void;
-  onAnalyticsClick?: () => void;
-}
-
-const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick, onAnalyticsClick }) => {
+const HeaderComponent: React.FC = () => {
   const { user, isAdmin } = useAuth();
+  const { trackEvent } = useAnalytics();
   const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    // If we're not on the home page, navigate there first
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
+  };
+
+  const handleGalleryClick = () => {
+    // Always navigate to home and scroll to gallery
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById('gallery');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById('gallery');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handleAnalyticsClick = () => {
+    if (!isAdmin()) {
+      console.log('Access denied: User is not admin');
+      return;
+    }
+    trackEvent('analytics_viewed');
+    navigate('/analytics');
   };
 
   return (
@@ -117,7 +155,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick, onAna
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <MdPhotoLibrary size={19} />
                 <Button 
-                  onClick={onGalleryClick}
+                  onClick={handleGalleryClick}
                   sx={{ 
                     color: theme.palette.text.primary,
                     textTransform: 'none',
@@ -137,7 +175,7 @@ const HeaderComponent: React.FC<HeaderComponentProps> = ({ onGalleryClick, onAna
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <MdInsights size={19} />
                 <Button 
-                  onClick={onAnalyticsClick}
+                  onClick={handleAnalyticsClick}
                   sx={{ 
                     color: theme.palette.text.primary,
                     textTransform: 'none',
