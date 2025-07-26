@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Grid,
@@ -6,14 +6,16 @@ import {
   CardContent,
   Typography,
   Button,
-  IconButton,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
-  Chip,
   Paper,
-  Avatar
+  Avatar,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
@@ -22,104 +24,19 @@ import {
   MdImage,
   MdGroup,
   MdPhotoLibrary,
-  MdTrendingUp,
-  MdHistory,
-  MdChevronRight
+  MdArrowForward,
+  MdCheckCircle,
+  MdSettings
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
-import { useAnalytics } from '../context/AnalyticsContext';
-import { ApiService } from '../services/api.service';
 import OnboardingFlow from '../components/Onboarding/OnboardingFlow';
 import { useOnboarding } from '../context/OnboardingContext';
-
-interface DashboardStats {
-  totalCrews: number;
-  totalImages: number;
-  recentActivity: Array<{
-    id: string;
-    type: 'crew_created' | 'image_generated' | 'crew_updated';
-    title: string;
-    subtitle: string;
-    timestamp: Date;
-    icon: React.ReactNode;
-  }>;
-}
 
 const DashboardPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getEventsByType } = useAnalytics();
   const { shouldShowOnboarding, completeOnboarding } = useOnboarding();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCrews: 0,
-    totalImages: 0,
-    recentActivity: []
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [user]);
-
-  const loadDashboardData = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Load crews
-      const crewsResponse = await ApiService.getCrews();
-      const crews = crewsResponse.data || [];
-
-      // Load images count
-      let totalImages = 0;
-      for (const crew of crews) {
-        try {
-          const imagesResponse = await ApiService.getSavedImages(crew.id);
-          if (imagesResponse.data) {
-            totalImages += imagesResponse.data.length;
-          }
-        } catch (imageError) {
-          console.error(`Error loading images for crew ${crew.id}:`, imageError);
-        }
-      }
-
-      // Get recent activity from analytics
-      const recentCrews = getEventsByType('crew_created').slice(0, 3);
-      const recentImages = getEventsByType('image_generated').slice(0, 3);
-      
-      const recentActivity = [
-        ...recentCrews.map(event => ({
-          id: `crew_${event.timestamp}`,
-          type: 'crew_created' as const,
-          title: `New crew created`,
-          subtitle: `${event.metadata?.clubName || 'Unknown Club'} - ${event.metadata?.boatClass || 'Unknown Class'}`,
-          timestamp: new Date(event.timestamp),
-          icon: <MdGroup size={20} />
-        })),
-        ...recentImages.map(event => ({
-          id: `image_${event.timestamp}`,
-          type: 'image_generated' as const,
-          title: `Image generated`,
-          subtitle: `${event.metadata?.crewName || 'Unknown Crew'} - Template ${event.metadata?.template || '1'}`,
-          timestamp: new Date(event.timestamp),
-          icon: <MdImage size={20} />
-        }))
-      ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 5);
-
-      setStats({
-        totalCrews: crews.length,
-        totalImages,
-        recentActivity
-      });
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleOnboardingComplete = () => {
     completeOnboarding();
@@ -129,269 +46,214 @@ const DashboardPage: React.FC = () => {
     }, 500);
   };
 
-  const quickActions = [
+  const steps = [
     {
-      title: 'Create New Crew',
-      description: 'Start building a new crew lineup',
+      label: 'Create Your Crew',
+      description: 'Start by creating a crew lineup with boat type, club name, race name, and crew members.',
       icon: <MdPersonAdd size={24} />,
-      color: theme.palette.primary.main,
-      action: () => navigate('/create')
+      action: () => navigate('/create'),
+      actionText: 'Create Crew'
     },
     {
-      title: 'Generate Images',
-      description: 'Create lineup images for your crews',
+      label: 'Generate Images',
+      description: 'Turn your crew lineup into beautiful, shareable images using our templates.',
       icon: <MdImage size={24} />,
-      color: theme.palette.success.main,
-      action: () => navigate('/generate')
+      action: () => navigate('/generate'),
+      actionText: 'Generate Images'
     },
     {
-      title: 'Browse Gallery',
-      description: 'View your generated images',
+      label: 'View & Download',
+      description: 'Browse your generated images in the gallery and download them individually or in bulk.',
       icon: <MdPhotoLibrary size={24} />,
-      color: theme.palette.info.main,
-      action: () => navigate('/gallery')
-    },
-    {
-      title: 'Manage Crews',
-      description: 'Edit and organize your crews',
-      icon: <MdGroup size={24} />,
-      color: theme.palette.warning.main,
-      action: () => navigate('/crews')
+      action: () => navigate('/gallery'),
+      actionText: 'View Gallery'
     }
   ];
 
-  const statCards = [
+  const features = [
     {
-      title: 'Total Crews',
-      value: stats.totalCrews,
-      icon: <MdGroup size={32} />,
-      color: theme.palette.primary.main,
-      action: () => navigate('/crews')
+      title: 'Multiple Boat Types',
+      description: 'Support for 8+, 4+, 4-, 4x, 2-, 2x, and 1x boats'
     },
     {
-      title: 'Generated Images',
-      value: stats.totalImages,
-      icon: <MdPhotoLibrary size={32} />,
-      color: theme.palette.success.main,
-      action: () => navigate('/gallery')
+      title: 'Custom Templates',
+      description: 'Choose from multiple image templates for your crew lineups'
+    },
+    {
+      title: 'Club Branding',
+      description: 'Add your club colors and logo to personalize your images'
+    },
+    {
+      title: 'Bulk Generation',
+      description: 'Generate images for multiple crews at once to save time'
+    },
+    {
+      title: 'Easy Sharing',
+      description: 'Download individual images or bulk ZIP files for sharing'
+    },
+    {
+      title: 'Cloud Storage',
+      description: 'Your crews and images are saved securely to your account'
     }
   ];
-
-  if (!user) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          textAlign: 'center',
-          px: 3
-        }}
-      >
-        <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
-          Welcome to RowGram
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-          Sign in to start creating crew lineups and generating images
-        </Typography>
-      </Box>
-    );
-  }
 
   return (
-    <Box>
-      {/* Welcome Section */}
+    <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+      {/* Welcome Header */}
       <Paper
         sx={{
-          p: 3,
-          mb: 3,
-          background: `linear-gradient(135deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
+          p: 4,
+          mb: 4,
+          textAlign: 'center',
+          background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
           border: `1px solid ${theme.palette.divider}`
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar
-            src={user.profile_picture}
-            alt={user.name}
-            sx={{ width: 56, height: 56 }}
-          >
-            {user.name?.charAt(0)}
-          </Avatar>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
-              Welcome back, {user.name?.split(' ')[0]}!
+        {user ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, mb: 3 }}>
+            <Avatar
+              src={user.profile_picture}
+              alt={user.name}
+              sx={{ width: 64, height: 64 }}
+            >
+              {user.name?.charAt(0)}
+            </Avatar>
+            <Box sx={{ textAlign: 'left' }}>
+              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Welcome back, {user.name?.split(' ')[0]}!
+              </Typography>
+              <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+                Ready to create some amazing crew lineups?
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
+              Welcome to RowGram
             </Typography>
             <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-              Ready to create some amazing crew lineups?
+              Create beautiful crew lineup images for rowing teams
             </Typography>
           </Box>
-        </Box>
+        )}
+        
+        <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 600 }}>
+          🚣‍♂️ Your Complete Crew Lineup Solution
+        </Typography>
       </Paper>
 
-      <Grid container spacing={3}>
-        {/* Stats Cards */}
-        <Grid item xs={12} md={8}>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            {statCards.map((stat, index) => (
-              <Grid item xs={6} key={index}>
-                <Card
-                  sx={{
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: theme.shadows[4]
-                    }
-                  }}
-                  onClick={stat.action}
-                >
-                  <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box
-                      sx={{
-                        backgroundColor: `${stat.color}20`,
-                        color: stat.color,
-                        p: 1.5,
-                        borderRadius: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {stat.icon}
-                    </Box>
-                    <Box>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                        {stat.value}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                        {stat.title}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
+      {/* How It Works */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}>
+            How It Works
+          </Typography>
+          
+          <Grid container spacing={4}>
+            {steps.map((step, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      backgroundColor: theme.palette.primary.main,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 2
+                    }}
+                  >
+                    {step.icon}
+                  </Box>
+                  
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    {index + 1}. {step.label}
+                  </Typography>
+                  
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
+                    {step.description}
+                  </Typography>
+                  
+                  <Button
+                    variant="outlined"
+                    onClick={step.action}
+                    endIcon={<MdArrowForward />}
+                    sx={{ 
+                      textTransform: 'none',
+                      fontWeight: 600
+                    }}
+                  >
+                    {step.actionText}
+                  </Button>
+                </Box>
               </Grid>
             ))}
           </Grid>
+        </CardContent>
+      </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Quick Actions
-              </Typography>
-              <Grid container spacing={2}>
-                {quickActions.map((action, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Paper
-                      sx={{
-                        p: 2,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        border: `1px solid ${theme.palette.divider}`,
-                        '&:hover': {
-                          backgroundColor: `${action.color}08`,
-                          borderColor: action.color,
-                          transform: 'translateY(-1px)'
-                        }
-                      }}
-                      onClick={action.action}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
-                          sx={{
-                            backgroundColor: `${action.color}20`,
-                            color: action.color,
-                            p: 1,
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          {action.icon}
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                            {action.title}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                            {action.description}
-                          </Typography>
-                        </Box>
-                        <MdChevronRight size={20} color={theme.palette.text.secondary} />
-                      </Box>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Recent Activity */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ height: 'fit-content' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Recent Activity
-                </Typography>
-                <MdHistory size={20} color={theme.palette.text.secondary} />
-              </Box>
-              
-              {stats.recentActivity.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                    No recent activity yet
+      {/* Features */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}>
+            Features
+          </Typography>
+          
+          <Grid container spacing={3}>
+            {features.map((feature, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  <MdCheckCircle 
+                    size={32} 
+                    color={theme.palette.success.main} 
+                    style={{ marginBottom: 8 }}
+                  />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                    {feature.title}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                    Start creating crews to see activity here
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                    {feature.description}
                   </Typography>
                 </Box>
-              ) : (
-                <List sx={{ p: 0 }}>
-                  {stats.recentActivity.map((activity, index) => (
-                    <ListItem key={activity.id} sx={{ px: 0, py: 1 }}>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Box
-                          sx={{
-                            backgroundColor: theme.palette.primary.main + '20',
-                            color: theme.palette.primary.main,
-                            p: 0.5,
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          {activity.icon}
-                        </Box>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={activity.title}
-                        secondary={activity.subtitle}
-                        primaryTypographyProps={{
-                          variant: 'body2',
-                          fontWeight: 500
-                        }}
-                        secondaryTypographyProps={{
-                          variant: 'caption',
-                          color: theme.palette.text.secondary
-                        }}
-                      />
-                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                        {activity.timestamp.toLocaleDateString()}
-                      </Typography>
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Quick Start */}
+      {user && (
+        <Card>
+          <CardContent sx={{ p: 4, textAlign: 'center' }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+              Ready to Get Started?
+            </Typography>
+            <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
+              Create your first crew lineup and generate beautiful images in minutes
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate('/create')}
+              startIcon={<MdPersonAdd />}
+              sx={{
+                py: 1.5,
+                px: 4,
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                textTransform: 'none'
+              }}
+            >
+              Create Your First Crew
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Onboarding Flow */}
       <OnboardingFlow
