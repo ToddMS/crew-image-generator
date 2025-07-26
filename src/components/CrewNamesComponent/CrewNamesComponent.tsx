@@ -10,10 +10,13 @@ interface CrewNamesComponentProps {
   coxName: string;
   onNameChange: (idx: number, value: string) => void;
   onCoxNameChange: (value: string) => void;
-  onSaveCrew?: (boatClub: string, raceName: string, boatName: string) => void;
+  onSaveCrew?: () => void;
   clubName: string;
   raceName: string;
   boatName: string;
+  saving?: boolean;
+  canSave?: boolean;
+  user?: any;
 }
 
 const getSeatLabels = (boatClass: string): string[] => {
@@ -58,6 +61,9 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   clubName,
   raceName,
   boatName,
+  saving = false,
+  canSave = false,
+  user,
 }) => {
   const theme = useTheme();
   const seatLabels = getSeatLabels(boatClass);
@@ -69,12 +75,8 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
-        const allNamesFilled = hasCox ? 
-          coxName.trim() && crewNames.every(name => name.trim()) :
-          crewNames.every(name => name.trim());
-        
-        if (allNamesFilled && onSaveCrew) {
-          onSaveCrew(clubName, raceName, boatName);
+        if (canSave && onSaveCrew) {
+          onSaveCrew();
         }
       }
     };
@@ -85,7 +87,9 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onSaveCrew(clubName, raceName, boatName);
+    if (canSave && onSaveCrew) {
+      onSaveCrew();
+    }
   };
 
 
@@ -101,7 +105,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
     >
       {hasCox && (
         <Box sx={{ mb: 2 }}>
-          <Typography className={styles.label}>Cox</Typography>
+          <Typography className={styles.label} sx={{ mb: 0.5 }}>Cox</Typography>
           <TextField
             name="coxName"
             placeholder="Enter Cox name"
@@ -118,7 +122,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
         return (
           <Box key={idx} sx={{ mb: 2 }}>
-            <Typography className={styles.label}>{label}</Typography>
+            <Typography className={styles.label} sx={{ mb: 0.5 }}>{label}</Typography>
             <TextField
               name={`crewName-${idx}`}
               placeholder={`Enter ${label.toLowerCase()} name`}
@@ -132,28 +136,35 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         );
       })}
       
-      {onSaveCrew && (
+      {onSaveCrew && user && (
         <Button
           type="submit"
           variant="contained"
+          disabled={!canSave || saving}
           sx={{
-            backgroundColor: theme.palette.primary.main,
+            backgroundColor: theme.palette.success.main,
             color: '#fff',
-            padding: '10px',
-            borderRadius: '6px',
+            padding: '12px 20px',
+            borderRadius: '8px',
             boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
             '&:hover': {
-              backgroundColor: theme.palette.primary.dark || '#4177a6',
+              backgroundColor: theme.palette.success.dark,
+            },
+            '&:disabled': {
+              backgroundColor: theme.palette.action.disabledBackground,
+              color: theme.palette.action.disabled,
             },
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            marginTop: '16px',
+            marginTop: '24px',
             justifyContent: 'center',
+            fontSize: '1rem',
+            fontWeight: 600,
           }}
-          endIcon={<MdSave size={22} />}
+          startIcon={saving ? undefined : <MdSave size={20} />}
         >
-          Save Crew
+          {saving ? 'Saving...' : 'Save Crew'}
         </Button>
       )}
     </Box>

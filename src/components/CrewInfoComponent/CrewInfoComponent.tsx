@@ -172,8 +172,8 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       </Typography>
       
       {/* Club Name Section with Preset Option */}
-      <div>
-        <Box display="flex" alignItems="center" gap={1} mb={1}>
+      <Box sx={{ mb: 2 }}>
+        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
           <Typography className={styles.label}>Club Name</Typography>
           {user && presets.length > 0 && (
             <FormControlLabel
@@ -239,9 +239,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             onChange={e => setClubName(e.target.value)}
           />
         )}
-      </div>
-      <div>
-        <Typography className={styles.label}>Race Name</Typography>
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography className={styles.label} sx={{ mb: 0.5 }}>Race Name</Typography>
         <TextField
           name="raceName"
           placeholder="Enter race name"
@@ -252,9 +252,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           value={raceName}
           onChange={e => setRaceName(e.target.value)}
         />
-      </div>
-      <div>
-        <Typography className={styles.label}>Boat Name</Typography>
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography className={styles.label} sx={{ mb: 0.5 }}>Boat Name</Typography>
         <TextField
           name="boatName"
           placeholder="Enter boat name"
@@ -265,9 +265,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           value={boatName}
           onChange={e => setBoatName(e.target.value)}
         />
-      </div>
-      <div>
-        <Typography className={styles.label}>Boat Class</Typography>
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography className={styles.label} sx={{ mb: 0.5 }}>Boat Class</Typography>
         <FormControl fullWidth required variant="outlined" className={styles.inputField}>
           <Select
             name="boatClass"
@@ -292,15 +292,16 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             <MenuItem value="1x">1x (Single Sculls)</MenuItem>
           </Select>
         </FormControl>
-      </div>
+      </Box>
+      
       <Button
         type="submit"
         variant="contained"
         sx={{
           backgroundColor: theme.palette.primary.main,
           color: '#fff',
-          padding: '10px',
-          borderRadius: '6px',
+          padding: '12px 20px',
+          borderRadius: '8px',
           boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
           '&:hover': {
             backgroundColor: theme.palette.primary.dark || '#4177a6',
@@ -308,10 +309,14 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
+          marginTop: '24px',
+          justifyContent: 'center',
+          fontSize: '1rem',
+          fontWeight: 600,
         }}
       >
-        Next Step
-        <MdChevronRight size={24} />
+        Enter Crew Names
+        <MdChevronRight size={20} />
       </Button>
     </Box>
   );

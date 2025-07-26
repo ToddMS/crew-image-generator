@@ -241,7 +241,7 @@ const GenerateImagesPage: React.FC = () => {
           startIcon={<MdGroup />}
           onClick={() => navigate('/create')}
         >
-          Create Your First Crew
+          Create Your Crew
         </Button>
       </Box>
     );

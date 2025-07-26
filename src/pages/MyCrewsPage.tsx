@@ -8,7 +8,7 @@ import {
   CardContent
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MdPersonAdd, MdImage } from 'react-icons/md';
 import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
@@ -44,6 +44,7 @@ const boatClassToBoatType = (boatClass: string) => {
 const MyCrewsPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
 
@@ -51,10 +52,23 @@ const MyCrewsPage: React.FC = () => {
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadCrews();
   }, [user]);
+
+  useEffect(() => {
+    // Check for success message from navigation state
+    const state = location.state as any;
+    if (state?.successMessage) {
+      setSuccessMessage(state.successMessage);
+      // Clear the navigation state
+      navigate(location.pathname, { replace: true });
+      // Auto-hide after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  }, [location.state, navigate, location.pathname]);
 
   const loadCrews = async () => {
     if (!user) {
@@ -253,7 +267,7 @@ const MyCrewsPage: React.FC = () => {
           No Crews Yet
         </Typography>
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Create your first crew lineup to get started
+          Create your crew lineup to get started
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
           <Button
@@ -261,7 +275,7 @@ const MyCrewsPage: React.FC = () => {
             startIcon={<MdPersonAdd />}
             onClick={() => navigate('/create')}
           >
-            Create Your First Crew
+            Create Your Crew
           </Button>
         </Box>
       </Box>
@@ -270,6 +284,17 @@ const MyCrewsPage: React.FC = () => {
 
   return (
     <Box>
+      {/* Success Message */}
+      {successMessage && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 3 }}
+          onClose={() => setSuccessMessage(null)}
+        >
+          {successMessage}
+        </Alert>
+      )}
+
       {/* Header Actions */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>

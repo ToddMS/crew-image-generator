@@ -174,7 +174,6 @@ const CreateCrewPage: React.FC = () => {
       
       if (result.data) {
         clearDraft();
-        setSaveSuccess(true);
         
         trackEvent('crew_created', {
           boatClass,
@@ -183,10 +182,12 @@ const CreateCrewPage: React.FC = () => {
           raceName
         });
 
-        // Show success for 2 seconds, then navigate
-        setTimeout(() => {
-          navigate('/crews');
-        }, 2000);
+        // Navigate immediately with success message
+        navigate('/crews', { 
+          state: { 
+            successMessage: `Crew "${boatName}" saved successfully!` 
+          } 
+        });
       }
     } catch (error) {
       console.error('Error saving crew:', error);
@@ -197,35 +198,8 @@ const CreateCrewPage: React.FC = () => {
 
 
   const canProceedToStep2 = boatClass && clubName && raceName && boatName;
-  const canSave = canProceedToStep2 && crewNames.some(name => name.trim()) && (!boatClassHasCox(boatClass) || coxName.trim());
+  const canSave = canProceedToStep2 && crewNames.every(name => name.trim() !== '') && (!boatClassHasCox(boatClass) || coxName.trim() !== '');
 
-  if (saveSuccess) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          textAlign: 'center'
-        }}
-      >
-        <MdCheckCircle size={64} color={theme.palette.success.main} />
-        <Typography variant="h4" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
-          Crew Saved Successfully!
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-          Your crew "{boatName}" has been saved to your account.
-        </Typography>
-        <Chip
-          label="Redirecting to My Crews..."
-          color="success"
-          sx={{ fontSize: '0.9rem' }}
-        />
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
@@ -291,9 +265,13 @@ const CreateCrewPage: React.FC = () => {
                   coxName={coxName}
                   onNameChange={handleNameChange}
                   onCoxNameChange={handleCoxNameChange}
+                  onSaveCrew={handleSaveCrew}
                   clubName={clubName}
                   raceName={raceName}
                   boatName={boatName}
+                  saving={saving}
+                  canSave={canSave}
+                  user={user}
                 />
               )}
               
@@ -322,31 +300,15 @@ const CreateCrewPage: React.FC = () => {
         }}
       >
         <Button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/')}
           startIcon={<MdArrowBack />}
           sx={{ color: theme.palette.text.secondary }}
         >
           Back to Dashboard
         </Button>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {canProceedToStep2 && user && (
-            <Button
-              variant="contained"
-              onClick={handleSaveCrew}
-              disabled={!canSave || saving}
-              startIcon={saving ? undefined : <MdSave />}
-              sx={{
-                backgroundColor: theme.palette.success.main,
-                '&:hover': {
-                  backgroundColor: theme.palette.success.dark
-                }
-              }}
-            >
-              {saving ? 'Saving...' : 'Save Crew'}
-            </Button>
-          )}
-        </Box>
+        {/* Save button moved to CrewNamesComponent */}
+        <Box />
       </Box>
     </Box>
   );

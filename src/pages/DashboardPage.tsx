@@ -6,27 +6,17 @@ import {
   CardContent,
   Typography,
   Button,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Paper,
-  Avatar,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent
+  Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import {
   MdPersonAdd,
   MdImage,
-  MdGroup,
   MdPhotoLibrary,
   MdArrowForward,
   MdCheckCircle,
-  MdSettings
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import OnboardingFlow from '../components/Onboarding/OnboardingFlow';
@@ -234,7 +224,7 @@ const DashboardPage: React.FC = () => {
               Ready to Get Started?
             </Typography>
             <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-              Create your first crew lineup and generate beautiful images in minutes
+              Create your crew lineup and generate beautiful images in minutes
             </Typography>
             <Button
               variant="contained"
@@ -249,7 +239,7 @@ const DashboardPage: React.FC = () => {
                 textTransform: 'none'
               }}
             >
-              Create Your First Crew
+              Create Your Crew
             </Button>
           </CardContent>
         </Card>
