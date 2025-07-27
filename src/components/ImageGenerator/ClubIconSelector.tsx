@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
-  Button,
-  FormControlLabel,
-  Checkbox
+  Button
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useAuth } from '../../context/AuthContext';
 
 interface ClubPreset {
   id: number;
@@ -66,121 +63,182 @@ const ClubIconSelector: React.FC<ClubIconSelectorProps> = ({
   };
 
   return (
-    <div>
+    <Box sx={{ 
+      width: '100%'
+    }}>
       <Typography 
+        variant="body2" 
         sx={{ 
-          mb: 2, 
-          fontWeight: 500, 
-          color: theme.palette.text.primary,
-          fontSize: '16px'
+          mb: 1, 
+          fontSize: 13, 
+          color: theme.palette.text.secondary, 
+          textAlign: 'center' 
         }}
       >
-        Club Icon (Optional)
-      </Typography>
-      
-      <Typography variant="body2" sx={{ mb: 2, fontSize: 12, color: theme.palette.text.secondary }}>
-        Add your club logo to appear in the bottom-right corner of generated images
+        Club Icon
       </Typography>
       
       {/* Show preset club icon if using preset */}
-      {usePresetColors && selectedPresetId && (
+      {usePresetColors && selectedPresetId ? (
         <Box sx={{ mb: 2 }}>
           {(() => {
             const selectedPreset = presets.find(p => p.id === selectedPresetId);
             return selectedPreset?.logo_filename ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
-                <img 
-                  src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${selectedPreset.logo_filename}`}
-                  alt="Club logo"
-                  style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                />
-                <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
-                  Using club logo from preset: {selectedPreset.preset_name}
-                </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Box sx={{
+                  width: '70px',
+                  height: '70px',
+                  border: `2px solid ${theme.palette.divider}`,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.palette.background.paper
+                }}>
+                  <img 
+                    src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${selectedPreset.logo_filename}`}
+                    alt="Club logo"
+                    style={{ width: '60px', height: '60px', objectFit: 'contain' }}
+                  />
+                </Box>
+                <Box sx={{ width: 90, textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ 
+                    fontSize: 11, 
+                    color: theme.palette.text.secondary
+                  }}>
+                    From preset
+                  </Typography>
+                </Box>
               </Box>
             ) : (
-              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
-                Selected preset doesn't have a club logo
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Box sx={{
+                  width: '70px',
+                  height: '70px',
+                  border: `2px solid ${theme.palette.divider}`,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.palette.background.paper,
+                  color: theme.palette.text.secondary
+                }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, textAlign: 'center' }}>
+                    No Logo
+                  </Typography>
+                </Box>
+                <Box sx={{ width: 90, textAlign: 'center' }}>
+                  <Typography variant="caption" sx={{ 
+                    fontSize: 11, 
+                    color: theme.palette.text.secondary
+                  }}>
+                    From preset
+                  </Typography>
+                </Box>
+              </Box>
             );
           })()}
         </Box>
-      )}
-      
-      {/* Manual club icon upload for manual color mode */}
-      {!usePresetColors && (
-        <Box>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={useClubIcon}
-                onChange={(e) => onUseClubIconChange(e.target.checked)}
-                size="small"
+      ) : (
+        /* Manual club icon upload for manual color mode */
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+          {!clubIconPreview ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleClubIconUpload}
+                style={{ display: 'none' }}
+                id={inputId}
               />
-            }
-            label="Add club icon to image"
-            sx={{ mb: 1 }}
-          />
-          
-          {useClubIcon && (
-            <Box sx={{ mt: 2 }}>
-              {!clubIconPreview ? (
-                <Box>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleClubIconUpload}
-                    style={{ display: 'none' }}
-                    id={inputId}
-                  />
-                  <label htmlFor={inputId}>
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      sx={{
-                        borderColor: theme.palette.divider,
-                        color: theme.palette.text.primary,
-                        '&:hover': {
-                          borderColor: theme.palette.primary.main,
-                        }
-                      }}
-                    >
-                      Choose Club Logo
-                    </Button>
-                  </label>
-                  <Typography variant="caption" sx={{ display: 'block', mt: 1, color: theme.palette.text.secondary }}>
-                    Supported: PNG, JPG, GIF (max 5MB)
+              <label htmlFor={inputId}>
+                <Box sx={{
+                  width: '70px',
+                  height: '70px',
+                  border: `2px solid ${theme.palette.divider}`,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.palette.background.paper,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    borderColor: theme.palette.primary.main,
+                  }
+                }}>
+                  <Typography variant="h4" sx={{ 
+                    color: theme.palette.text.secondary,
+                    userSelect: 'none'
+                  }}>
+                    +
                   </Typography>
                 </Box>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 1 }}>
-                  <img 
-                    src={clubIconPreview} 
-                    alt="Club logo preview" 
-                    style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                  />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ color: theme.palette.text.primary }}>
-                      {clubIcon?.name}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                      {clubIcon && (clubIcon.size / 1024).toFixed(1)} KB
-                    </Typography>
-                  </Box>
-                  <Button
-                    size="small"
-                    onClick={onRemoveClubIcon}
-                    sx={{ color: theme.palette.error.main }}
-                  >
-                    Remove
-                  </Button>
-                </Box>
-              )}
+              </label>
+              <Box sx={{ width: 90, textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ 
+                  fontSize: 11, 
+                  color: theme.palette.text.secondary
+                }}>
+                  Click to add
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+              <Box sx={{
+                width: '70px',
+                height: '70px',
+                border: `2px solid ${theme.palette.divider}`,
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: theme.palette.background.paper,
+                position: 'relative'
+              }}>
+                <img 
+                  src={clubIconPreview} 
+                  alt="Logo preview" 
+                  style={{ width: '60px', height: '60px', objectFit: 'contain' }}
+                />
+                <Button
+                  size="small"
+                  onClick={onRemoveClubIcon}
+                  sx={{ 
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    minWidth: 20,
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    backgroundColor: theme.palette.error.main,
+                    color: 'white',
+                    fontSize: 12,
+                    '&:hover': {
+                      backgroundColor: theme.palette.error.dark,
+                    }
+                  }}
+                >
+                  ×
+                </Button>
+              </Box>
+              <Box sx={{ width: 90, textAlign: 'center' }}>
+                <Typography variant="caption" sx={{ 
+                  fontSize: 11, 
+                  color: theme.palette.text.secondary,
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap'
+                }}>
+                  {clubIcon?.name?.replace(/\.[^/.]+$/, "") || "Club logo"}
+                </Typography>
+              </Box>
             </Box>
           )}
         </Box>
       )}
-    </div>
+    </Box>
   );
 };
 

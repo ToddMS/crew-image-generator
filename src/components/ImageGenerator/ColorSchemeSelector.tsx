@@ -7,8 +7,7 @@ import {
   Select,
   MenuItem,
   FormControlLabel,
-  Radio,
-  RadioGroup,
+  Checkbox,
   TextField,
   Chip
 } from '@mui/material';
@@ -36,6 +35,7 @@ interface ColorSchemeSelectorProps {
   onPresetModeChange: (usePreset: boolean) => void;
   onPresetSelection: (presetId: number) => void;
   presets?: ClubPreset[];
+  clubIconSelector?: React.ReactNode;
 }
 
 const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
@@ -47,15 +47,12 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
   onSecondaryColorChange,
   onPresetModeChange,
   onPresetSelection,
-  presets = []
+  presets = [],
+  clubIconSelector
 }) => {
   const { user } = useAuth();
   const theme = useTheme();
 
-  const handlePresetModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const usePresetMode = event.target.value === 'preset';
-    onPresetModeChange(usePresetMode);
-  };
 
   const handlePresetSelection = (event: SelectChangeEvent<number>) => {
     const presetId = event.target.value as number;
@@ -63,7 +60,7 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
   };
 
   return (
-    <div>
+    <Box>
       <Typography 
         sx={{ 
           mb: 2, 
@@ -77,134 +74,150 @@ const ColorSchemeSelector: React.FC<ColorSchemeSelectorProps> = ({
       
       {user && presets.length > 0 && (
         <Box sx={{ mb: 2 }}>
-          <RadioGroup
-            row
-            value={usePresetColors ? 'preset' : 'manual'}
-            onChange={handlePresetModeChange}
-          >
-            <FormControlLabel
-              value="preset"
-              control={<Radio size="small" />}
-              label="Use Saved Preset"
-            />
-            <FormControlLabel
-              value="manual"
-              control={<Radio size="small" />}
-              label="Choose Colors Manually"
-            />
-          </RadioGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={usePresetColors}
+                onChange={(e) => onPresetModeChange(e.target.checked)}
+                size="small"
+              />
+            }
+            label="Use Club Preset Colors"
+          />
         </Box>
       )}
       
-      {usePresetColors ? (
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel>Select Club Preset</InputLabel>
-          <Select
-            value={selectedPresetId || ''}
-            onChange={handlePresetSelection}
-            label="Select Club Preset"
-          >
-            {presets.map((preset) => (
-              <MenuItem key={preset.id} value={preset.id}>
-                <Box display="flex" alignItems="center" gap={1} width="100%">
-                  {preset.logo_filename && (
-                    <img 
-                      src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${preset.logo_filename}`}
-                      alt="Club logo"
-                      style={{ width: '20px', height: '20px', objectFit: 'contain', borderRadius: '2px' }}
-                    />
-                  )}
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 1,
-                      backgroundColor: preset.primary_color,
-                      border: '1px solid #ddd'
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 1,
-                      backgroundColor: preset.secondary_color,
-                      border: '1px solid #ddd'
-                    }}
-                  />
-                  <Box flex={1}>
-                    <Typography variant="body2" fontWeight="bold">
-                      {preset.club_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {preset.preset_name}
-                    </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+        {usePresetColors ? (
+          <FormControl sx={{ maxWidth: 500, width: '100%' }}>
+            <InputLabel>Select Club Preset</InputLabel>
+            <Select
+              value={selectedPresetId || ''}
+              onChange={handlePresetSelection}
+              label="Select Club Preset"
+              size="medium"
+              sx={{ 
+                '& .MuiSelect-select': { 
+                  py: 2 
+                }
+              }}
+            >
+              {presets.map((preset) => (
+                <MenuItem key={preset.id} value={preset.id} sx={{ py: 1.5 }}>
+                  <Box display="flex" alignItems="center" gap={2} width="100%">
+                    {preset.logo_filename && (
+                      <img 
+                        src={`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${preset.logo_filename}`}
+                        alt="Club logo"
+                        style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '6px' }}
+                      />
+                    )}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 14,
+                          borderRadius: 1,
+                          backgroundColor: preset.primary_color,
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 14,
+                          borderRadius: 1,
+                          backgroundColor: preset.secondary_color,
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <Typography variant="body1" fontWeight="bold">
+                        {preset.club_name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {preset.preset_name}
+                      </Typography>
+                    </Box>
+                    {preset.is_default && (
+                      <Chip label="Default" size="small" color="primary" />
+                    )}
                   </Box>
-                  {preset.is_default && (
-                    <Chip label="Default" size="small" color="primary" />
-                  )}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <>
+            {/* Color pickers when not using presets */}
+            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: 13, color: theme.palette.text.secondary, textAlign: 'center' }}>
+                  Primary
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => onPrimaryColorChange(e.target.value)}
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      border: `2px solid ${theme.palette.divider}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField
+                    value={primaryColor}
+                    onChange={(e) => onPrimaryColorChange(e.target.value)}
+                    size="small"
+                    sx={{ width: 90 }}
+                    placeholder="#5E98C2"
+                    inputProps={{ style: { fontSize: 11, textAlign: 'center' } }}
+                  />
                 </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ) : (
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ mb: 1, fontSize: 14, color: theme.palette.text.secondary }}>
-              Primary Color
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <input
-                type="color"
-                value={primaryColor}
-                onChange={(e) => onPrimaryColorChange(e.target.value)}
-                style={{
-                  width: '50px',
-                  height: '40px',
-                  border: `1px solid ${theme.palette.divider}`,
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              />
-              <TextField
-                value={primaryColor}
-                onChange={(e) => onPrimaryColorChange(e.target.value)}
-                size="small"
-                sx={{ flex: 1 }}
-                placeholder="#5E98C2"
-              />
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: 13, color: theme.palette.text.secondary, textAlign: 'center' }}>
+                  Secondary
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <input
+                    type="color"
+                    value={secondaryColor}
+                    onChange={(e) => onSecondaryColorChange(e.target.value)}
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      border: `2px solid ${theme.palette.divider}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <TextField
+                    value={secondaryColor}
+                    onChange={(e) => onSecondaryColorChange(e.target.value)}
+                    size="small"
+                    sx={{ width: 90 }}
+                    placeholder="#ffffff"
+                    inputProps={{ style: { fontSize: 11, textAlign: 'center' } }}
+                  />
+                </Box>
+              </Box>
             </Box>
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ mb: 1, fontSize: 14, color: theme.palette.text.secondary }}>
-              Secondary Color
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <input
-                type="color"
-                value={secondaryColor}
-                onChange={(e) => onSecondaryColorChange(e.target.value)}
-                style={{
-                  width: '50px',
-                  height: '40px',
-                  border: `1px solid ${theme.palette.divider}`,
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              />
-              <TextField
-                value={secondaryColor}
-                onChange={(e) => onSecondaryColorChange(e.target.value)}
-                size="small"
-                sx={{ flex: 1 }}
-                placeholder="#ffffff"
-              />
-            </Box>
-          </Box>
-        </Box>
-      )}
-    </div>
+            
+            {/* Club icon to the right of color pickers */}
+            {clubIconSelector && (
+              <Box sx={{ minWidth: 120, maxWidth: 120 }}>
+                {clubIconSelector}
+              </Box>
+            )}
+          </>
+        )}
+      </Box>
+    </Box>
   );
 };
 

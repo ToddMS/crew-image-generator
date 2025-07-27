@@ -75,7 +75,8 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
   // Auto-populate image name based on selected crew
   useEffect(() => {
     if (selectedCrew && !imageName) {
-      setImageName(`${selectedCrew.boatName}_${selectedCrew.raceName}`);
+      const defaultName = `${selectedCrew.boatClub || selectedCrew.clubName || 'Club'}-${selectedCrew.raceName || 'Race'}-${selectedCrew.boatName || 'Boat'}`;
+      setImageName(defaultName);
     }
   }, [selectedCrew]);
 
@@ -152,18 +153,18 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         const colors = { primary: primaryColor, secondary: secondaryColor };
         
         // Prepare club icon data
-        let clubIconData = null;
+        let clubIconData: ClubIconData | null = null;
         if (usePresetColors && selectedPresetId) {
           const selectedPreset = presets.find(p => p.id === selectedPresetId);
           if (selectedPreset?.logo_filename) {
             clubIconData = {
-              type: 'preset',
+              type: 'preset' as const,
               filename: selectedPreset.logo_filename
             };
           }
         } else if (useClubIcon && clubIcon) {
           clubIconData = {
-            type: 'upload',
+            type: 'upload' as const,
             file: clubIcon
           };
         }
@@ -188,21 +189,18 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
         color: theme.palette.text.primary
       }}
     >
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
-        Generate Image
-      </Typography>
-      
       <div>
         <Typography className={styles.label}>Image Name</Typography>
         <TextField
           name="imageName"
-          placeholder="Enter image name"
+          placeholder="Club-Race-Boat"
           required
-          fullWidth
+          size="small"
           variant="outlined"
           className={styles.inputField}
           value={imageName}
           onChange={e => setImageName(e.target.value)}
+          sx={{ maxWidth: 450, mb: 2, width: '100%' }}
         />
       </div>
 
@@ -246,19 +244,20 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
           }
         }}
         presets={presets}
-      />
-
-      <ClubIconSelector
-        usePresetColors={usePresetColors}
-        selectedPresetId={selectedPresetId}
-        useClubIcon={useClubIcon}
-        clubIcon={clubIcon}
-        clubIconPreview={clubIconPreview}
-        onUseClubIconChange={setUseClubIcon}
-        onClubIconUpload={handleClubIconUpload}
-        onRemoveClubIcon={removeClubIcon}
-        inputId="club-icon-upload"
-        presets={presets}
+        clubIconSelector={
+          <ClubIconSelector
+            usePresetColors={usePresetColors}
+            selectedPresetId={selectedPresetId}
+            useClubIcon={useClubIcon}
+            clubIcon={clubIcon}
+            clubIconPreview={clubIconPreview}
+            onUseClubIconChange={setUseClubIcon}
+            onClubIconUpload={handleClubIconUpload}
+            onRemoveClubIcon={removeClubIcon}
+            inputId="club-icon-upload"
+            presets={presets}
+          />
+        }
       />
 
       {error && (
