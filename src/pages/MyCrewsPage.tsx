@@ -15,7 +15,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { MdChecklist, MdPersonAdd, MdClose, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
 import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
-import ImageGenerator from '../components/ImageGenerator/ImageGenerator';
+import TemplateSelector from '../components/ImageGenerator/TemplateSelector';
+import ColorSchemeSelector from '../components/ImageGenerator/ColorSchemeSelector';
+import ClubIconSelector from '../components/ImageGenerator/ClubIconSelector';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { ApiService } from '../services/api.service';
@@ -57,16 +59,21 @@ const MyCrewsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [bulkMode, setBulkMode] = useState(false);
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
-  const [showGenerateSection, setShowGenerateSection] = useState(false);
-  const [selectedCrewsForGeneration, setSelectedCrewsForGeneration] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('1');
+  const [primaryColor, setPrimaryColor] = useState<string>('#5E98C2');
+  const [secondaryColor, setSecondaryColor] = useState<string>('#ffffff');
+  const [usePresetColors, setUsePresetColors] = useState<boolean>(false);
+  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  const [clubIcon, setClubIcon] = useState<any>(null);
+  const [presets, setPresets] = useState<any[]>([]);
   const [generating, setGenerating] = useState(false);
   const generateSectionRef = useRef<HTMLDivElement>(null);
   const crewsSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadCrews();
+    loadPresets();
   }, [user]);
 
   useEffect(() => {
@@ -141,6 +148,28 @@ const MyCrewsPage: React.FC = () => {
     }
   };
 
+  const loadPresets = async () => {
+    if (!user) {
+      setPresets([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPresets(data);
+      }
+    } catch (error) {
+      console.error('Error loading presets:', error);
+    }
+  };
+
   const updateRecentCrews = (crewIndex: number) => {
     setRecentCrews(prev => {
       const filtered = prev.filter(idx => idx !== crewIndex);
@@ -183,52 +212,57 @@ const MyCrewsPage: React.FC = () => {
     });
   };
 
-  const handleGenerateImage = (index: number) => {
-    updateRecentCrews(index);
-    const crew = savedCrews[index];
-    setSelectedCrewsForGeneration([crew]);
-    setShowGenerateSection(true);
-    // Smooth scroll to generate section
-    setTimeout(() => {
-      generateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
+  const handleCrewSelection = (crewId: string, checked: boolean) => {
+    const newSelected = new Set(selectedCrews);
+    if (checked) {
+      newSelected.add(crewId);
+    } else {
+      newSelected.delete(crewId);
+    }
+    setSelectedCrews(newSelected);
   };
 
-  const handleGenerateImages = async (
-    imageName: string, 
-    template: string, 
-    colors?: { primary: string; secondary: string }, 
-    saveImage?: boolean, 
-    clubIcon?: any
-  ) => {
-    if (selectedCrewsForGeneration.length === 0) return;
+  const handleGenerateImages = async () => {
+    if (selectedCrews.size === 0) {
+      setError('Please select at least one crew to generate images.');
+      return;
+    }
 
     setGenerating(true);
     setError(null);
 
     try {
       let successCount = 0;
+      const selectedCrewsArray = savedCrews.filter(crew => selectedCrews.has(crew.id));
       
-      for (let i = 0; i < selectedCrewsForGeneration.length; i++) {
-        const crew = selectedCrewsForGeneration[i];
+      // Prepare colors based on preset selection
+      const colors = usePresetColors && selectedPresetId 
+        ? (() => {
+            const preset = presets.find(p => p.id === selectedPresetId);
+            return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
+          })()
+        : { primary: primaryColor, secondary: secondaryColor };
+      
+      for (let i = 0; i < selectedCrewsArray.length; i++) {
+        const crew = selectedCrewsArray[i];
         
         try {
           const imageBlob = await ApiService.generateImage(
             crew.id, 
             `${crew.boatName}_${crew.raceName}`, 
-            template, 
+            selectedTemplate, 
             colors, 
             clubIcon
           );
           
           if (imageBlob) {
-            await ApiService.saveImage(crew.id, `${crew.boatName}_${crew.raceName}`, template, colors, imageBlob);
+            await ApiService.saveImage(crew.id, `${crew.boatName}_${crew.raceName}`, selectedTemplate, colors, imageBlob);
             successCount++;
             
             trackEvent('image_generated', {
-              template,
-              primaryColor: colors?.primary,
-              secondaryColor: colors?.secondary,
+              template: selectedTemplate,
+              primaryColor: colors.primary,
+              secondaryColor: colors.secondary,
               crewName: crew.boatName,
               raceName: crew.raceName,
               boatClass: crew.boatClass
@@ -239,18 +273,21 @@ const MyCrewsPage: React.FC = () => {
         }
         
         // Small delay between generations
-        if (i < selectedCrewsForGeneration.length - 1) {
+        if (i < selectedCrewsArray.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
       
       if (successCount > 0) {
         trackEvent('bulk_generation', {
-          template,
+          template: selectedTemplate,
           crewCount: successCount,
-          primaryColor: colors?.primary,
-          secondaryColor: colors?.secondary
+          primaryColor: colors.primary,
+          secondaryColor: colors.secondary
         });
+        
+        // Clear selections after successful generation
+        setSelectedCrews(new Set());
         
         // Navigate to gallery after successful generation
         navigate('/gallery');
@@ -265,34 +302,6 @@ const MyCrewsPage: React.FC = () => {
     }
   };
 
-  // Wrapper function to match SavedCrewsComponent interface
-  const handleBulkGenerateImages = (
-    crewIds: string[], 
-    template: string, 
-    colors?: { primary: string; secondary: string }, 
-    onProgress?: (current: number, total: number, crewName: string) => void,
-    clubIcon?: any
-  ) => {
-    // This function is not used in the new implementation
-    // but kept for compatibility with SavedCrewsComponent interface
-    console.log('Bulk generate called with crew IDs:', crewIds);
-  };
-
-  const handleBulkModeChange = (isBulkMode: boolean) => {
-    setBulkMode(isBulkMode);
-    setSelectedCrews(new Set());
-  };
-
-  const handleCrewSelection = (crewId: string, checked: boolean) => {
-    const newSelected = new Set(selectedCrews);
-    if (checked) {
-      newSelected.add(crewId);
-    } else {
-      newSelected.delete(crewId);
-    }
-    setSelectedCrews(newSelected);
-  };
-
   const handleBulkDelete = () => {
     const indicesToDelete = Array.from(selectedCrews)
       .map(crewId => savedCrews.findIndex(crew => crew.id === crewId))
@@ -301,35 +310,6 @@ const MyCrewsPage: React.FC = () => {
     
     indicesToDelete.forEach(index => handleDeleteCrew(index));
     setSelectedCrews(new Set());
-  };
-
-  const handleBulkGenerate = () => {
-    const selectedCrewsData = savedCrews.filter(crew => selectedCrews.has(crew.id));
-    setSelectedCrewsForGeneration(selectedCrewsData);
-    setShowGenerateSection(true);
-    // Smooth scroll to generate section
-    setTimeout(() => {
-      generateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
-
-  const handleRemoveCrewFromGeneration = (crewId: string) => {
-    const newCrews = selectedCrewsForGeneration.filter(crew => crew.id !== crewId);
-    setSelectedCrewsForGeneration(newCrews);
-    
-    if (newCrews.length === 0) {
-      setShowGenerateSection(false);
-      // Scroll back to crews section
-      crewsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  const scrollToCrews = () => {
-    crewsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const scrollToGenerate = () => {
-    generateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const getBoatClassColor = (boatClass: string) => {
@@ -410,7 +390,7 @@ const MyCrewsPage: React.FC = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ pb: 10 }}> {/* Add padding bottom for sticky footer */}
       {/* Success Message */}
       {successMessage && (
         <Alert 
@@ -433,51 +413,83 @@ const MyCrewsPage: React.FC = () => {
         </Alert>
       )}
 
+      {/* Template Selection Section */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+            Generate Crew Images
+          </Typography>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
+            Choose template and settings, then select crews to generate images
+          </Typography>
+          
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+            {/* Template Selector */}
+            <Box>
+              <TemplateSelector
+                selectedTemplate={selectedTemplate}
+                onTemplateChange={setSelectedTemplate}
+              />
+            </Box>
+            
+            {/* Color Scheme and Club Icon */}
+            <Box>
+              <ColorSchemeSelector
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+                usePresetColors={usePresetColors}
+                selectedPresetId={selectedPresetId}
+                onPrimaryColorChange={setPrimaryColor}
+                onSecondaryColorChange={setSecondaryColor}
+                onPresetModeChange={setUsePresetColors}
+                onPresetSelection={setSelectedPresetId}
+                presets={presets}
+                clubIconSelector={
+                  <ClubIconSelector
+                    selectedIcon={clubIcon}
+                    onIconChange={setClubIcon}
+                  />
+                }
+              />
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+
       {/* Crews Section */}
-      <Box ref={crewsSectionRef}>
-        {/* Header Actions */}
+      <Box>
+        {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
-            <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
-              {savedCrews.length} crew{savedCrews.length !== 1 ? 's' : ''} in your account
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Select Crews
+            </Typography>
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+              {selectedCrews.size > 0 
+                ? `${selectedCrews.size} of ${savedCrews.length} crews selected`
+                : `${savedCrews.length} crew${savedCrews.length !== 1 ? 's' : ''} in your account`
+              }
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {bulkMode && selectedCrews.size > 0 && (
-              <>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleBulkDelete}
-                >
-                  Delete {selectedCrews.size}
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleBulkGenerate}
-                >
-                  Generate Crews ({selectedCrews.size})
-                </Button>
-              </>
-            )}
-            <Button
-              variant={bulkMode ? "contained" : "outlined"}
-              startIcon={<MdChecklist />}
-              onClick={() => handleBulkModeChange(!bulkMode)}
-            >
-              Select Multiple
-            </Button>
-            {showGenerateSection && (
+          {selectedCrews.size > 0 && (
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <Button
                 variant="outlined"
-                startIcon={<MdKeyboardArrowDown />}
-                onClick={scrollToGenerate}
-                sx={{ color: theme.palette.primary.main }}
+                color="error"
+                onClick={handleBulkDelete}
+                size="small"
               >
-                Go to Generate
+                Delete {selectedCrews.size}
               </Button>
-            )}
-          </Box>
+              <Button
+                variant="outlined"
+                onClick={() => setSelectedCrews(new Set())}
+                size="small"
+              >
+                Clear Selection
+              </Button>
+            </Box>
+          )}
         </Box>
 
         {/* Crews List */}
@@ -486,112 +498,50 @@ const MyCrewsPage: React.FC = () => {
           recentCrews={recentCrews}
           onDeleteCrew={handleDeleteCrew}
           onEditCrew={handleEditCrew}
-          onGenerateImage={handleGenerateImage}
-                      onBulkGenerateImages={handleBulkGenerateImages}
-          onBulkModeChange={handleBulkModeChange}
-          bulkMode={bulkMode}
+          bulkMode={true} // Always in selection mode now
           selectedCrews={selectedCrews}
           onCrewSelection={handleCrewSelection}
           onBulkDelete={handleBulkDelete}
-          onBulkGenerate={handleBulkGenerate}
         />
       </Box>
 
-      {/* Generate Section */}
-      {showGenerateSection && (
-        <Box ref={generateSectionRef} sx={{ mt: 6 }}>
-          <Divider sx={{ mb: 4 }} />
-          
-          {/* Generate Header */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                  Generate Images
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<MdKeyboardArrowUp />}
-                    onClick={scrollToCrews}
-                    size="small"
-                  >
-                    Back to Crews
-                  </Button>
-                  <IconButton
-                    onClick={() => {
-                      setShowGenerateSection(false);
-                      setSelectedCrewsForGeneration([]);
-                    }}
-                    size="small"
-                  >
-                    <MdClose />
-                  </IconButton>
-                </Box>
-              </Box>
+      {/* Sticky Generation Footer */}
+      {selectedCrews.size > 0 && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: theme.palette.background.paper,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            p: 2,
+            zIndex: 1000,
+            boxShadow: theme.shadows[8]
+          }}
+        >
+          <Box sx={{ maxWidth: 1200, mx: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {selectedCrews.size} crew{selectedCrews.size !== 1 ? 's' : ''} selected
+              </Typography>
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                Choose a template and customize settings for your selected crews
+                Template {selectedTemplate} • {usePresetColors ? 'Club Preset Colors' : 'Custom Colors'}
               </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Selected Crews */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Selected Crews ({selectedCrewsForGeneration.length})
-              </Typography>
-              
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {selectedCrewsForGeneration.map((crew) => (
-                  <Chip
-                    key={crew.id}
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            backgroundColor: getBoatClassColor(crew.boatClass)
-                          }}
-                        />
-                        <span>{crew.boatClub} - {crew.boatName}</span>
-                      </Box>
-                    }
-                    onDelete={() => handleRemoveCrewFromGeneration(crew.id)}
-                    deleteIcon={<MdClose size={16} />}
-                    variant="outlined"
-                    sx={{
-                      '& .MuiChip-label': {
-                        px: 1
-                      }
-                    }}
-                  />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {/* Template Selection and Generation */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                Choose Template & Generate
-              </Typography>
-              
-              <ImageGenerator 
-                onGenerate={handleGenerateImages}
-                selectedCrew={selectedCrewsForGeneration[0]} // Use first crew for preview
-                generating={generating}
-                buttonText={
-                  selectedCrewsForGeneration.length === 1 
-                    ? 'Generate Image' 
-                    : `Generate ${selectedCrewsForGeneration.length} Images`
-                }
-              />
-            </CardContent>
-          </Card>
+            </Box>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleGenerateImages}
+              disabled={generating}
+              sx={{ minWidth: 200 }}
+            >
+              {generating 
+                ? 'Generating...' 
+                : `Generate ${selectedCrews.size} Image${selectedCrews.size !== 1 ? 's' : ''}`
+              }
+            </Button>
+          </Box>
         </Box>
       )}
     </Box>

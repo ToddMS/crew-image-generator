@@ -32,7 +32,8 @@ import {
   MdLightMode,
   MdDarkMode,
   MdLogout,
-  MdAccountCircle
+  MdAccountCircle,
+  MdPalette
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useTheme as useAppTheme } from '../context/ThemeContext';
@@ -82,6 +83,12 @@ const navigationItems: NavigationItem[] = [
     icon: <MdAnalytics size={24} />,
     path: '/analytics',
     adminOnly: true
+  },
+  {
+    id: 'club-presets',
+    label: 'Club Presets',
+    icon: <MdPalette size={24} />,
+    path: '/club-presets'
   },
   {
     id: 'settings',

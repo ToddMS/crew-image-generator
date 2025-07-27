@@ -15,7 +15,6 @@ import { useTheme } from '@mui/material/styles';
 import { 
   MdDelete, 
   MdEdit, 
-  MdImage, 
   MdSearch, 
   MdClear 
 } from 'react-icons/md';
@@ -39,32 +38,20 @@ interface SavedCrewsComponentProps {
   recentCrews: number[];
   onDeleteCrew: (index: number) => void;
   onEditCrew: (index: number) => void;
-  onGenerateImage: (index: number) => void;
-  onBulkGenerateImages?: (
-    crewIds: string[], 
-    template: string, 
-    colors?: { primary: string; secondary: string },
-    onProgress?: (current: number, total: number, crewName: string) => void,
-    clubIcon?: any
-  ) => void;
-  onBulkModeChange?: (isBulkMode: boolean) => void;
   bulkMode?: boolean;
   selectedCrews?: Set<string>;
   onCrewSelection?: (crewId: string, checked: boolean) => void;
   onBulkDelete?: () => void;
-  onBulkGenerate?: () => void;
 }
 
 const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({ 
   savedCrews, 
   onDeleteCrew, 
   onEditCrew, 
-  onGenerateImage,
   bulkMode = false,
   selectedCrews = new Set(),
   onCrewSelection,
-  onBulkDelete,
-  onBulkGenerate
+  onBulkDelete
 }) => {
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
@@ -350,50 +337,34 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                 </Box>
 
                 {/* Actions - Always at bottom */}
-                {!bulkMode && (
-                  <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<MdEdit size={16} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditCrew(originalIndex);
-                      }}
-                      size="small"
-                      sx={{ flex: 1 }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<MdImage size={16} />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onGenerateImage(originalIndex);
-                      }}
-                      size="small"
-                      sx={{ flex: 1 }}
-                    >
-                      Generate
-                    </Button>
-                  </Box>
-                )}
-                
-                {bulkMode && (
-                  <Box sx={{ mt: 'auto', textAlign: 'center', py: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1, mt: 'auto', alignItems: 'center' }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<MdEdit size={16} />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditCrew(originalIndex);
+                    }}
+                    size="small"
+                    sx={{ flex: 1 }}
+                  >
+                    Edit
+                  </Button>
+                  <Box sx={{ flex: 1, textAlign: 'center' }}>
                     <Typography 
                       variant="body2" 
                       sx={{ 
                         color: selectedCrews.has(crew.id) 
                           ? theme.palette.primary.main 
                           : theme.palette.text.secondary,
-                        fontWeight: selectedCrews.has(crew.id) ? 600 : 400
+                        fontWeight: selectedCrews.has(crew.id) ? 600 : 400,
+                        fontSize: '0.875rem'
                       }}
                     >
-                      {selectedCrews.has(crew.id) ? 'Selected' : 'Click to select'}
+                      {selectedCrews.has(crew.id) ? '✓ Selected' : 'Click to select'}
                     </Typography>
                   </Box>
-                )}
+                </Box>
               </CardContent>
             </Card>
           );

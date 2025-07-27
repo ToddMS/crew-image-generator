@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -9,34 +9,18 @@ import {
   Divider,
   Button,
   Alert,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Avatar
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { MdEdit, MdDelete, MdAdd, MdDownload, MdUpload } from 'react-icons/md';
+import { MdDelete, MdDownload } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useTheme as useAppTheme } from '../context/ThemeContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import LoginPrompt from '../components/Auth/LoginPrompt';
-
-interface ClubPreset {
-  id: number;
-  preset_name: string;
-  club_name: string;
-  primary_color: string;
-  secondary_color: string;
-  logo_filename?: string;
-  is_default: boolean;
-}
 
 const SettingsPage: React.FC = () => {
   const theme = useTheme();
@@ -44,39 +28,9 @@ const SettingsPage: React.FC = () => {
   const { isDarkMode, toggleDarkMode } = useAppTheme();
   const { clearAllData, exportData } = useAnalytics();
   
-  const [presets, setPresets] = useState<ClubPreset[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [dataExported, setDataExported] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      loadPresets();
-    }
-  }, [user]);
-
-  const loadPresets = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPresets(data);
-      }
-    } catch (error) {
-      console.error('Error loading presets:', error);
-      setError('Failed to load club presets');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleExportData = () => {
     try {
@@ -91,7 +45,6 @@ const SettingsPage: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      setDataExported(true);
       setSuccess('Data exported successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
@@ -110,7 +63,7 @@ const SettingsPage: React.FC = () => {
   if (!user) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
+        <Typography variant="h4" sx={{ color: theme.palette.text.primary, mb: 2 }}>
           Settings
         </Typography>
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
@@ -126,6 +79,16 @@ const SettingsPage: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ color: theme.palette.text.primary, mb: 1 }}>
+          Settings
+        </Typography>
+        <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+          Manage your account preferences and application settings
+        </Typography>
+      </Box>
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
@@ -149,18 +112,28 @@ const SettingsPage: React.FC = () => {
             <Avatar
               src={user.profile_picture}
               alt={user.name}
-              sx={{ width: 80, height: 80 }}
+              sx={{ 
+                width: 80, 
+                height: 80,
+                bgcolor: 'primary.main',
+                fontSize: '2rem'
+              }}
             >
-              {user.name?.charAt(0)}
+              {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
             </Avatar>
             
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {user.name}
+                {user.name || 'User'}
               </Typography>
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
                 {user.email}
               </Typography>
+              {user.clubName && (
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                  {user.clubName}
+                </Typography>
+              )}
               <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                 Member since {new Date(user.created_at || Date.now()).toLocaleDateString()}
               </Typography>
@@ -196,82 +169,6 @@ const SettingsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Club Presets Section */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Club Presets
-            </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<MdAdd />}
-              onClick={() => {
-                // TODO: Add navigation to create preset page
-                setError('Creating new presets coming soon!');
-                setTimeout(() => setError(null), 3000);
-              }}
-            >
-              Add Preset
-            </Button>
-          </Box>
-          
-          {loading ? (
-            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Loading presets...
-            </Typography>
-          ) : presets.length === 0 ? (
-            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              No club presets found. Create your first preset to get started.
-            </Typography>
-          ) : (
-            <List>
-              {presets.map((preset) => (
-                <ListItem key={preset.id}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mr: 2 }}>
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 1,
-                        backgroundColor: preset.primary_color,
-                        border: '1px solid #ddd'
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 1,
-                        backgroundColor: preset.secondary_color,
-                        border: '1px solid #ddd'
-                      }}
-                    />
-                  </Box>
-                  
-                  <ListItemText
-                    primary={preset.club_name}
-                    secondary={`${preset.preset_name} ${preset.is_default ? '(Default)' : ''}`}
-                  />
-                  
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      edge="end"
-                      onClick={() => {
-                        // TODO: Add edit functionality
-                        setError('Editing presets coming soon!');
-                        setTimeout(() => setError(null), 3000);
-                      }}
-                    >
-                      <MdEdit />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Data Management */}
       <Card sx={{ mb: 3 }}>
