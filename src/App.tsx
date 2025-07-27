@@ -4,7 +4,6 @@ import MainLayout from './layouts/MainLayout';
 import DashboardPage from './pages/DashboardPage';
 import CreateCrewPage from './pages/CreateCrewPage';
 import MyCrewsPage from './pages/MyCrewsPage';
-import GenerateImagesPage from './pages/GenerateImagesPage';
 import GalleryPageEnhanced from './pages/GalleryPageEnhanced';
 import SettingsPage from './pages/SettingsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -17,7 +16,6 @@ function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/create" element={<CreateCrewPage />} />
           <Route path="/crews" element={<MyCrewsPage />} />
-          <Route path="/generate" element={<GenerateImagesPage />} />
           <Route path="/gallery" element={<GalleryPageEnhanced />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/settings" element={<SettingsPage />} />

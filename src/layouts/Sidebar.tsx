@@ -71,12 +71,6 @@ const navigationItems: NavigationItem[] = [
     path: '/crews'
   },
   {
-    id: 'generate',
-    label: 'Generate Images',
-    icon: <MdImage size={24} />,
-    path: '/generate'
-  },
-  {
     id: 'gallery',
     label: 'Gallery',
     icon: <MdPhotoLibrary size={24} />,

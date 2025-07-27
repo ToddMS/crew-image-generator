@@ -161,18 +161,37 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
           const originalIndex = savedCrews.findIndex(c => c === crew);
           const boatClass = getBoatClass(crew);
           
+          const handleCardClick = () => {
+            if (bulkMode && onCrewSelection) {
+              onCrewSelection(crew.id, !selectedCrews.has(crew.id));
+            }
+          };
+
           return (
             <Card 
               key={crew.id} 
+              onClick={handleCardClick}
               sx={{ 
                 position: 'relative',
                 transition: 'all 0.2s ease',
                 height: 280,
                 display: 'flex',
                 flexDirection: 'column',
+                cursor: bulkMode ? 'pointer' : 'default',
+                border: bulkMode && selectedCrews.has(crew.id) 
+                  ? `2px solid ${theme.palette.primary.main}` 
+                  : `1px solid ${theme.palette.divider}`,
+                backgroundColor: bulkMode && selectedCrews.has(crew.id)
+                  ? `${theme.palette.primary.main}08`
+                  : theme.palette.background.paper,
                 '&:hover': {
                   transform: 'translateY(-2px)',
-                  boxShadow: theme.shadows[8]
+                  boxShadow: theme.shadows[8],
+                  ...(bulkMode && {
+                    backgroundColor: selectedCrews.has(crew.id)
+                      ? `${theme.palette.primary.main}12`
+                      : `${theme.palette.primary.main}04`
+                  })
                 }
               }}
             >
@@ -219,7 +238,11 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                     {bulkMode && onCrewSelection && (
                       <Checkbox
                         checked={selectedCrews.has(crew.id)}
-                        onChange={(e) => onCrewSelection(crew.id, e.target.checked)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          onCrewSelection(crew.id, e.target.checked);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         sx={{ 
                           color: theme.palette.primary.main,
                           '&.Mui-checked': {
@@ -327,26 +350,50 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                 </Box>
 
                 {/* Actions - Always at bottom */}
-                <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<MdEdit size={16} />}
-                    onClick={() => onEditCrew(originalIndex)}
-                    size="small"
-                    sx={{ flex: 1 }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<MdImage size={16} />}
-                    onClick={() => onGenerateImage(originalIndex)}
-                    size="small"
-                    sx={{ flex: 1 }}
-                  >
-                    Generate
-                  </Button>
-                </Box>
+                {!bulkMode && (
+                  <Box sx={{ display: 'flex', gap: 1, mt: 'auto' }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<MdEdit size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditCrew(originalIndex);
+                      }}
+                      size="small"
+                      sx={{ flex: 1 }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<MdImage size={16} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onGenerateImage(originalIndex);
+                      }}
+                      size="small"
+                      sx={{ flex: 1 }}
+                    >
+                      Generate
+                    </Button>
+                  </Box>
+                )}
+                
+                {bulkMode && (
+                  <Box sx={{ mt: 'auto', textAlign: 'center', py: 1 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: selectedCrews.has(crew.id) 
+                          ? theme.palette.primary.main 
+                          : theme.palette.text.secondary,
+                        fontWeight: selectedCrews.has(crew.id) ? 600 : 400
+                      }}
+                    >
+                      {selectedCrews.has(crew.id) ? 'Selected' : 'Click to select'}
+                    </Typography>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           );

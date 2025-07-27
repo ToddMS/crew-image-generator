@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
   Typography,
   Alert,
   Card,
-  CardContent
+  CardContent,
+  Chip,
+  IconButton,
+  Divider
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdChecklist, MdPersonAdd } from 'react-icons/md';
+import { MdChecklist, MdPersonAdd, MdClose, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
 import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
+import ImageGenerator from '../components/ImageGenerator/ImageGenerator';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { ApiService } from '../services/api.service';
@@ -55,6 +59,11 @@ const MyCrewsPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
+  const [showGenerateSection, setShowGenerateSection] = useState(false);
+  const [selectedCrewsForGeneration, setSelectedCrewsForGeneration] = useState<any[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const generateSectionRef = useRef<HTMLDivElement>(null);
+  const crewsSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadCrews();
@@ -176,57 +185,97 @@ const MyCrewsPage: React.FC = () => {
 
   const handleGenerateImage = (index: number) => {
     updateRecentCrews(index);
-    // Navigate to generate page with crew context
-    navigate('/generate', { state: { selectedCrewIndex: index, selectedCrew: savedCrews[index] } });
+    const crew = savedCrews[index];
+    setSelectedCrewsForGeneration([crew]);
+    setShowGenerateSection(true);
+    // Smooth scroll to generate section
+    setTimeout(() => {
+      generateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
-  const handleBulkGenerateImages = async (
+  const handleGenerateImages = async (
+    imageName: string, 
+    template: string, 
+    colors?: { primary: string; secondary: string }, 
+    saveImage?: boolean, 
+    clubIcon?: any
+  ) => {
+    if (selectedCrewsForGeneration.length === 0) return;
+
+    setGenerating(true);
+    setError(null);
+
+    try {
+      let successCount = 0;
+      
+      for (let i = 0; i < selectedCrewsForGeneration.length; i++) {
+        const crew = selectedCrewsForGeneration[i];
+        
+        try {
+          const imageBlob = await ApiService.generateImage(
+            crew.id, 
+            `${crew.boatName}_${crew.raceName}`, 
+            template, 
+            colors, 
+            clubIcon
+          );
+          
+          if (imageBlob) {
+            await ApiService.saveImage(crew.id, `${crew.boatName}_${crew.raceName}`, template, colors, imageBlob);
+            successCount++;
+            
+            trackEvent('image_generated', {
+              template,
+              primaryColor: colors?.primary,
+              secondaryColor: colors?.secondary,
+              crewName: crew.boatName,
+              raceName: crew.raceName,
+              boatClass: crew.boatClass
+            });
+          }
+        } catch (error) {
+          console.error(`Error generating image for crew ${crew.boatName}:`, error);
+        }
+        
+        // Small delay between generations
+        if (i < selectedCrewsForGeneration.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      if (successCount > 0) {
+        trackEvent('bulk_generation', {
+          template,
+          crewCount: successCount,
+          primaryColor: colors?.primary,
+          secondaryColor: colors?.secondary
+        });
+        
+        // Navigate to gallery after successful generation
+        navigate('/gallery');
+      } else {
+        setError('Failed to generate any images. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error during bulk generation:', error);
+      setError('Failed to generate images. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Wrapper function to match SavedCrewsComponent interface
+  const handleBulkGenerateImages = (
     crewIds: string[], 
     template: string, 
-    colors?: { primary: string; secondary: string },
+    colors?: { primary: string; secondary: string }, 
     onProgress?: (current: number, total: number, crewName: string) => void,
     clubIcon?: any
   ) => {
-    console.log('Bulk generating images for crews:', crewIds, 'with template:', template);
-    
-    for (let i = 0; i < crewIds.length; i++) {
-      const crewId = crewIds[i];
-      const crew = savedCrews.find(c => c.id === crewId);
-      
-      if (!crew) continue;
-      
-      try {
-        const imageName = `${crew.boatName}_${crew.raceName}`;
-        console.log(`Generating image ${i + 1}/${crewIds.length}: ${imageName} with clubIcon:`, clubIcon);
-        
-        onProgress?.(i + 1, crewIds.length, crew.boatName);
-        
-        const imageBlob = await ApiService.generateImage(crew.id, imageName, template, colors, clubIcon);
-        
-        if (imageBlob) {
-          await ApiService.saveImage(crew.id, imageName, template, colors, imageBlob);
-          console.log(`Image ${i + 1}/${crewIds.length} saved to gallery`);
-        }
-      } catch (error) {
-        console.error(`Error generating image for crew ${crew.boatName}:`, error);
-      }
-      
-      if (i < crewIds.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
-    
-    trackEvent('bulk_generation', {
-      template,
-      crewCount: crewIds.length,
-      primaryColor: colors?.primary,
-      secondaryColor: colors?.secondary
-    });
-    
-    console.log('Bulk generation completed!');
-    
-    // Navigate to gallery after bulk generation completion
-    navigate('/gallery');
+    // This function is not used in the new implementation
+    // but kept for compatibility with SavedCrewsComponent interface
+    console.log('Bulk generate called with crew IDs:', crewIds);
   };
 
   const handleBulkModeChange = (isBulkMode: boolean) => {
@@ -255,12 +304,45 @@ const MyCrewsPage: React.FC = () => {
   };
 
   const handleBulkGenerate = () => {
-    // Navigate to generate page with selected crews
-    navigate('/generate', { 
-      state: { 
-        selectedCrewIds: Array.from(selectedCrews) 
-      } 
-    });
+    const selectedCrewsData = savedCrews.filter(crew => selectedCrews.has(crew.id));
+    setSelectedCrewsForGeneration(selectedCrewsData);
+    setShowGenerateSection(true);
+    // Smooth scroll to generate section
+    setTimeout(() => {
+      generateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
+  const handleRemoveCrewFromGeneration = (crewId: string) => {
+    const newCrews = selectedCrewsForGeneration.filter(crew => crew.id !== crewId);
+    setSelectedCrewsForGeneration(newCrews);
+    
+    if (newCrews.length === 0) {
+      setShowGenerateSection(false);
+      // Scroll back to crews section
+      crewsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const scrollToCrews = () => {
+    crewsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const scrollToGenerate = () => {
+    generateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const getBoatClassColor = (boatClass: string) => {
+    const colors: Record<string, string> = {
+      '8+': '#FF6B6B',
+      '4+': '#4ECDC4', 
+      '4-': '#45B7D1',
+      '4x': '#96CEB4',
+      '2-': '#E67E22',
+      '2x': '#DDA0DD',
+      '1x': '#FFB347',
+    };
+    return colors[boatClass] || '#9E9E9E';
   };
 
   if (!user) {
@@ -340,56 +422,178 @@ const MyCrewsPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Header Actions */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
-            {savedCrews.length} crew{savedCrews.length !== 1 ? 's' : ''} in your account
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {bulkMode && selectedCrews.size > 0 && (
-            <>
+      {/* Error Message */}
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 3 }}
+          onClose={() => setError(null)}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Crews Section */}
+      <Box ref={crewsSectionRef}>
+        {/* Header Actions */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
+              {savedCrews.length} crew{savedCrews.length !== 1 ? 's' : ''} in your account
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            {bulkMode && selectedCrews.size > 0 && (
+              <>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleBulkDelete}
+                >
+                  Delete {selectedCrews.size}
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleBulkGenerate}
+                >
+                  Generate Crews ({selectedCrews.size})
+                </Button>
+              </>
+            )}
+            <Button
+              variant={bulkMode ? "contained" : "outlined"}
+              startIcon={<MdChecklist />}
+              onClick={() => handleBulkModeChange(!bulkMode)}
+            >
+              Select Multiple
+            </Button>
+            {showGenerateSection && (
               <Button
                 variant="outlined"
-                color="error"
-                onClick={handleBulkDelete}
+                startIcon={<MdKeyboardArrowDown />}
+                onClick={scrollToGenerate}
+                sx={{ color: theme.palette.primary.main }}
               >
-                Delete {selectedCrews.size}
+                Go to Generate
               </Button>
-              <Button
-                variant="contained"
-                onClick={handleBulkGenerate}
-              >
-                Generate Crews ({selectedCrews.size})
-              </Button>
-            </>
-          )}
-          <Button
-            variant={bulkMode ? "contained" : "outlined"}
-            startIcon={<MdChecklist />}
-            onClick={() => handleBulkModeChange(!bulkMode)}
-          >
-            Select Multiple
-          </Button>
+            )}
+          </Box>
         </Box>
+
+        {/* Crews List */}
+        <SavedCrewsComponent
+          savedCrews={savedCrews}
+          recentCrews={recentCrews}
+          onDeleteCrew={handleDeleteCrew}
+          onEditCrew={handleEditCrew}
+          onGenerateImage={handleGenerateImage}
+                      onBulkGenerateImages={handleBulkGenerateImages}
+          onBulkModeChange={handleBulkModeChange}
+          bulkMode={bulkMode}
+          selectedCrews={selectedCrews}
+          onCrewSelection={handleCrewSelection}
+          onBulkDelete={handleBulkDelete}
+          onBulkGenerate={handleBulkGenerate}
+        />
       </Box>
 
-      {/* Crews List */}
-      <SavedCrewsComponent
-        savedCrews={savedCrews}
-        recentCrews={recentCrews}
-        onDeleteCrew={handleDeleteCrew}
-        onEditCrew={handleEditCrew}
-        onGenerateImage={handleGenerateImage}
-        onBulkGenerateImages={handleBulkGenerateImages}
-        onBulkModeChange={handleBulkModeChange}
-        bulkMode={bulkMode}
-        selectedCrews={selectedCrews}
-        onCrewSelection={handleCrewSelection}
-        onBulkDelete={handleBulkDelete}
-        onBulkGenerate={handleBulkGenerate}
-      />
+      {/* Generate Section */}
+      {showGenerateSection && (
+        <Box ref={generateSectionRef} sx={{ mt: 6 }}>
+          <Divider sx={{ mb: 4 }} />
+          
+          {/* Generate Header */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                  Generate Images
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<MdKeyboardArrowUp />}
+                    onClick={scrollToCrews}
+                    size="small"
+                  >
+                    Back to Crews
+                  </Button>
+                  <IconButton
+                    onClick={() => {
+                      setShowGenerateSection(false);
+                      setSelectedCrewsForGeneration([]);
+                    }}
+                    size="small"
+                  >
+                    <MdClose />
+                  </IconButton>
+                </Box>
+              </Box>
+              <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                Choose a template and customize settings for your selected crews
+              </Typography>
+            </CardContent>
+          </Card>
+
+          {/* Selected Crews */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Selected Crews ({selectedCrewsForGeneration.length})
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {selectedCrewsForGeneration.map((crew) => (
+                  <Chip
+                    key={crew.id}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            backgroundColor: getBoatClassColor(crew.boatClass)
+                          }}
+                        />
+                        <span>{crew.boatClub} - {crew.boatName}</span>
+                      </Box>
+                    }
+                    onDelete={() => handleRemoveCrewFromGeneration(crew.id)}
+                    deleteIcon={<MdClose size={16} />}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiChip-label': {
+                        px: 1
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Template Selection and Generation */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Choose Template & Generate
+              </Typography>
+              
+              <ImageGenerator 
+                onGenerate={handleGenerateImages}
+                selectedCrew={selectedCrewsForGeneration[0]} // Use first crew for preview
+                generating={generating}
+                buttonText={
+                  selectedCrewsForGeneration.length === 1 
+                    ? 'Generate Image' 
+                    : `Generate ${selectedCrewsForGeneration.length} Images`
+                }
+              />
+            </CardContent>
+          </Card>
+        </Box>
+      )}
     </Box>
   );
 };
