@@ -141,8 +141,9 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
       {/* Crews Grid */}
       <Box sx={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-        gap: 3 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+        gap: 3,
+        alignItems: 'start' // Align cards to top instead of stretching
       }}>
         {filteredCrews.map((crew, index) => {
           const originalIndex = savedCrews.findIndex(c => c === crew);
@@ -154,217 +155,178 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
             }
           };
 
+          // Option A: Improved "Sports Team" Style
           return (
             <Card 
-              key={crew.id} 
+              key={crew.id}
               onClick={handleCardClick}
               sx={{ 
                 position: 'relative',
                 transition: 'all 0.2s ease',
-                height: 280,
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: bulkMode ? 'pointer' : 'default',
-                border: bulkMode && selectedCrews.has(crew.id) 
+                height: 'auto',
+                cursor: 'pointer',
+                border: selectedCrews.has(crew.id) 
                   ? `2px solid ${theme.palette.primary.main}` 
                   : `1px solid ${theme.palette.divider}`,
-                backgroundColor: bulkMode && selectedCrews.has(crew.id)
+                backgroundColor: selectedCrews.has(crew.id)
                   ? `${theme.palette.primary.main}08`
                   : theme.palette.background.paper,
+                mb: 3, // Margin bottom for masonry spacing
+                breakInside: 'avoid', // Prevent breaking across columns
+                display: 'inline-block',
+                width: '100%',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: theme.shadows[8],
-                  ...(bulkMode && {
-                    backgroundColor: selectedCrews.has(crew.id)
-                      ? `${theme.palette.primary.main}12`
-                      : `${theme.palette.primary.main}04`
-                  })
+                  backgroundColor: selectedCrews.has(crew.id)
+                    ? `${theme.palette.primary.main}12`
+                    : `${theme.palette.primary.main}04`
                 }
               }}
             >
-              {/* Delete button (single mode) */}
-              {!bulkMode && (
+              {/* Top Right Controls */}
+              <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <IconButton
-                  onClick={() => onDeleteCrew(originalIndex)}
-                  sx={{ 
-                    position: 'absolute', 
-                    top: 8, 
-                    right: 8, 
-                    zIndex: 1,
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    color: theme.palette.text.secondary,
-                    '&:hover': {
-                      backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                      color: theme.palette.error.main
-                    }
-                  }}
                   size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditCrew(originalIndex);
+                  }}
+                  sx={{ p: 0.5 }}
                 >
-                  <MdDelete size={16} />
+                  <MdEdit size={16} />
                 </IconButton>
-              )}
+                <Checkbox
+                  checked={selectedCrews.has(crew.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onCrewSelection && onCrewSelection(crew.id, e.target.checked);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  size="small"
+                  sx={{ p: 0.5 }}
+                />
+              </Box>
 
-              <CardContent sx={{ 
-                pb: 2, 
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column'
-              }}>
-                {/* Boat Type Badge with optional checkbox */}
-                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, minHeight: 32 }}>
-                  <Chip
-                    label={boatClass}
-                    size="small"
-                    sx={{
-                      backgroundColor: getBoatClassColor(boatClass),
-                      color: 'white',
-                      fontWeight: 600
-                    }}
-                  />
-                  <Box sx={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {bulkMode && onCrewSelection && (
-                      <Checkbox
-                        checked={selectedCrews.has(crew.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          onCrewSelection(crew.id, e.target.checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        sx={{ 
-                          color: theme.palette.primary.main,
-                          '&.Mui-checked': {
-                            color: theme.palette.primary.main,
-                          },
-                          p: 0
-                        }}
-                        size="small"
-                      />
-                    )}
-                  </Box>
-                </Box>
-
-                {/* Split Layout: Club Info + Crew Members */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 3, flex: 1 }}>
-                  {/* Left Half - Club Info */}
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                      {crew.boatClub}
-                    </Typography>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Typography variant="body1" sx={{ color: theme.palette.primary.main }}>
-                        {crew.raceName}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                        •
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                        {crew.boatName}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Right Half - Crew Members */}
-                  <Box sx={{ flex: 1 }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'column',
-                      gap: 0.5,
-                      maxHeight: 140,
-                      overflow: 'auto',
-                      '&::-webkit-scrollbar': {
-                        width: '4px',
-                      },
-                      '&::-webkit-scrollbar-track': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                        borderRadius: '2px',
-                      },
-                      '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                        borderRadius: '2px',
-                        '&:hover': {
-                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                        },
-                      },
-                    }}>
-                      {crew.crewMembers.map((member, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
+              <CardContent sx={{ p: 3, pr: 8 }}> {/* Right padding for icon controls */}
+                {/* Main Content */}
+                <Box sx={{ mb: 3 }}>
+                  {/* Header with Club Name */}
+                  <Box sx={{ mb: 2 }}>
+                      <Box sx={{ mb: 1 }}>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            fontWeight: 600,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            flex: 1
                           }}
                         >
-                          {/* Seat Badge */}
-                          <Box
-                            sx={{
-                              backgroundColor: member.seat === 'Cox' ? '#FFB347' : theme.palette.primary.main,
-                              color: 'white',
-                              px: 1,
-                              py: 0.25,
-                              borderRadius: 1,
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              minWidth: 24,
-                              textAlign: 'center'
-                            }}
-                          >
-                            {member.seat === 'Cox' ? 'Cox' : 
-                             member.seat === 'Stroke Seat' ? 'S' :
-                             member.seat === 'Bow' ? 'B' :
-                             member.seat.match(/(\d+)/) ? member.seat.match(/(\d+)/)?.[1] : 
-                             member.seat}
-                          </Box>
-                          
-                          {/* Member Name */}
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              fontSize: '0.875rem',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              flex: 1
-                            }}
-                          >
-                            {member.name}
+                          {crew.boatClub}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600, minWidth: 35 }}>
+                          Race:
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: theme.palette.text.secondary, 
+                            fontWeight: 500,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            flex: 1
+                          }}
+                        >
+                          {crew.raceName}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600, minWidth: 35 }}>
+                          Boat:
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: theme.palette.text.secondary,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            flex: 1
+                          }}
+                        >
+                          {crew.boatName}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600, minWidth: 50 }}>
+                          Boat type:
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: theme.palette.text.secondary,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            flex: 1
+                          }}
+                        >
+                          {boatClass}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Crew Members - Grid Layout */}
+                      <Box sx={{ mt: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                          <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600, minWidth: 35 }}>
+                            Crew:
                           </Typography>
+                          <Box sx={{ flex: 1 }}>
+                            {boatClass === '8+' ? (
+                              <Box>
+                                {/* Cox centered */}
+                                {crew.crewMembers.filter((m: any) => m.seat === 'Cox').map((member: any) => (
+                                  <Box key="cox" sx={{ textAlign: 'center', mb: 1 }}>
+                                    <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>Cox: {member.name}</Typography>
+                                  </Box>
+                                ))}
+                                {/* 2x4 Grid */}
+                                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5, fontSize: '0.7rem' }}>
+                                  {crew.crewMembers.filter((m: any) => m.seat !== 'Cox').slice(0, 4).map((member: any) => (
+                                    <Typography key={member.seat} variant="body2" sx={{ fontSize: '0.75rem' }}>
+                                      {member.seat === 'Stroke Seat' ? 'Stroke' : member.seat === 'Bow' ? 'Bow' : member.seat.match(/(\d+)/)?.[1] || member.seat}: {member.name}
+                                    </Typography>
+                                  ))}
+                                  {crew.crewMembers.filter((m: any) => m.seat !== 'Cox').slice(4, 8).map((member: any) => (
+                                    <Typography key={member.seat} variant="body2" sx={{ fontSize: '0.75rem' }}>
+                                      {member.seat === 'Stroke Seat' ? 'Stroke' : member.seat === 'Bow' ? 'Bow' : member.seat.match(/(\d+)/)?.[1] || member.seat}: {member.name}
+                                    </Typography>
+                                  ))}
+                                </Box>
+                              </Box>
+                            ) : (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {crew.crewMembers.map((member: any) => (
+                                  <Typography key={member.seat} variant="body2" sx={{ fontSize: '0.75rem' }}>
+                                    {member.seat === 'Cox' ? 'Cox' : member.seat === 'Stroke Seat' ? 'Stroke' : member.seat === 'Bow' ? 'Bow' : member.seat.match(/(\d+)/)?.[1] || member.seat}: {member.name}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            )}
+                          </Box>
                         </Box>
-                      ))}
+                      </Box>
                     </Box>
-                  </Box>
                 </Box>
 
-                {/* Actions - Always at bottom */}
-                <Box sx={{ display: 'flex', gap: 1, mt: 'auto', alignItems: 'center' }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<MdEdit size={16} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditCrew(originalIndex);
-                    }}
-                    size="small"
-                    sx={{ flex: 1 }}
-                  >
-                    Edit
-                  </Button>
-                  <Box sx={{ flex: 1, textAlign: 'center' }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: selectedCrews.has(crew.id) 
-                          ? theme.palette.primary.main 
-                          : theme.palette.text.secondary,
-                        fontWeight: selectedCrews.has(crew.id) ? 600 : 400,
-                        fontSize: '0.875rem'
-                      }}
-                    >
-                      {selectedCrews.has(crew.id) ? '✓ Selected' : 'Click to select'}
-                    </Typography>
-                  </Box>
-                </Box>
               </CardContent>
             </Card>
           );
