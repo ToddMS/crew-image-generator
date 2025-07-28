@@ -572,6 +572,108 @@ const MyCrewsPage: React.FC = () => {
           </Box>
         )}
       </Card>
+
+      {/* Bottom Sticky Bar for Selection Actions */}
+      <Box
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1300,
+          transform: selectedCrews.size > 0 ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'transform 0.3s ease-in-out',
+          backgroundColor: theme.palette.background.paper,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          boxShadow: theme.shadows[8],
+          p: 2
+        }}
+      >
+        <Box sx={{ 
+          maxWidth: 1200, 
+          mx: 'auto', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          gap: 2
+        }}>
+          {/* Selection Info */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              backgroundColor: theme.palette.primary.main, 
+              color: 'white', 
+              px: 2, 
+              py: 0.5, 
+              borderRadius: 3,
+              fontWeight: 600,
+              fontSize: '0.9rem'
+            }}>
+              {selectedCrews.size}
+            </Box>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {selectedCrews.size === 1 ? 'crew selected' : 'crews selected'}
+            </Typography>
+            
+            {/* Quick Preview of Selected Crews */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
+              {Array.from(selectedCrews).slice(0, 3).map(crewId => {
+                const crew = savedCrews.find(c => c.id === crewId);
+                return crew ? (
+                  <Chip
+                    key={crewId}
+                    label={crew.boatClub}
+                    size="small"
+                    sx={{ 
+                      backgroundColor: theme.palette.action.selected,
+                      fontSize: '0.75rem',
+                      maxWidth: 120
+                    }}
+                  />
+                ) : null;
+              })}
+              {selectedCrews.size > 3 && (
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                  +{selectedCrews.size - 3} more
+                </Typography>
+              )}
+            </Box>
+          </Box>
+
+          {/* Action Buttons */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button
+              variant="text"
+              onClick={() => setSelectedCrews(new Set())}
+              sx={{ color: theme.palette.text.secondary }}
+            >
+              Clear All
+            </Button>
+            
+            <Button
+              variant="outlined"
+              onClick={() => setShowGeneratePanel(true)}
+              sx={{ minWidth: 120 }}
+            >
+              Customize & Generate
+            </Button>
+            
+            <Button
+              variant="contained"
+              onClick={handleGenerateImages}
+              disabled={generating}
+              sx={{ 
+                minWidth: 140,
+                bgcolor: theme.palette.primary.main,
+                '&:hover': {
+                  bgcolor: theme.palette.primary.dark
+                }
+              }}
+            >
+              {generating ? 'Generating...' : 'Quick Generate'}
+            </Button>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };
