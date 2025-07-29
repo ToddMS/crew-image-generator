@@ -425,9 +425,6 @@ const MyCrewsPage: React.FC = () => {
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-              My Crews
-            </Typography>
             <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
               {selectedCrews.size > 0 
                 ? `${selectedCrews.size} of ${savedCrews.length} crews selected`
