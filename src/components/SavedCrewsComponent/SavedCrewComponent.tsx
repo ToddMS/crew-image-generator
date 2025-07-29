@@ -398,6 +398,79 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           </Box>
                         </Box>
                       </Box>
+                    ) : boatClass === '4+' ? (
+                      /* 4+ Layout: Cox above, then one row of 4 */
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        {/* Cox - Center */}
+                        {crew.crewMembers.filter((member: any) => member.seat === 'Cox').map((member: any, idx: number) => (
+                          <Box key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Box sx={{ 
+                              backgroundColor: theme.palette.action.selected,
+                              px: 2,
+                              py: 0.75,
+                              borderRadius: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1
+                            }}>
+                              <Typography variant="caption" sx={{ 
+                                fontSize: '0.7rem', 
+                                color: theme.palette.text.secondary,
+                                fontWeight: 600
+                              }}>
+                                Cox
+                              </Typography>
+                              <Typography variant="body2" sx={{ 
+                                fontSize: '0.8rem', 
+                                fontWeight: 500, 
+                                color: theme.palette.text.primary,
+                                textAlign: 'center',
+                                flex: 1
+                              }}>
+                                {member.name}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                        
+                        {/* Rowers in one row of 4 */}
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          {crew.crewMembers
+                            .filter((member: any) => member.seat !== 'Cox')
+                            .map((member: any, idx: number) => (
+                              <Box key={idx} sx={{ 
+                                backgroundColor: theme.palette.action.selected,
+                                px: 2,
+                                py: 0.75,
+                                borderRadius: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                flex: '1 1 calc(25% - 6px)',
+                                minWidth: 'fit-content'
+                              }}>
+                                <Typography variant="caption" sx={{ 
+                                  fontSize: '0.7rem', 
+                                  color: theme.palette.text.secondary,
+                                  fontWeight: 600
+                                }}>
+                                  {member.seat === 'Stroke Seat' ? 'S' : 
+                                   member.seat === 'Bow' ? 'B' : 
+                                   member.seat.match(/(\d+)/)?.[1] || member.seat.charAt(0)}
+                                </Typography>
+                                <Typography variant="body2" sx={{ 
+                                  fontSize: '0.8rem', 
+                                  fontWeight: 500, 
+                                  color: theme.palette.text.primary,
+                                  textAlign: 'center',
+                                  flex: 1
+                                }}>
+                                  {member.name}
+                                </Typography>
+                              </Box>
+                            ))}
+                        </Box>
+                      </Box>
                     ) : (
                       /* Other boat types: spread across */
                       <Box sx={{ 

@@ -469,106 +469,6 @@ const MyCrewsPage: React.FC = () => {
         />
       </Box>
 
-      {/* Collapsible Generate Images Panel */}
-      <Card 
-        sx={{ 
-          mb: 4,
-          border: selectedCrews.size > 0 ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
-          backgroundColor: selectedCrews.size > 0 ? `${theme.palette.primary.main}08` : theme.palette.background.paper
-        }}
-      >
-        <CardContent 
-          onClick={() => setShowGeneratePanel(!showGeneratePanel)}
-          sx={{ 
-            cursor: 'pointer',
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover
-            }
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <MdSettings size={24} color={theme.palette.primary.main} />
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  ⚡ Generate Images
-                  {selectedCrews.size > 0 && (
-                    <Chip 
-                      label={`${selectedCrews.size} selected`} 
-                      size="small" 
-                      color="primary" 
-                      sx={{ ml: 2 }}
-                    />
-                  )}
-                </Typography>
-                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                  {selectedCrews.size > 0 
-                    ? 'Configure template and settings for your selected crews'
-                    : 'Select crews above to configure image generation settings'
-                  }
-                </Typography>
-              </Box>
-            </Box>
-            {showGeneratePanel ? <MdExpandLess size={24} /> : <MdExpandMore size={24} />}
-          </Box>
-        </CardContent>
-
-        {/* Collapsible Content */}
-        {showGeneratePanel && (
-          <Box sx={{ px: 3, pb: 3 }}>
-            <Divider sx={{ mb: 3 }} />
-            
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4, mb: 3 }}>
-              {/* Template Selector */}
-              <Box>
-                <TemplateSelector
-                  selectedTemplate={selectedTemplate}
-                  onTemplateChange={setSelectedTemplate}
-                />
-              </Box>
-              
-              {/* Color Scheme and Club Icon */}
-              <Box>
-                <ColorSchemeSelector
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
-                  usePresetColors={usePresetColors}
-                  selectedPresetId={selectedPresetId}
-                  onPrimaryColorChange={setPrimaryColor}
-                  onSecondaryColorChange={setSecondaryColor}
-                  onPresetModeChange={setUsePresetColors}
-                  onPresetSelection={setSelectedPresetId}
-                  presets={presets}
-                  clubIconSelector={
-                    <ClubIconSelector
-                      selectedIcon={clubIcon}
-                      onIconChange={setClubIcon}
-                    />
-                  }
-                />
-              </Box>
-            </Box>
-
-            {/* Generate Button */}
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleGenerateImages}
-                disabled={generating || selectedCrews.size === 0}
-                sx={{ minWidth: 250, py: 1.5 }}
-              >
-                {generating 
-                  ? 'Generating...' 
-                  : selectedCrews.size === 0
-                    ? 'Select crews to generate'
-                    : `Generate ${selectedCrews.size} Image${selectedCrews.size !== 1 ? 's' : ''}`
-                }
-              </Button>
-            </Box>
-          </Box>
-        )}
-      </Card>
 
       {/* Bottom Sticky Bar for Selection Actions */}
       <Box
@@ -647,26 +547,24 @@ const MyCrewsPage: React.FC = () => {
             </Button>
             
             <Button
-              variant="outlined"
-              onClick={() => setShowGeneratePanel(true)}
-              sx={{ minWidth: 120 }}
-            >
-              Customize & Generate
-            </Button>
-            
-            <Button
               variant="contained"
-              onClick={handleGenerateImages}
-              disabled={generating}
+              onClick={() => {
+                // Navigate to generate page with selected crew IDs
+                navigate('/generate', {
+                  state: {
+                    selectedCrewIds: Array.from(selectedCrews)
+                  }
+                });
+              }}
               sx={{ 
-                minWidth: 140,
+                minWidth: 160,
                 bgcolor: theme.palette.primary.main,
                 '&:hover': {
                   bgcolor: theme.palette.primary.dark
                 }
               }}
             >
-              {generating ? 'Generating...' : 'Quick Generate'}
+              Generate Images
             </Button>
           </Box>
         </Box>
