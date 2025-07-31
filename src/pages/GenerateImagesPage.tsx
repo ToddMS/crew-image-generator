@@ -198,10 +198,9 @@ const GenerateImagesPage: React.FC = () => {
     const newIds = selectedCrewIds.filter(id => id !== crewId);
     setSelectedCrewIds(newIds);
     
-    if (newIds.length === 0) {
-      // No crews left, go back to My Crews
-      navigate('/crews');
-    }
+    // Update the selected crews array to match
+    const newSelectedCrews = selectedCrews.filter(crew => crew.id !== crewId);
+    setSelectedCrews(newSelectedCrews);
   };
 
   const handleGenerateImages = async (
@@ -317,20 +316,46 @@ const GenerateImagesPage: React.FC = () => {
 
   if (selectedCrews.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          No Crews Selected
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Select crews from My Crews page to generate images
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<MdArrowBack />}
-          onClick={() => navigate('/crews')}
-        >
-          Go to My Crews
-        </Button>
+      <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+        {/* Header */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                Choose Template & Customize
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<MdArrowBack />}
+                onClick={() => navigate('/crews')}
+              >
+                Back to My Crews
+              </Button>
+            </Box>
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+              Choose a template and customize settings for your selected crews
+            </Typography>
+          </CardContent>
+        </Card>
+
+        {/* No Crews Selected State */}
+        <Card>
+          <CardContent sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
+              No Crews Selected
+            </Typography>
+            <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
+              Select crews from My Crews page to generate images
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<MdArrowBack />}
+              onClick={() => navigate('/crews')}
+            >
+              Go to My Crews
+            </Button>
+          </CardContent>
+        </Card>
       </Box>
     );
   }
@@ -751,20 +776,84 @@ const GenerateImagesPage: React.FC = () => {
                     </Button>
                     
                     {clubIcon && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
-                        <Typography variant="caption" sx={{ 
-                          color: theme.palette.success.main,
-                          flex: 1
-                        }}>
-                          ✓ {clubIcon.filename || 'Logo selected'}
-                        </Typography>
-                        <Button
-                          size="small"
-                          onClick={() => setClubIcon(null)}
-                          sx={{ color: theme.palette.error.main }}
-                        >
-                          Remove
-                        </Button>
+                      <Box sx={{ 
+                        mt: 2,
+                        p: 2,
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: 2,
+                        backgroundColor: theme.palette.background.default
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {/* Image Preview */}
+                          <Box sx={{ 
+                            width: 48,
+                            height: 48,
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                            border: `1px solid ${theme.palette.divider}`,
+                            backgroundColor: theme.palette.action.selected,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            {clubIcon.file ? (
+                              <img 
+                                src={URL.createObjectURL(clubIcon.file)}
+                                alt="Club logo preview"
+                                style={{ 
+                                  width: '100%', 
+                                  height: '100%', 
+                                  objectFit: 'contain'
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="caption" sx={{ 
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                color: theme.palette.text.secondary
+                              }}>
+                                📁
+                              </Typography>
+                            )}
+                          </Box>
+                          
+                          {/* File Info */}
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="body2" sx={{ 
+                              fontWeight: 500,
+                              color: theme.palette.success.main,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              ✓ Logo uploaded
+                            </Typography>
+                            <Typography variant="caption" sx={{ 
+                              color: theme.palette.text.secondary,
+                              display: 'block',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {clubIcon.filename || 'Unknown file'}
+                            </Typography>
+                          </Box>
+                          
+                          {/* Remove Button */}
+                          <IconButton
+                            size="small"
+                            onClick={() => setClubIcon(null)}
+                            sx={{ 
+                              color: theme.palette.error.main,
+                              '&:hover': {
+                                backgroundColor: theme.palette.error.light + '20'
+                              }
+                            }}
+                          >
+                            <MdClose size={16} />
+                          </IconButton>
+                        </Box>
                       </Box>
                     )}
                     
