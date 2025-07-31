@@ -1060,10 +1060,10 @@ const GenerateImagesPage: React.FC = () => {
             }}
             disabled={generating || selectedCrews.length === 0}
             sx={{
-              py: 1,
+              py: 1.5,
               px: 3,
-              fontSize: '0.9rem',
-              fontWeight: 600
+              fontSize: '0.875rem',
+              fontWeight: 500
             }}
           >
             {generating 

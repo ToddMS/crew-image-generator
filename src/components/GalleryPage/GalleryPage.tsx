@@ -21,7 +21,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload, MdChecklist } from 'react-icons/md';
+import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react-icons/md';
 import { ApiService } from '../../services/api.service';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalytics } from '../../context/AnalyticsContext';
@@ -70,12 +70,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [crewFilter, setCrewFilter] = useState('');
-  const [raceFilter, setRaceFilter] = useState('');
-  const [clubFilter, setClubFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
-  const [showBulkOptions, setShowBulkOptions] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const loadAllData = async () => {
@@ -173,9 +169,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       // Remove deleted images from the state
       setAllImages(prev => prev.filter(img => !selectedImages.has(img.id)));
       
-      // Clear selection and exit bulk mode
+      // Clear selection
       setSelectedImages(new Set());
-      setShowBulkOptions(false);
       
       // Track bulk delete
       trackEvent('gallery_bulk_delete', {
@@ -242,7 +237,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     setIsDownloading(true);
     
     try {
-      const selectedImageData = filteredImages.filter(img => selectedImages.has(img.id));
+      const selectedImageData = allImages.filter(img => selectedImages.has(img.id));
+      console.log('Selected images for download:', selectedImageData.length, selectedImageData.map(img => img.image_name));
       
       // Import JSZip dynamically
       const JSZip = (await import('jszip')).default;
@@ -253,12 +249,21 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         const image = selectedImageData[i];
         try {
           const imageUrl = getImageUrl(image.image_url);
+          console.log(`Downloading image ${i + 1}/${selectedImageData.length}:`, imageUrl);
           const response = await fetch(imageUrl);
-          const blob = await response.blob();
           
-          // Create a clean filename with crew and race info
-          const cleanFileName = `${image.crew_name}_${image.race_name}_${image.image_name}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+          if (!response.ok) {
+            console.error(`Failed to fetch image ${image.image_name}:`, response.status, response.statusText);
+            continue;
+          }
+          
+          const blob = await response.blob();
+          console.log(`Image ${image.image_name} blob size:`, blob.size);
+          
+          // Create a unique filename with crew, race info, and image ID
+          const cleanFileName = `${image.crew_name}_${image.race_name}_${image.image_name}_${image.id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
           zip.file(`${cleanFileName}.png`, blob);
+          console.log(`Added ${cleanFileName}.png to zip`);
           
         } catch (error) {
           console.error(`Error adding image ${image.image_name} to zip:`, error);
@@ -296,7 +301,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       
       // Clear selection after download
       setSelectedImages(new Set());
-      setShowBulkOptions(false);
     } catch (error) {
       console.error('Error in bulk download:', error);
     } finally {
@@ -313,39 +317,18 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     return `${import.meta.env.VITE_API_URL}${imageUrl}`;
   };
 
-  // Get unique values for filters with counts
-  const uniqueCrews = [...new Set(allImages.map(img => img.crew_name))].filter(Boolean);
-  const uniqueRaces = [...new Set(allImages.map(img => img.race_name))].filter(Boolean);
-  const uniqueClubs = [...new Set(allImages.map(img => img.club_name))].filter(Boolean);
 
-  // Get counts for each filter option
-  const crewCounts = uniqueCrews.map(crew => ({
-    name: crew,
-    count: allImages.filter(img => img.crew_name === crew).length
-  }));
-
-  const raceCounts = uniqueRaces.map(race => ({
-    name: race,
-    count: allImages.filter(img => img.race_name === race).length
-  }));
-
-  const clubCounts = uniqueClubs.map(club => ({
-    name: club,
-    count: allImages.filter(img => img.club_name === club).length
-  }));
-
-  // Filter images
+  // Filter images by search term only
   const filteredImages = allImages.filter(image => {
-    const crewMatches = !crewFilter || image.crew_name === crewFilter;
-    const raceMatches = !raceFilter || image.race_name === raceFilter;
-    const clubMatches = !clubFilter || image.club_name === clubFilter;
-    const searchMatches = !searchTerm || 
-      image.image_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      image.crew_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      image.race_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      image.club_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!searchTerm) return true;
     
-    return crewMatches && raceMatches && clubMatches && searchMatches;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      image.image_name.toLowerCase().includes(searchLower) ||
+      image.crew_name?.toLowerCase().includes(searchLower) ||
+      image.race_name?.toLowerCase().includes(searchLower) ||
+      image.club_name?.toLowerCase().includes(searchLower)
+    );
   });
 
   if (!user) {
@@ -375,96 +358,59 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Gallery Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            color: theme.palette.text.secondary,
-            fontWeight: 500
-          }}
-        >
-          {filteredImages.length} image{filteredImages.length !== 1 ? 's' : ''} in your gallery
-        </Typography>
-      </Box>
-
-      {/* Bulk Selection Toggle */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Button
-          variant={showBulkOptions ? "contained" : "outlined"}
-          startIcon={<MdChecklist />}
-          onClick={() => {
-            const newBulkMode = !showBulkOptions;
-            setShowBulkOptions(newBulkMode);
-            setSelectedImages(new Set());
-          }}
-        >
-          Select Multiple
-        </Button>
-        
-        {showBulkOptions && (
+      {/* Header and Controls */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+            {selectedImages.size > 0 
+              ? `${selectedImages.size} of ${filteredImages.length} images selected`
+              : `${filteredImages.length} image${filteredImages.length !== 1 ? 's' : ''} in your gallery`
+            }
+          </Typography>
+        </Box>
+        {selectedImages.size > 0 && (
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Button
-              variant="outlined"
+              variant="contained"
+              startIcon={<MdDownload />}
+              onClick={handleBulkDownload}
+              disabled={isDownloading}
               size="small"
-              onClick={handleSelectAll}
-              disabled={filteredImages.length === 0}
             >
-              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
+              {isDownloading ? 'Creating ZIP...' : `Download ZIP (${selectedImages.size})`}
             </Button>
-            
-            {selectedImages.size > 0 && (
-              <>
-                <Button
-                  variant="contained"
-                  startIcon={<MdDownload />}
-                  onClick={handleBulkDownload}
-                  disabled={isDownloading}
-                  sx={{
-                    backgroundColor: theme.palette.primary.main,
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.dark,
-                    }
-                  }}
-                >
-                  {isDownloading ? `Creating ZIP...` : `Download ZIP (${selectedImages.size})`}
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  startIcon={<MdDelete />}
-                  onClick={handleBulkDelete}
-                  color="error"
-                  sx={{
-                    borderColor: theme.palette.error.main,
-                    color: theme.palette.error.main,
-                    '&:hover': {
-                      borderColor: theme.palette.error.dark,
-                      backgroundColor: theme.palette.error.main,
-                      color: 'white'
-                    }
-                  }}
-                >
-                  Delete ({selectedImages.size})
-                </Button>
-              </>
-            )}
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleBulkDelete}
+              size="small"
+            >
+              Delete {selectedImages.size}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSelectedImages(new Set());
+              }}
+              size="small"
+            >
+              Clear Selection
+            </Button>
           </Box>
         )}
       </Box>
 
-      {/* Filters */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      {/* Search Bar */}
+      <Box sx={{ mb: 4 }}>
         <TextField
-          placeholder="Search images..."
+          fullWidth
+          placeholder="Search images by name, club, race, or crew..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          size="small"
-          sx={{ minWidth: 200 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <MdSearch color={theme.palette.primary.main} />
+                <MdSearch size={20} color={theme.palette.text.secondary} />
               </InputAdornment>
             ),
             endAdornment: searchTerm && (
@@ -472,74 +418,29 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                 <IconButton
                   size="small"
                   onClick={() => setSearchTerm('')}
-                  sx={{ color: theme.palette.text.secondary }}
                 >
                   <MdClear size={16} />
                 </IconButton>
               </InputAdornment>
             ),
           }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+            }
+          }}
         />
-
-        <FormControl sx={{ minWidth: 170 }}>
-          <InputLabel>Filter by Club</InputLabel>
-          <Select
-            value={clubFilter}
-            onChange={(e) => setClubFilter(e.target.value)}
-            label="Filter by Club"
-            size="small"
-          >
-            <MenuItem value="">All Clubs ({allImages.length})</MenuItem>
-            {clubCounts.map(({ name, count }) => (
-              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl sx={{ minWidth: 170 }}>
-          <InputLabel>Filter by Race</InputLabel>
-          <Select
-            value={raceFilter}
-            onChange={(e) => setRaceFilter(e.target.value)}
-            label="Filter by Race"
-            size="small"
-          >
-            <MenuItem value="">All Races ({allImages.length})</MenuItem>
-            {raceCounts.map(({ name, count }) => (
-              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl sx={{ minWidth: 170 }}>
-          <InputLabel>Filter by Crew</InputLabel>
-          <Select
-            value={crewFilter}
-            onChange={(e) => setCrewFilter(e.target.value)}
-            label="Filter by Crew"
-            size="small"
-          >
-            <MenuItem value="">All Crews ({allImages.length})</MenuItem>
-            {crewCounts.map(({ name, count }) => (
-              <MenuItem key={name} value={name}>{name} ({count})</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {(crewFilter || raceFilter || clubFilter || searchTerm) && (
-          <IconButton
-            onClick={() => {
-              setCrewFilter('');
-              setRaceFilter('');
-              setClubFilter('');
-              setSearchTerm('');
-            }}
-            sx={{ color: theme.palette.text.secondary }}
-          >
-            <MdClear />
-          </IconButton>
+        
+        {searchTerm && (
+          <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
+            {filteredImages.length === 0 
+              ? `No images found matching "${searchTerm}"` 
+              : `Found ${filteredImages.length} image${filteredImages.length === 1 ? '' : 's'}`
+            }
+          </Typography>
         )}
       </Box>
+
 
       {/* Images Grid */}
       {filteredImages.length === 0 ? (
@@ -562,28 +463,33 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           {filteredImages.map((image) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
               <Card
+                onClick={() => handleImageSelection(image.id, !selectedImages.has(image.id))}
                 sx={{
                   position: 'relative',
                   cursor: 'pointer',
                   backgroundColor: theme.palette.background.paper,
-                  border: `1px solid ${theme.palette.divider}`,
+                  border: selectedImages.has(image.id) 
+                    ? `2px solid ${theme.palette.primary.main}` 
+                    : `1px solid ${theme.palette.divider}`,
                   borderRadius: 2,
                   overflow: 'hidden',
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    transform: showBulkOptions ? 'none' : 'translateY(-4px)',
-                    boxShadow: showBulkOptions ? 'none' : theme.shadows[8],
+                    transform: 'translateY(-2px)',
+                    boxShadow: theme.shadows[8],
+                    backgroundColor: selectedImages.has(image.id)
+                      ? `${theme.palette.primary.main}12`
+                      : `${theme.palette.primary.main}04`,
                     '& .action-buttons': {
                       opacity: 1,
                     }
                   }
                 }}
-                onClick={() => !showBulkOptions && handleImageClick(image)}
               >
                 <CardMedia
                   component="img"
                   sx={{
-                    height: 180,
+                    aspectRatio: '1/1',
                     objectFit: 'cover',
                     backgroundColor: theme.palette.grey[100]
                   }}
@@ -591,79 +497,95 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   alt={image.image_name}
                 />
                 
-                {/* Bulk Selection Checkbox */}
-                {showBulkOptions && (
-                  <Checkbox
-                    checked={selectedImages.has(image.id)}
-                    onChange={(e) => handleImageSelection(image.id, e.target.checked)}
-                    onClick={(e) => e.stopPropagation()}
-                    size="small"
-                    sx={{ 
-                      position: 'absolute', 
-                      top: 6, 
-                      left: 6, 
-                      zIndex: 2,
-                      padding: '4px',
-                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                      borderRadius: '50%',
+                {/* Selection Checkbox */}
+                <Checkbox
+                  checked={selectedImages.has(image.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    handleImageSelection(image.id, e.target.checked);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  size="small"
+                  sx={{ 
+                    position: 'absolute', 
+                    top: 8, 
+                    right: 8, 
+                    zIndex: 2,
+                    padding: '4px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    borderRadius: '50%',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    },
+                    '&.Mui-checked': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.9)',
                       color: 'white',
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        backgroundColor: 'rgba(25, 118, 210, 1)',
                       },
-                      '&.Mui-checked': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 1)',
-                        },
-                      },
-                    }}
-                  />
-                )}
+                    },
+                  }}
+                />
                 
                 {/* Action buttons */}
-                {!showBulkOptions && (
-                  <Box
-                    className="action-buttons"
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      display: 'flex',
-                      gap: 1,
-                      opacity: 0,
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                  <IconButton
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(25, 118, 210, 0.8)',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                      }
-                    }}
-                    onClick={(e) => handleDownloadImage(image, e)}
-                  >
-                    <MdDownload size={18} />
-                  </IconButton>
-                  
-                  <IconButton
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(244, 67, 54, 0.8)',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'rgba(244, 67, 54, 0.9)',
-                      }
-                    }}
-                    onClick={(e) => handleDeleteImage(image.id, e)}
-                  >
-                    <MdDelete size={18} />
-                  </IconButton>
-                  </Box>
-                )}
+                <Box
+                  className="action-buttons"
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    display: 'flex',
+                    gap: 1,
+                    opacity: 0,
+                    transition: 'opacity 0.2s ease',
+                  }}
+                >
+                <IconButton
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(25, 118, 210, 0.8)',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                    }
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleImageClick(image);
+                  }}
+                >
+                  <MdImage size={18} />
+                </IconButton>
+                
+                <IconButton
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(76, 175, 80, 0.9)',
+                    }
+                  }}
+                  onClick={(e) => handleDownloadImage(image, e)}
+                >
+                  <MdDownload size={18} />
+                </IconButton>
+                
+                <IconButton
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(244, 67, 54, 0.8)',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.9)',
+                    }
+                  }}
+                  onClick={(e) => handleDeleteImage(image.id, e)}
+                >
+                  <MdDelete size={18} />
+                </IconButton>
+                </Box>
                 
                 <Box sx={{ p: 2 }}>
                   <Typography 
@@ -691,23 +613,17 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     {image.crew_name} • {image.race_name}
                   </Typography>
                   
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
-                    <Chip
-                      label={`Template ${image.template_id}`}
-                      size="small"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                    
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: theme.palette.text.secondary,
-                        fontSize: '0.7rem'
-                      }}
-                    >
-                      {new Date(image.created_at).toLocaleDateString()}
-                    </Typography>
-                  </Box>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: theme.palette.text.secondary,
+                      fontSize: '0.75rem',
+                      display: 'block',
+                      mt: 1
+                    }}
+                  >
+                    {new Date(image.created_at).toLocaleDateString('en-GB')}
+                  </Typography>
                 </Box>
               </Card>
             </Grid>

@@ -37,12 +37,6 @@ const GalleryPageEnhanced: React.FC = () => {
 
   return (
     <Box>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
-          Browse and manage your generated images
-        </Typography>
-      </Box>
 
       {/* Gallery Component */}
       <GalleryPage refreshTrigger={refreshTrigger} />
