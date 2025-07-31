@@ -50,6 +50,7 @@ const GenerateImagesPage: React.FC = () => {
   const [clubIcon, setClubIcon] = useState<any>(null);
   const [presets, setPresets] = useState<any[]>([]);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [logoUrls, setLogoUrls] = useState<Record<string, string>>({});
 
   // Check if we came from crews page with selected crews
   useEffect(() => {
@@ -97,10 +98,39 @@ const GenerateImagesPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setPresets(data);
+        
+        // Load logo images with authentication
+        await loadLogoImages(data);
       }
     } catch (error) {
       console.error('Error loading presets:', error);
     }
+  };
+
+  const loadLogoImages = async (presets: any[]) => {
+    const urls: Record<string, string> = {};
+    
+    for (const preset of presets) {
+      if (preset.logo_filename) {
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets/logos/${preset.logo_filename}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+            },
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            urls[preset.logo_filename] = objectUrl;
+          }
+        } catch (error) {
+          console.error('Error loading logo for', preset.club_name, error);
+        }
+      }
+    }
+    
+    setLogoUrls(urls);
   };
 
   const loadCrews = async () => {
@@ -528,28 +558,95 @@ const GenerateImagesPage: React.FC = () => {
                     >
                       {presets.map((preset) => (
                         <MenuItem key={preset.id} value={preset.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                            {/* Club Icon */}
+                            <Box
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 1,
+                                backgroundColor: theme.palette.action.selected,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: `1px solid ${theme.palette.divider}`,
+                                flexShrink: 0
+                              }}
+                            >
+                              {preset.logo_filename && logoUrls[preset.logo_filename] ? (
+                                <img 
+                                  src={logoUrls[preset.logo_filename]}
+                                  alt={preset.club_name || preset.preset_name}
+                                  style={{ 
+                                    width: '24px', 
+                                    height: '24px', 
+                                    objectFit: 'contain',
+                                    borderRadius: '2px'
+                                  }}
+                                />
+                              ) : (
+                                <Typography variant="caption" sx={{ 
+                                  fontSize: '0.7rem', 
+                                  fontWeight: 600,
+                                  color: theme.palette.text.secondary
+                                }}>
+                                  {(preset.club_name || preset.preset_name) ? (preset.club_name || preset.preset_name).charAt(0).toUpperCase() : '?'}
+                                </Typography>
+                              )}
+                            </Box>
+                            
+                            {/* Club Name */}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  fontWeight: 500,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {preset.club_name || preset.preset_name}
+                              </Typography>
+                              {preset.description && (
+                                <Typography 
+                                  variant="caption" 
+                                  sx={{ 
+                                    color: theme.palette.text.secondary,
+                                    display: 'block',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  {preset.description}
+                                </Typography>
+                              )}
+                            </Box>
+                            
+                            {/* Color Swatches */}
+                            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                               <Box
                                 sx={{
-                                  width: 16,
-                                  height: 16,
+                                  width: 20,
+                                  height: 20,
                                   borderRadius: 1,
                                   backgroundColor: preset.primary_color,
-                                  border: `1px solid ${theme.palette.divider}`
+                                  border: `1px solid ${theme.palette.divider}`,
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                 }}
                               />
                               <Box
                                 sx={{
-                                  width: 16,
-                                  height: 16,
+                                  width: 20,
+                                  height: 20,
                                   borderRadius: 1,
                                   backgroundColor: preset.secondary_color,
-                                  border: `1px solid ${theme.palette.divider}`
+                                  border: `1px solid ${theme.palette.divider}`,
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                 }}
                               />
                             </Box>
-                            <Typography>{preset.name}</Typography>
                           </Box>
                         </MenuItem>
                       ))}
@@ -831,53 +928,64 @@ const GenerateImagesPage: React.FC = () => {
                 display: 'block', 
                 textAlign: 'center', 
                 color: theme.palette.text.secondary, 
-                mt: 2 
+                mt: 2
               }}>
                 Click to enlarge preview
               </Typography>
             </CardContent>
           </Card>
 
+          {/* Generate Button - Under Preview Card */}
+          <Button
+            variant="contained"
+            size="medium"
+            fullWidth
+            onClick={() => {
+              const colors = usePresetColors && selectedPresetId 
+                ? (() => {
+                    const preset = presets.find(p => p.id === selectedPresetId);
+                    return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
+                  })()
+                : { primary: primaryColor, secondary: secondaryColor };
+              
+              // Prepare club icon - either from custom upload or preset
+              let finalClubIcon = null;
+              if (usePresetColors && selectedPresetId) {
+                const selectedPreset = presets.find(p => p.id === selectedPresetId);
+                if (selectedPreset?.logo_filename) {
+                  finalClubIcon = {
+                    type: 'preset',
+                    filename: selectedPreset.logo_filename,
+                    format: 'instagram'
+                  };
+                }
+              } else if (clubIcon) {
+                finalClubIcon = {
+                  ...clubIcon,
+                  format: 'instagram'
+                };
+              }
+              
+              // Extended image generation with styling options
+              handleGenerateImages('', selectedTemplate, colors, true, finalClubIcon);
+            }}
+            disabled={generating || selectedCrews.length === 0}
+            sx={{
+              py: 1,
+              px: 3,
+              fontSize: '0.9rem',
+              fontWeight: 600
+            }}
+          >
+            {generating 
+              ? 'Generating...' 
+              : `Generate ${selectedCrews.length} Image${selectedCrews.length !== 1 ? 's' : ''}`
+            }
+          </Button>
+
         </Box>
       </Box>
 
-      {/* Generate Button - Bottom */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={() => {
-            const colors = usePresetColors && selectedPresetId 
-              ? (() => {
-                  const preset = presets.find(p => p.id === selectedPresetId);
-                  return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
-                })()
-              : { primary: primaryColor, secondary: secondaryColor };
-            
-            // Extended image generation with styling options
-            handleGenerateImages('', selectedTemplate, colors, true, {
-              ...clubIcon,
-              format: 'instagram'
-            });
-          }}
-          disabled={generating || selectedCrews.length === 0}
-          sx={{
-            py: 2,
-            px: 6,
-            fontSize: '1.1rem',
-            fontWeight: 600,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-            '&:hover': {
-              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
-            }
-          }}
-        >
-          {generating 
-            ? '🎨 Generating Images...' 
-            : `🚀 Generate ${selectedCrews.length} Image${selectedCrews.length !== 1 ? 's' : ''}`
-          }
-        </Button>
-      </Box>
 
       {/* Preview Modal */}
       <Dialog
