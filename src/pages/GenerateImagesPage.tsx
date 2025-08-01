@@ -22,6 +22,7 @@ import ImageGenerator from '../components/ImageGenerator/ImageGenerator';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
+import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 
 interface ClubIconData {
@@ -36,6 +37,7 @@ const GenerateImagesPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
+  const { showSuccess, showError } = useNotification();
 
   const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([]);
   const [selectedCrews, setSelectedCrews] = useState<any[]>([]);
@@ -261,13 +263,18 @@ const GenerateImagesPage: React.FC = () => {
           secondaryColor: colors?.secondary
         });
         
+        // Show success notification
+        showSuccess(`Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`);
+        
         // Navigate to gallery after successful generation
         navigate('/gallery');
       } else {
+        showError('Failed to generate any images. Please try again.');
         setError('Failed to generate any images. Please try again.');
       }
     } catch (error) {
       console.error('Error during bulk generation:', error);
+      showError('Failed to generate images. Please try again.');
       setError('Failed to generate images. Please try again.');
     } finally {
       setGenerating(false);

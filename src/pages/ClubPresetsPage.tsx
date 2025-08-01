@@ -22,6 +22,7 @@ import { useTheme } from '@mui/material/styles';
 import { MdAdd, MdEdit, MdDelete, MdStar, MdStarBorder, MdUpload } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
+import { useNotification } from '../context/NotificationContext';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 
 interface ClubPreset {
@@ -46,11 +47,10 @@ const ClubPresetsPage: React.FC = () => {
   const theme = useTheme();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
+  const { showSuccess, showError } = useNotification();
 
   const [presets, setPresets] = useState<ClubPreset[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [editingPreset, setEditingPreset] = useState<ClubPreset | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -71,15 +71,6 @@ const ClubPresetsPage: React.FC = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (success || error) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-        setError(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, error]);
 
   const loadPresets = async () => {
     setLoading(true);
@@ -94,11 +85,11 @@ const ClubPresetsPage: React.FC = () => {
         const data = await response.json();
         setPresets(data);
       } else {
-        setError('Failed to load club presets');
+        showError('Failed to load club presets');
       }
     } catch (error) {
       console.error('Error loading presets:', error);
-      setError('Failed to load club presets');
+      showError('Failed to load club presets');
     } finally {
       setLoading(false);
     }
@@ -112,11 +103,11 @@ const ClubPresetsPage: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Logo file must be less than 5MB');
+        showError('Logo file must be less than 5MB');
         return;
       }
       if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file');
+        showError('Please select a valid image file');
         return;
       }
       setLogoFile(file);
@@ -138,7 +129,6 @@ const ClubPresetsPage: React.FC = () => {
 
   const handleSave = async () => {
     setLoading(true);
-    setError(null);
 
     try {
       const formDataToSend = new FormData();
@@ -167,7 +157,7 @@ const ClubPresetsPage: React.FC = () => {
       });
 
       if (response.ok) {
-        setSuccess(editingPreset ? 'Preset updated successfully!' : 'Preset created successfully!');
+        showSuccess(editingPreset ? 'Preset updated successfully!' : 'Preset created successfully!');
         resetForm();
         loadPresets();
         
@@ -179,11 +169,11 @@ const ClubPresetsPage: React.FC = () => {
         });
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to save preset');
+        showError(errorData.error || 'Failed to save preset');
       }
     } catch (error) {
       console.error('Error saving preset:', error);
-      setError('Failed to save preset');
+      showError('Failed to save preset');
     } finally {
       setLoading(false);
     }
@@ -212,18 +202,18 @@ const ClubPresetsPage: React.FC = () => {
       });
 
       if (response.ok) {
-        setSuccess('Preset deleted successfully!');
+        showSuccess('Preset deleted successfully!');
         loadPresets();
         trackEvent('club_preset_deleted', {
           preset_name: preset.preset_name,
           club_name: preset.club_name
         });
       } else {
-        setError('Failed to delete preset');
+        showError('Failed to delete preset');
       }
     } catch (error) {
       console.error('Error deleting preset:', error);
-      setError('Failed to delete preset');
+      showError('Failed to delete preset');
     } finally {
       setLoading(false);
       setDeleteConfirmOpen(false);
@@ -234,9 +224,6 @@ const ClubPresetsPage: React.FC = () => {
   const handleSetDefault = async (presetId: number) => {
     setLoading(true);
     try {
-      console.log('Setting default preset:', presetId);
-      console.log('API URL:', `${import.meta.env.VITE_API_URL}/api/club-presets/${presetId}/default`);
-      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets/${presetId}/default`, {
         method: 'PATCH',
         headers: {
@@ -244,20 +231,17 @@ const ClubPresetsPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-
-      console.log('Response status:', response.status);
       
       if (response.ok) {
-        setSuccess('Default preset updated!');
+        showSuccess('Default preset updated!');
         loadPresets();
       } else {
         const errorData = await response.json();
-        console.error('Error response:', errorData);
-        setError(errorData.error || 'Failed to set default preset');
+        showError(errorData.error || 'Failed to set default preset');
       }
     } catch (error) {
       console.error('Error setting default:', error);
-      setError('Failed to set default preset');
+      showError('Failed to set default preset');
     } finally {
       setLoading(false);
     }
@@ -306,18 +290,6 @@ const ClubPresetsPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Messages */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-      
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
 
       {/* Create/Edit Form */}
       {isCreating && (
@@ -461,26 +433,27 @@ const ClubPresetsPage: React.FC = () => {
           </Button>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {presets.map((preset) => (
-            <Grid item xs={12} sm={6} md={4} key={preset.id}>
+            <Grid item xs={12} sm={6} md={4} lg={3} key={preset.id}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flexGrow: 1 }}>
+                <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                    <Typography variant="h6" noWrap>
+                    <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600, fontSize: '1rem' }}>
                       {preset.preset_name}
                     </Typography>
-                    <Box>
-                      {preset.is_default && (
-                        <Chip label="Default" size="small" color="primary" sx={{ mr: 1 }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      {!!preset.is_default && (
+                        <Chip label="Default" size="small" color="primary" />
                       )}
                       <IconButton
                         size="small"
                         onClick={() => handleSetDefault(preset.id)}
                         color={preset.is_default ? 'primary' : 'default'}
                         title="Set as default"
+                        sx={{ p: 0.5, minWidth: 'auto', width: 'auto' }}
                       >
-                        {preset.is_default ? <MdStar /> : <MdStarBorder />}
+                        {preset.is_default ? <MdStar size={18} /> : <MdStarBorder size={18} />}
                       </IconButton>
                     </Box>
                   </Box>
@@ -489,11 +462,11 @@ const ClubPresetsPage: React.FC = () => {
                     {preset.club_name}
                   </Typography>
                   
-                  <Box display="flex" alignItems="center" gap={1} mb={2}>
+                  <Box display="flex" alignItems="center" gap={1} mb={1.5}>
                     <Box
                       sx={{
-                        width: 24,
-                        height: 24,
+                        width: 20,
+                        height: 20,
                         borderRadius: 1,
                         backgroundColor: preset.primary_color,
                         border: '1px solid #ddd'
@@ -501,27 +474,51 @@ const ClubPresetsPage: React.FC = () => {
                     />
                     <Box
                       sx={{
-                        width: 24,
-                        height: 24,
+                        width: 20,
+                        height: 20,
                         borderRadius: 1,
                         backgroundColor: preset.secondary_color,
                         border: '1px solid #ddd'
                       }}
                     />
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                       {preset.primary_color} / {preset.secondary_color}
                     </Typography>
                   </Box>
                   
-                  {preset.logo_filename && (
-                    <Box mb={2}>
+                  <Box mb={1.5}>
+                    {preset.logo_filename ? (
                       <img
                         src={getLogoUrl(preset.logo_filename)}
                         alt={`${preset.club_name} logo`}
-                        style={{ maxWidth: '100%', maxHeight: 80, borderRadius: 8 }}
+                        style={{ maxWidth: '100%', maxHeight: 60, borderRadius: 6 }}
                       />
-                    </Box>
-                  )}
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          border: `2px dashed ${theme.palette.divider}`,
+                          borderRadius: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: theme.palette.action.hover,
+                        }}
+                      >
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: theme.palette.text.secondary,
+                            textAlign: 'center',
+                            fontSize: '0.65rem'
+                          }}
+                        >
+                          No Icon Saved
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
                 </CardContent>
                 
                 <CardActions>

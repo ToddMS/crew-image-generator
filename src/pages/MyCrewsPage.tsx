@@ -20,6 +20,7 @@ import ColorSchemeSelector from '../components/ImageGenerator/ColorSchemeSelecto
 import ClubIconSelector from '../components/ImageGenerator/ClubIconSelector';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
+import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 
 const boatClassToSeats: Record<string, number> = {
@@ -53,6 +54,7 @@ const MyCrewsPage: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
+  const { showSuccess, showError } = useNotification();
 
   const [savedCrews, setSavedCrews] = useState<any[]>([]);
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
@@ -188,8 +190,12 @@ const MyCrewsPage: React.FC = () => {
         crewName: crew.boatName,
         boatClass: crew.boatClass
       });
+      
+      // Show success notification
+      showSuccess(`Crew "${crew.boatName}" deleted successfully!`);
     } catch (error) {
       console.error('Error deleting crew:', error);
+      showError('Failed to delete crew. Please try again.');
       setError('Failed to delete crew. Please try again.');
     }
   };
@@ -292,6 +298,9 @@ const MyCrewsPage: React.FC = () => {
           secondaryColor: colors.secondary
         });
         
+        // Show success notification
+        showSuccess(`Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`);
+        
         // Clear selections and hide panel after successful generation
         setSelectedCrews(new Set());
         setShowGeneratePanel(false);
@@ -299,24 +308,41 @@ const MyCrewsPage: React.FC = () => {
         // Navigate to gallery after successful generation
         navigate('/gallery');
       } else {
+        showError('Failed to generate any images. Please try again.');
         setError('Failed to generate any images. Please try again.');
       }
     } catch (error) {
       console.error('Error during bulk generation:', error);
+      showError('Failed to generate images. Please try again.');
       setError('Failed to generate images. Please try again.');
     } finally {
       setGenerating(false);
     }
   };
 
-  const handleBulkDelete = () => {
-    const indicesToDelete = Array.from(selectedCrews)
-      .map(crewId => savedCrews.findIndex(crew => crew.id === crewId))
-      .filter(index => index !== -1)
-      .sort((a, b) => b - a); // Delete from highest index first
+  const handleBulkDelete = async () => {
+    const crewsToDelete = Array.from(selectedCrews)
+      .map(crewId => savedCrews.find(crew => crew.id === crewId))
+      .filter(crew => crew !== undefined);
     
-    indicesToDelete.forEach(index => handleDeleteCrew(index));
-    setSelectedCrews(new Set());
+    if (crewsToDelete.length === 0) return;
+    
+    try {
+      // Delete all crews
+      await Promise.all(crewsToDelete.map(crew => ApiService.deleteCrew(crew.id)));
+      
+      // Update local state
+      setSavedCrews(prev => prev.filter(crew => !selectedCrews.has(crew.id)));
+      
+      // Show success notification
+      showSuccess(`Successfully deleted ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}!`);
+      
+      // Clear selection
+      setSelectedCrews(new Set());
+    } catch (error) {
+      console.error('Error in bulk delete:', error);
+      showError('Failed to delete some crews. Please try again.');
+    }
   };
 
   const getBoatClassColor = (boatClass: string) => {

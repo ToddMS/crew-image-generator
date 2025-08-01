@@ -14,6 +14,7 @@ import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesCompon
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
+import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 
 const boatClassToSeats: Record<string, number> = {
@@ -47,6 +48,7 @@ const CreateCrewPage: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
+  const { showSuccess, showError } = useNotification();
 
   const [boatClass, setBoatClass] = useState('');
   const [clubName, setClubName] = useState('');
@@ -206,15 +208,15 @@ const CreateCrewPage: React.FC = () => {
           raceName
         });
 
-        // Navigate immediately with success message
-        navigate('/crews', { 
-          state: { 
-            successMessage: `Crew "${boatName}" ${editingCrewId ? 'updated' : 'saved'} successfully!` 
-          } 
-        });
+        // Show success notification
+        showSuccess(`Crew "${boatName}" ${editingCrewId ? 'updated' : 'created'} successfully!`);
+
+        // Navigate immediately
+        navigate('/crews');
       }
     } catch (error) {
       console.error('Error saving crew:', error);
+      showError('Failed to save crew. Please try again.');
     } finally {
       setSaving(false);
     }

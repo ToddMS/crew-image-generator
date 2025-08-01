@@ -25,6 +25,7 @@ import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react
 import { ApiService } from '../../services/api.service';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalytics } from '../../context/AnalyticsContext';
+import { useNotification } from '../../context/NotificationContext';
 
 interface SavedImage {
   id: number;
@@ -64,6 +65,7 @@ interface GalleryPageProps {
 const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
+  const { showSuccess, showError } = useNotification();
   const theme = useTheme();
   const [allImages, setAllImages] = useState<SavedImage[]>([]);
   const [crews, setCrews] = useState<Crew[]>([]);
@@ -137,6 +139,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
 
     try {
+      const imageToDelete = allImages.find(img => img.id === imageId);
       const response = await ApiService.deleteSavedImage(imageId);
       if (!response.error) {
         setAllImages(prev => prev.filter(img => img.id !== imageId));
@@ -144,9 +147,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           setDialogOpen(false);
           setSelectedImage(null);
         }
+        
+        // Show success notification
+        showSuccess(`Image "${imageToDelete?.image_name || 'image'}" deleted successfully!`);
       }
     } catch (error) {
       console.error('Error deleting image:', error);
+      showError('Failed to delete image. Please try again.');
     }
   };
 
@@ -177,8 +184,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         imageCount: selectedCount
       });
       
+      // Show success notification
+      showSuccess(`Successfully deleted ${selectedCount} image${selectedCount > 1 ? 's' : ''}!`);
+      
     } catch (error) {
       console.error('Error in bulk delete:', error);
+      showError('Failed to delete some images. Please try again.');
     }
   };
 
@@ -206,8 +217,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         crewName: image.crew_name,
         raceName: image.race_name
       });
+      
+      // Show success notification
+      showSuccess(`Downloaded "${image.image_name}" successfully!`);
     } catch (error) {
       console.error('Error downloading image:', error);
+      showError('Failed to download image. Please try again.');
     }
   };
 
@@ -299,10 +314,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         clubs: [...new Set(selectedImageData.map(img => img.club_name))]
       });
       
+      // Show success notification
+      showSuccess(`Successfully downloaded ${selectedImageData.length} image${selectedImageData.length > 1 ? 's' : ''} as ZIP file!`);
+      
       // Clear selection after download
       setSelectedImages(new Set());
     } catch (error) {
       console.error('Error in bulk download:', error);
+      showError('Failed to create ZIP download. Please try again.');
     } finally {
       setIsDownloading(false);
     }
