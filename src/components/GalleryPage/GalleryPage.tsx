@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Grid,
   Card,
   CardMedia,
