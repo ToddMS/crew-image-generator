@@ -208,6 +208,28 @@ const CreateCrewPage: React.FC = () => {
           raceName
         });
 
+        // Add to recently saved crews
+        const crewId = String(editingCrewId || result.data?.id);
+        console.log('Crew saved, ID:', crewId, 'Result:', result);
+        if (user && crewId && crewId !== 'undefined') {
+          const recentKey = `recently_saved_crews_${user.id}`;
+          const existing = localStorage.getItem(recentKey);
+          let recentCrews = [];
+          
+          if (existing) {
+            try {
+              recentCrews = JSON.parse(existing);
+            } catch (error) {
+              console.error('Error parsing recent crews:', error);
+            }
+          }
+          
+          // Ensure all IDs are strings and add to front, remove if already exists, keep only 5
+          const filtered = recentCrews.map(id => String(id)).filter(id => id !== crewId);
+          const newRecent = [crewId, ...filtered].slice(0, 5);
+          localStorage.setItem(recentKey, JSON.stringify(newRecent));
+        }
+
         // Show success notification
         showSuccess(`Crew "${boatName}" ${editingCrewId ? 'updated' : 'created'} successfully!`);
 

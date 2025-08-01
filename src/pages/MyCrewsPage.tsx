@@ -8,7 +8,11 @@ import {
   CardContent,
   Chip,
   IconButton,
-  Divider
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -58,6 +62,7 @@ const MyCrewsPage: React.FC = () => {
 
   const [savedCrews, setSavedCrews] = useState<any[]>([]);
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState<string>('recent');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -138,6 +143,21 @@ const MyCrewsPage: React.FC = () => {
           };
         });
         setSavedCrews(transformedCrews);
+        
+        // Load recently saved crews from localStorage
+        const recentlyViewed = localStorage.getItem(`recently_saved_crews_${user.id}`);
+        console.log('Loading recent crews for user:', user.id, 'Data:', recentlyViewed);
+        if (recentlyViewed) {
+          try {
+            const recentIds = JSON.parse(recentlyViewed);
+            console.log('Parsed recent crew IDs:', recentIds);
+            // Ensure all IDs are strings for consistent comparison
+            const stringIds = recentIds.map(id => String(id));
+            setRecentCrews(stringIds.slice(0, 5)); // Keep only last 5
+          } catch (error) {
+            console.error('Error parsing recent crews:', error);
+          }
+        }
       } else if (result.error) {
         setError('Failed to load crews. Please try again.');
         setSavedCrews([]);
@@ -173,11 +193,65 @@ const MyCrewsPage: React.FC = () => {
     }
   };
 
-  const updateRecentCrews = (crewIndex: number) => {
+  const updateRecentCrews = (crewId: string) => {
+    if (!user) return;
+    
+    const stringId = String(crewId);
     setRecentCrews(prev => {
-      const filtered = prev.filter(idx => idx !== crewIndex);
-      return [crewIndex, ...filtered].slice(0, 5);
+      const stringPrev = prev.map(id => String(id));
+      const filtered = stringPrev.filter(id => id !== stringId);
+      const newRecent = [stringId, ...filtered].slice(0, 5);
+      
+      // Save to localStorage
+      localStorage.setItem(`recently_saved_crews_${user.id}`, JSON.stringify(newRecent));
+      
+      return newRecent;
     });
+  };
+
+  const getSortedCrews = () => {
+    const crewsCopy = [...savedCrews];
+    
+    switch (sortBy) {
+      case 'recent':
+        // Default: by creation date (newest first)
+        return crewsCopy.sort((a, b) => new Date(b.created_at || b.createdAt || 0).getTime() - new Date(a.created_at || a.createdAt || 0).getTime());
+      
+      case 'alphabetical':
+        return crewsCopy.sort((a, b) => a.boatName.localeCompare(b.boatName));
+      
+      case 'club':
+        return crewsCopy.sort((a, b) => a.boatClub.localeCompare(b.boatClub));
+      
+      case 'race':
+        return crewsCopy.sort((a, b) => a.raceName.localeCompare(b.raceName));
+      
+      case 'boat_class':
+        return crewsCopy.sort((a, b) => a.boatClass.localeCompare(b.boatClass));
+      
+      default:
+        return crewsCopy;
+    }
+  };
+
+  const getRecentlyViewedCrews = () => {
+    const recent = recentCrews
+      .map(crewId => {
+        const stringId = String(crewId);
+        const found = savedCrews.find(crew => String(crew.id) === stringId);
+        console.log('Looking for crew ID:', stringId, 'Found:', found?.boatName || 'NOT FOUND');
+        return found;
+      })
+      .filter(crew => crew !== undefined)
+      .slice(0, 5);
+    
+    console.log('Recent crews result:', recent.length, recent.map(c => c.boatName));
+    return recent;
+  };
+
+  const getRemainingCrews = () => {
+    const recentIds = new Set(recentCrews.map(id => String(id)));
+    return getSortedCrews().filter(crew => !recentIds.has(String(crew.id)));
   };
 
   const handleDeleteCrew = async (index: number) => {
@@ -201,8 +275,8 @@ const MyCrewsPage: React.FC = () => {
   };
 
   const handleEditCrew = (index: number) => {
-    updateRecentCrews(index);
     const crew = savedCrews[index];
+    updateRecentCrews(crew.id);
     // Navigate to create page with crew data for editing
     navigate('/create', {
       state: {
@@ -458,6 +532,24 @@ const MyCrewsPage: React.FC = () => {
               }
             </Typography>
           </Box>
+          
+          {/* Sort Dropdown */}
+          {savedCrews.length > 0 && selectedCrews.size === 0 && (
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Sort by</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort by"
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <MenuItem value="recent">Recently Created</MenuItem>
+                <MenuItem value="alphabetical">Alphabetical</MenuItem>
+                <MenuItem value="club">Club Name</MenuItem>
+                <MenuItem value="race">Race Name</MenuItem>
+                <MenuItem value="boat_class">Boat Class</MenuItem>
+              </Select>
+            </FormControl>
+          )}
           {selectedCrews.size > 0 && (
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <Button
@@ -482,17 +574,63 @@ const MyCrewsPage: React.FC = () => {
           )}
         </Box>
 
-        {/* Crews List */}
-        <SavedCrewsComponent
-          savedCrews={savedCrews}
-          recentCrews={recentCrews}
-          onDeleteCrew={handleDeleteCrew}
-          onEditCrew={handleEditCrew}
-          bulkMode={true} // Always in selection mode now
-          selectedCrews={selectedCrews}
-          onCrewSelection={handleCrewSelection}
-          onBulkDelete={handleBulkDelete}
-        />
+        {/* Recently Saved Crews */}
+        {getRecentlyViewedCrews().length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Recently Saved
+            </Typography>
+            <SavedCrewsComponent
+              savedCrews={getRecentlyViewedCrews()}
+              recentCrews={[]}
+              onDeleteCrew={(index) => {
+                const recentCrews = getRecentlyViewedCrews();
+                const crew = recentCrews[index];
+                const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+                handleDeleteCrew(originalIndex);
+              }}
+              onEditCrew={(index) => {
+                const recentCrews = getRecentlyViewedCrews();
+                const crew = recentCrews[index];
+                const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+                handleEditCrew(originalIndex);
+              }}
+              bulkMode={true}
+              selectedCrews={selectedCrews}
+              onCrewSelection={handleCrewSelection}
+              onBulkDelete={handleBulkDelete}
+            />
+          </Box>
+        )}
+
+        {/* All Other Crews */}
+        <Box>
+          {getRecentlyViewedCrews().length > 0 && (
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              All Crews
+            </Typography>
+          )}
+          <SavedCrewsComponent
+            savedCrews={getRemainingCrews()}
+            recentCrews={[]}
+            onDeleteCrew={(index) => {
+              const remainingCrews = getRemainingCrews();
+              const crew = remainingCrews[index];
+              const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+              handleDeleteCrew(originalIndex);
+            }}
+            onEditCrew={(index) => {
+              const remainingCrews = getRemainingCrews();
+              const crew = remainingCrews[index];
+              const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+              handleEditCrew(originalIndex);
+            }}
+            bulkMode={true}
+            selectedCrews={selectedCrews}
+            onCrewSelection={handleCrewSelection}
+            onBulkDelete={handleBulkDelete}
+          />
+        </Box>
       </Box>
 
 
