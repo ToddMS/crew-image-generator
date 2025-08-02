@@ -217,9 +217,6 @@ const MyCrewsPage: React.FC = () => {
         // Default: by creation date (newest first)
         return crewsCopy.sort((a, b) => new Date(b.created_at || b.createdAt || 0).getTime() - new Date(a.created_at || a.createdAt || 0).getTime());
       
-      case 'alphabetical':
-        return crewsCopy.sort((a, b) => a.boatName.localeCompare(b.boatName));
-      
       case 'club':
         return crewsCopy.sort((a, b) => a.boatClub.localeCompare(b.boatClub));
       
@@ -543,7 +540,6 @@ const MyCrewsPage: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value)}
               >
                 <MenuItem value="recent">Recently Created</MenuItem>
-                <MenuItem value="alphabetical">Alphabetical</MenuItem>
                 <MenuItem value="club">Club Name</MenuItem>
                 <MenuItem value="race">Race Name</MenuItem>
                 <MenuItem value="boat_class">Boat Class</MenuItem>

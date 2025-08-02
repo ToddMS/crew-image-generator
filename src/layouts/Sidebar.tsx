@@ -78,17 +78,17 @@ const navigationItems: NavigationItem[] = [
     path: '/gallery'
   },
   {
+    id: 'club-presets',
+    label: 'Club Presets',
+    icon: <MdPalette size={24} />,
+    path: '/club-presets'
+  },
+  {
     id: 'analytics',
     label: 'Analytics',
     icon: <MdAnalytics size={24} />,
     path: '/analytics',
     adminOnly: true
-  },
-  {
-    id: 'club-presets',
-    label: 'Club Presets',
-    icon: <MdPalette size={24} />,
-    path: '/club-presets'
   },
   {
     id: 'settings',
