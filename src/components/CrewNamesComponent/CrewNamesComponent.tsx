@@ -18,6 +18,8 @@ interface CrewNamesComponentProps {
   canSave?: boolean;
   user?: any;
   isEditing?: boolean;
+  showValidation?: boolean;
+  hideButton?: boolean;
 }
 
 const getSeatLabels = (boatClass: string): string[] => {
@@ -66,6 +68,8 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   canSave = false,
   user,
   isEditing = false,
+  showValidation = false,
+  hideButton = false,
 }) => {
   const theme = useTheme();
   const seatLabels = getSeatLabels(boatClass);
@@ -138,7 +142,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
         );
       })}
       
-      {onSaveCrew && user && (
+      {!hideButton && onSaveCrew && user && (
         <Button
           type="submit"
           variant="contained"

@@ -15,7 +15,6 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
 import styles from './CrewInfoComponent.module.css';
-import { MdChevronRight } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
 
 interface ClubPreset {
@@ -36,11 +35,13 @@ interface CrewInfoComponentProps {
     raceName: string;
     boatName: string;
   };
+  showValidation?: boolean;
 }
 
 const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   onSubmit,
   initialValues,
+  showValidation = false,
 }) => {
   const { user } = useAuth();
   const theme = useTheme();
@@ -76,20 +77,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     }
   }, [initialValues]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        if (boatClass && clubName && raceName && boatName) {
-          handleFormSubmit(event as any);
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [boatClass, clubName, raceName, boatName]);
 
   const loadPresets = async () => {
     try {
@@ -152,24 +139,25 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     }
   };
 
-  const handleFormSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  // Update parent component with current form state whenever fields change
+  useEffect(() => {
+    // Always call onSubmit to update the parent's state, even if fields are empty
     onSubmit(boatClass, clubName, raceName, boatName);
-  };
+  }, [boatClass, clubName, raceName, boatName, onSubmit]);
 
   return (
     <Box 
-      component="form" 
+      component="form"
       className={styles.container} 
-      onSubmit={handleFormSubmit}
       sx={{
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary
       }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        // Form validation will be triggered by the browser
+      }}
     >
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: 400, textAlign: 'center', mb: 2, letterSpacing: 1 }}>
-        Enter Crew Information
-      </Typography>
       
       {/* Club Name Section with Preset Option */}
       <Box sx={{ mb: 2 }}>
@@ -294,30 +282,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         </FormControl>
       </Box>
       
-      <Button
-        type="submit"
-        variant="contained"
-        sx={{
-          backgroundColor: theme.palette.primary.main,
-          color: '#fff',
-          padding: '12px 20px',
-          borderRadius: '8px',
-          boxShadow: `0 2px 8px rgba(${theme.palette.mode === 'dark' ? '125, 179, 211' : '94, 152, 194'}, 0.15)`,
-          '&:hover': {
-            backgroundColor: theme.palette.primary.dark || '#4177a6',
-          },
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginTop: '24px',
-          justifyContent: 'center',
-          fontSize: '1rem',
-          fontWeight: 600,
-        }}
-      >
-        Enter Crew Names
-        <MdChevronRight size={20} />
-      </Button>
     </Box>
   );
 };

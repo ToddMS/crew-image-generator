@@ -4,11 +4,12 @@ import {
   Typography,
   IconButton,
   Breadcrumbs,
-  Link
+  Link,
+  Button
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MdMenu, MdChevronRight } from 'react-icons/md';
+import { MdMenu, MdChevronRight, MdArrowBack } from 'react-icons/md';
 
 interface PageHeaderProps {
   title?: string;
@@ -26,8 +27,8 @@ const getPageInfo = (pathname: string) => {
       subtitle: 'Welcome to RowGram'
     },
     '/create': {
-      title: 'Create Crew',
-      subtitle: 'Build your racing crew lineup'
+      title: 'Create New Crew',
+      subtitle: 'Follow the steps below to create your crew lineup'
     },
     '/crews': {
       title: 'My Crews',
@@ -205,18 +206,26 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         </Box>
 
         {/* Header Actions */}
-        {actions && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              flexShrink: 0
-            }}
-          >
-            {actions}
-          </Box>
-        )}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            flexShrink: 0
+          }}
+        >
+          {/* Auto-add Back button for Create page */}
+          {location.pathname === '/create' && (
+            <Button
+              variant="outlined"
+              startIcon={<MdArrowBack />}
+              onClick={() => navigate('/')}
+            >
+              Back
+            </Button>
+          )}
+          {actions}
+        </Box>
       </Box>
     </Box>
   );

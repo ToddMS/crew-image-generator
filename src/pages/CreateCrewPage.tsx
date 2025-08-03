@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Typography,
   Stepper,
   Step,
@@ -87,6 +85,8 @@ const CreateCrewPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
+  const [showStep1Validation, setShowStep1Validation] = useState(false);
 
   // Clear fields and reset state when entering page
   const clearAllFields = () => {
@@ -101,6 +101,8 @@ const CreateCrewPage: React.FC = () => {
     setEditingCrewId(null);
     setSaving(false);
     setSaveSuccess(false);
+    setShowValidation(false);
+    setShowStep1Validation(false);
   };
 
   // Load editing data if present, otherwise clear fields
@@ -127,7 +129,7 @@ const CreateCrewPage: React.FC = () => {
         localStorage.removeItem(`rowgram_draft_${user.id}`);
       }
     }
-  }, [location.pathname, user]); // Remove location.state from dependencies to clear on every navigation
+  }, [location.pathname, user]);
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -145,8 +147,6 @@ const CreateCrewPage: React.FC = () => {
     }
   }, [boatClass, clubName, raceName, boatName, crewNames, coxName, user]);
 
-  // Note: Draft loading is now handled in the main useEffect above to ensure proper clearing
-
   const clearDraft = () => {
     if (user) {
       localStorage.removeItem(`rowgram_draft_${user.id}`);
@@ -155,10 +155,36 @@ const CreateCrewPage: React.FC = () => {
 
   // Wizard navigation
   const handleNext = () => {
+    // Try to trigger native form validation by finding the form and calling requestSubmit
+    const currentForm = document.querySelector(`[data-step="${activeStep}"] form`);
+    if (currentForm) {
+      // Create a temporary submit button to trigger validation
+      const submitButton = document.createElement('button');
+      submitButton.type = 'submit';
+      submitButton.style.display = 'none';
+      currentForm.appendChild(submitButton);
+      submitButton.click();
+      currentForm.removeChild(submitButton);
+      
+      // Check if form is valid after native validation
+      if (currentForm.checkValidity()) {
+        proceedToNextStep();
+      }
+    } else {
+      // Fallback to manual validation if no form found
+      if (canProceedFromStep(activeStep)) {
+        proceedToNextStep();
+      }
+    }
+  };
+
+  const proceedToNextStep = () => {
     const newCompleted = new Set(completedSteps);
     newCompleted.add(activeStep);
     setCompletedSteps(newCompleted);
     setActiveStep((prev) => prev + 1);
+    setShowValidation(false);
+    setShowStep1Validation(false);
   };
 
   const handleBack = () => {
@@ -181,14 +207,14 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
-  const handleCrewInfoSubmit = (newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
+  const handleCrewInfoSubmit = useCallback((newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
     setBoatClass(newBoatClass);
     setClubName(newClubName);
     setRaceName(newRaceName);
     setBoatName(newBoatName);
     setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
     setCoxName('');
-  };
+  }, []);
 
   const handleNameChange = (idx: number, value: string) => {
     setCrewNames(names => names.map((n, i) => (i === idx ? value : n)));
@@ -301,142 +327,122 @@ const CreateCrewPage: React.FC = () => {
     switch (step) {
       case 0:
         return (
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MdDirectionsBoat color={theme.palette.primary.main} />
-                Crew Information
-              </Typography>
-              <CrewInfoComponent
-                onSubmit={handleCrewInfoSubmit}
-                initialValues={{
-                  boatClass,
-                  clubName,
-                  raceName,
-                  boatName
-                }}
-              />
-            </CardContent>
-          </Card>
+          <Box data-step="0">
+            <CrewInfoComponent
+              onSubmit={handleCrewInfoSubmit}
+              initialValues={{
+                boatClass,
+                clubName,
+                raceName,
+                boatName
+              }}
+              showValidation={showValidation}
+            />
+          </Box>
         );
 
       case 1:
         return (
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MdGroup color={theme.palette.primary.main} />
-                Crew Members
-              </Typography>
-              
-              {!canProceedFromStep(0) ? (
-                <Box sx={{ 
-                  textAlign: 'center', 
-                  py: 8,
-                  color: theme.palette.text.secondary 
-                }}>
-                  <Typography variant="body1" sx={{ mb: 2 }}>
-                    ⬅️ Please complete crew information first
-                  </Typography>
-                  <Typography variant="body2">
-                    Go back to fill in boat class, club name, race name, and boat name
-                  </Typography>
-                </Box>
-              ) : (
-                <CrewNamesComponent
-                  boatClass={boatClass}
-                  crewNames={crewNames}
-                  coxName={coxName}
-                  onNameChange={handleNameChange}
-                  onCoxNameChange={handleCoxNameChange}
-                  onSaveCrew={() => {}} // Empty function, save happens in step 3
-                  clubName={clubName}
-                  raceName={raceName}
-                  boatName={boatName}
-                  saving={false}
-                  canSave={false}
-                  user={user}
-                  isEditing={!!editingCrewId}
-                  hideButton={true} // Hide the save button from this component
+          <Box data-step="1">
+            {!canProceedFromStep(0) ? (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 8,
+                color: theme.palette.text.secondary 
+              }}>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  ⬅️ Please complete crew information first
+                </Typography>
+                <Typography variant="body2">
+                  Go back to fill in boat class, club name, race name, and boat name
+                </Typography>
+              </Box>
+            ) : (
+              <CrewNamesComponent
+                boatClass={boatClass}
+                crewNames={crewNames}
+                coxName={coxName}
+                onNameChange={handleNameChange}
+                onCoxNameChange={handleCoxNameChange}
+                onSaveCrew={() => {}} // Empty function, save happens in step 3
+                clubName={clubName}
+                raceName={raceName}
+                boatName={boatName}
+                saving={false}
+                canSave={false}
+                user={user}
+                isEditing={!!editingCrewId}
+                hideButton={true} // Hide the save button from this component
+                showValidation={showStep1Validation}
+              />
+            )}
+            
+            {!user && canProceedFromStep(0) && (
+              <Box sx={{ mt: 3 }}>
+                <LoginPrompt 
+                  message="Sign in to save crews to your account"
+                  actionText="Continue"
                 />
-              )}
-              
-              {!user && canProceedFromStep(0) && (
-                <Box sx={{ mt: 3 }}>
-                  <LoginPrompt 
-                    message="Sign in to save crews to your account"
-                    actionText="Continue"
-                  />
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+              </Box>
+            )}
+          </Box>
         );
 
       case 2:
         return (
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MdPreview color={theme.palette.primary.main} />
-                Review & Save
+          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+            {/* Crew Details */}
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                Crew Details
               </Typography>
-              
-              <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-                {/* Crew Details */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                    Crew Details
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Boat Class:</Typography>
-                      <Typography variant="body2">{boatClass} - {boatClassToBoatType(boatClass)?.name}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Club:</Typography>
-                      <Typography variant="body2">{clubName}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Race:</Typography>
-                      <Typography variant="body2">{raceName}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">Boat Name:</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{boatName}</Typography>
-                    </Box>
-                  </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Boat Class:</Typography>
+                  <Typography variant="body2">{boatClass} - {boatClassToBoatType(boatClass)?.name}</Typography>
                 </Box>
-
-                {/* Crew Members */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                    Crew Members
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {boatClassHasCox(boatClass) && (
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" color="text.secondary">Coxswain:</Typography>
-                        <Typography variant="body2">{coxName}</Typography>
-                      </Box>
-                    )}
-                    {crewNames.map((name, index) => {
-                      const seatNumber = boatClassToSeats[boatClass] - index;
-                      const seatName = seatNumber === 1 ? 'Bow' : 
-                                     seatNumber === boatClassToSeats[boatClass] ? 'Stroke' : 
-                                     `${seatNumber} Seat`;
-                      return (
-                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2" color="text.secondary">{seatName}:</Typography>
-                          <Typography variant="body2">{name}</Typography>
-                        </Box>
-                      );
-                    })}
-                  </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Club:</Typography>
+                  <Typography variant="body2">{clubName}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Race:</Typography>
+                  <Typography variant="body2">{raceName}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Boat Name:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{boatName}</Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
+            </Box>
+
+            {/* Crew Members */}
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                Crew Members
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {boatClassHasCox(boatClass) && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">Coxswain:</Typography>
+                    <Typography variant="body2">{coxName}</Typography>
+                  </Box>
+                )}
+                {crewNames.map((name, index) => {
+                  const seatNumber = boatClassToSeats[boatClass] - index;
+                  const seatName = seatNumber === 1 ? 'Bow' : 
+                                 seatNumber === boatClassToSeats[boatClass] ? 'Stroke' : 
+                                 `${seatNumber} Seat`;
+                  return (
+                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">{seatName}:</Typography>
+                      <Typography variant="body2">{name}</Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          </Box>
         );
 
       default:
@@ -445,27 +451,12 @@ const CreateCrewPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-            {editingCrewId ? 'Edit Crew' : 'Create New Crew'}
-          </Typography>
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-            {editingCrewId ? 'Update your crew information and members' : 'Follow the steps below to create your crew lineup'}
-          </Typography>
-        </Box>
-        
-        <Button
-          variant="outlined"
-          startIcon={<MdArrowBack />}
-          onClick={() => navigate('/')}
-        >
-          Back
-        </Button>
-      </Box>
-
+    <Box sx={{ 
+      maxWidth: 1000, 
+      mx: 'auto',
+      width: '100%',
+      px: { xs: 2, sm: 3 }
+    }}>
       {/* Progress Indicator */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -537,7 +528,9 @@ const CreateCrewPage: React.FC = () => {
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        pt: 3,
+        pt: 4,
+        mt: 4,
+        pb: 20,
         borderTop: `1px solid ${theme.palette.divider}`
       }}>
         <Button
@@ -564,7 +557,6 @@ const CreateCrewPage: React.FC = () => {
             <Button
               variant="contained"
               onClick={handleNext}
-              disabled={!canProceedFromStep(activeStep)}
               endIcon={<MdNavigateNext />}
               size="large"
             >
