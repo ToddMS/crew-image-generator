@@ -18,8 +18,8 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdClose, MdArrowBack, MdImage } from 'react-icons/md';
-import ImageGenerator from '../components/ImageGenerator/ImageGenerator';
 import LoginPrompt from '../components/Auth/LoginPrompt';
+import ClubPresetDropdown from '../components/ClubPresetDropdown/ClubPresetDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
@@ -107,6 +107,11 @@ const GenerateImagesPage: React.FC = () => {
     } catch (error) {
       console.error('Error loading presets:', error);
     }
+  };
+
+  const handlePresetSelection = (presetId: number, preset: any) => {
+    setSelectedPresetId(presetId);
+    setUsePresetColors(true);
   };
 
   const loadLogoImages = async (presets: any[]) => {
@@ -581,109 +586,12 @@ const GenerateImagesPage: React.FC = () => {
                   <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
                     Select Club Preset
                   </Typography>
-                  <FormControl fullWidth>
-                    <InputLabel>Choose a club preset</InputLabel>
-                    <Select
-                      value={selectedPresetId || ''}
-                      onChange={(e) => setSelectedPresetId(e.target.value as number)}
-                      label="Choose a club preset"
-                    >
-                      {presets.map((preset) => (
-                        <MenuItem key={preset.id} value={preset.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                            {/* Club Icon */}
-                            <Box
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: 1,
-                                backgroundColor: theme.palette.action.selected,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: `1px solid ${theme.palette.divider}`,
-                                flexShrink: 0
-                              }}
-                            >
-                              {preset.logo_filename && logoUrls[preset.logo_filename] ? (
-                                <img 
-                                  src={logoUrls[preset.logo_filename]}
-                                  alt={preset.club_name || preset.preset_name}
-                                  style={{ 
-                                    width: '24px', 
-                                    height: '24px', 
-                                    objectFit: 'contain',
-                                    borderRadius: '2px'
-                                  }}
-                                />
-                              ) : (
-                                <Typography variant="caption" sx={{ 
-                                  fontSize: '0.7rem', 
-                                  fontWeight: 600,
-                                  color: theme.palette.text.secondary
-                                }}>
-                                  {(preset.club_name || preset.preset_name) ? (preset.club_name || preset.preset_name).charAt(0).toUpperCase() : '?'}
-                                </Typography>
-                              )}
-                            </Box>
-                            
-                            {/* Club Name */}
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                  fontWeight: 500,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                {preset.club_name || preset.preset_name}
-                              </Typography>
-                              {preset.description && (
-                                <Typography 
-                                  variant="caption" 
-                                  sx={{ 
-                                    color: theme.palette.text.secondary,
-                                    display: 'block',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap'
-                                  }}
-                                >
-                                  {preset.description}
-                                </Typography>
-                              )}
-                            </Box>
-                            
-                            {/* Color Swatches */}
-                            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                              <Box
-                                sx={{
-                                  width: 20,
-                                  height: 20,
-                                  borderRadius: 1,
-                                  backgroundColor: preset.primary_color,
-                                  border: `1px solid ${theme.palette.divider}`,
-                                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                }}
-                              />
-                              <Box
-                                sx={{
-                                  width: 20,
-                                  height: 20,
-                                  borderRadius: 1,
-                                  backgroundColor: preset.secondary_color,
-                                  border: `1px solid ${theme.palette.divider}`,
-                                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                                }}
-                              />
-                            </Box>
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <ClubPresetDropdown
+                    value={selectedPresetId}
+                    onChange={handlePresetSelection}
+                    label="Choose a club preset"
+                    placeholder="Select a club preset"
+                  />
                 </Box>
               ) : (
                 /* Custom Color Pickers with Club Logo */

@@ -96,7 +96,8 @@ import {
   MdAutorenew,
   MdNotifications,
   MdBookmark,
-  MdHistory
+  MdHistory,
+  MdRowing
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
@@ -263,7 +264,7 @@ const CreateCrewPageEnhanced: React.FC = () => {
   const steps = [
     {
       label: 'Crew Information',
-      icon: <MdBoat />,
+      icon: <MdRowing />,
       description: 'Basic details about your crew'
     },
     {

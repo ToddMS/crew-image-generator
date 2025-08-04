@@ -1,31 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
   FormControl,
   MenuItem,
   Select,
   TextField,
   Typography,
   FormControlLabel,
-  Checkbox,
-  Chip,
+  Switch,
   InputLabel,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
 import styles from './CrewInfoComponent.module.css';
 import { useAuth } from '../../context/AuthContext';
+import ClubPresetDropdown from '../ClubPresetDropdown/ClubPresetDropdown';
 
-interface ClubPreset {
-  id: number;
-  preset_name: string;
-  club_name: string;
-  primary_color: string;
-  secondary_color: string;
-  logo_filename?: string;
-  is_default: boolean;
-}
 
 interface CrewInfoComponentProps {
   onSubmit: (boatClass: string, clubName: string, raceName: string, boatName: string) => void;
@@ -51,16 +41,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   const [boatName, setBoatName] = useState('');
   
   // Preset state
-  const [presets, setPresets] = useState<ClubPreset[]>([]);
   const [usePreset, setUsePreset] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
-
-  // Load presets when user is authenticated
-  useEffect(() => {
-    if (user) {
-      loadPresets();
-    }
-  }, [user]);
+  
 
   // Update component state when initialValues change (e.g., on logout)
   useEffect(() => {
@@ -77,32 +60,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     }
   }, [initialValues]);
 
-
-  const loadPresets = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPresets(data);
-        
-        // Auto-select default preset if available and no club name is set
-        const defaultPreset = data.find((p: ClubPreset) => p.is_default);
-        if (defaultPreset && !clubName) {
-          setUsePreset(true);
-          setSelectedPresetId(defaultPreset.id);
-          setClubName(defaultPreset.club_name);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading presets:', error);
-    }
-  };
-
   const handleBoatClassChange = (event: SelectChangeEvent<string>) => {
     setBoatClass(event.target.value as string);
   };
@@ -111,39 +68,36 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     const usePresetMode = event.target.checked;
     setUsePreset(usePresetMode);
     
-    if (usePresetMode) {
-      // If switching to preset mode and there's a default, use it
-      const defaultPreset = presets.find(p => p.is_default);
-      if (defaultPreset) {
-        setSelectedPresetId(defaultPreset.id);
-        setClubName(defaultPreset.club_name);
-      } else if (presets.length > 0) {
-        // Use first preset if no default
-        setSelectedPresetId(presets[0].id);
-        setClubName(presets[0].club_name);
-      }
-    } else {
+    if (!usePresetMode) {
       // Switching to manual mode
       setSelectedPresetId(null);
       setClubName('');
     }
   };
 
-  const handlePresetSelection = (event: SelectChangeEvent<number>) => {
-    const presetId = event.target.value as number;
+  const handlePresetSelection = (presetId: number, preset: any) => {
     setSelectedPresetId(presetId);
-    
-    const selectedPreset = presets.find(p => p.id === presetId);
-    if (selectedPreset) {
-      setClubName(selectedPreset.club_name);
-    }
+    setClubName(preset.club_name);
   };
+
 
   // Update parent component with current form state whenever fields change
   useEffect(() => {
     // Always call onSubmit to update the parent's state, even if fields are empty
     onSubmit(boatClass, clubName, raceName, boatName);
   }, [boatClass, clubName, raceName, boatName, onSubmit]);
+
+
+  const boatClassOptions = [
+    { value: '8+', label: '8+ (Eight with Coxswain)', seats: 8, description: 'Eight rowers with coxswain' },
+    { value: '4+', label: '4+ (Four with Coxswain)', seats: 4, description: 'Four rowers with coxswain' },
+    { value: '4-', label: '4- (Four without Coxswain)', seats: 4, description: 'Four rowers without coxswain' },
+    { value: '4x', label: '4x (Quad Sculls)', seats: 4, description: 'Four scullers' },
+    { value: '2-', label: '2- (Coxless Pair)', seats: 2, description: 'Two rowers without coxswain' },
+    { value: '2x', label: '2x (Double Sculls)', seats: 2, description: 'Two scullers' },
+    { value: '1x', label: '1x (Single Sculls)', seats: 1, description: 'Single sculler' },
+  ];
+
 
   return (
     <Box 
@@ -158,63 +112,53 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         // Form validation will be triggered by the browser
       }}
     >
-      
+
       {/* Club Name Section with Preset Option */}
-      <Box sx={{ mb: 2 }}>
-        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-          <Typography className={styles.label}>Club Name</Typography>
-          {user && presets.length > 0 && (
+      <Box sx={{ mb: 3 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: theme.palette.text.primary,
+              fontSize: '1.1rem'
+            }}
+          >
+            Club Name
+          </Typography>
+          {user && (
             <FormControlLabel
               control={
-                <Checkbox
+                <Switch
                   size="small"
                   checked={usePreset}
                   onChange={handlePresetModeChange}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: theme.palette.primary.main,
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  }}
                 />
               }
-              label="Use saved preset"
-              sx={{ ml: 1 }}
+              label={
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Use preset
+                </Typography>
+              }
+              sx={{ ml: 'auto' }}
             />
           )}
         </Box>
         
         {usePreset ? (
-          <FormControl fullWidth variant="outlined" className={styles.inputField}>
-            <InputLabel>Select Club Preset</InputLabel>
-            <Select
-              value={selectedPresetId || ''}
-              onChange={handlePresetSelection}
-              label="Select Club Preset"
-              required
-            >
-              {presets.map((preset) => (
-                <MenuItem key={preset.id} value={preset.id}>
-                  <Box display="flex" alignItems="center" gap={1} width="100%">
-                    <Box
-                      sx={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: 1,
-                        backgroundColor: preset.primary_color,
-                        border: '1px solid #ddd'
-                      }}
-                    />
-                    <Box flex={1}>
-                      <Typography variant="body2" fontWeight="bold">
-                        {preset.club_name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {preset.preset_name}
-                      </Typography>
-                    </Box>
-                    {preset.is_default && (
-                      <Chip label="Default" size="small" color="primary" />
-                    )}
-                  </Box>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <ClubPresetDropdown
+            value={selectedPresetId}
+            onChange={handlePresetSelection}
+            className={styles.inputField}
+          />
         ) : (
           <TextField
             name="clubName"
@@ -225,11 +169,35 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             className={styles.inputField}
             value={clubName}
             onChange={e => setClubName(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: theme.palette.primary.main,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme.palette.primary.main,
+                  borderWidth: 2,
+                },
+              }
+            }}
           />
         )}
       </Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography className={styles.label} sx={{ mb: 0.5 }}>Race Name</Typography>
+
+      {/* Race Name */}
+      <Box sx={{ mb: 3 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: theme.palette.text.primary,
+              fontSize: '1.1rem'
+            }}
+          >
+            Race Name
+          </Typography>
+        </Box>
         <TextField
           name="raceName"
           placeholder="Enter race name"
@@ -239,10 +207,34 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           className={styles.inputField}
           value={raceName}
           onChange={e => setRaceName(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main,
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: theme.palette.primary.main,
+                borderWidth: 2,
+              },
+            }
+          }}
         />
       </Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography className={styles.label} sx={{ mb: 0.5 }}>Boat Name</Typography>
+
+      {/* Boat Name */}
+      <Box sx={{ mb: 3 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: theme.palette.text.primary,
+              fontSize: '1.1rem'
+            }}
+          >
+            Boat Name
+          </Typography>
+        </Box>
         <TextField
           name="boatName"
           placeholder="Enter boat name"
@@ -252,32 +244,64 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           className={styles.inputField}
           value={boatName}
           onChange={e => setBoatName(e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main,
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: theme.palette.primary.main,
+                borderWidth: 2,
+              },
+            }
+          }}
         />
       </Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography className={styles.label} sx={{ mb: 0.5 }}>Boat Class</Typography>
+      {/* Boat Class */}
+      <Box sx={{ mb: 3 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: theme.palette.text.primary,
+              fontSize: '1.1rem'
+            }}
+          >
+            Boat Class
+          </Typography>
+        </Box>
         <FormControl fullWidth required variant="outlined" className={styles.inputField}>
+          <InputLabel>Select boat class</InputLabel>
           <Select
             name="boatClass"
             value={boatClass}
             onChange={handleBoatClassChange}
-            displayEmpty
+            label="Select boat class"
             sx={{
-              '& .MuiSelect-select': {
-                color: boatClass ? 'inherit' : '#888',
-              },
+              '& .MuiOutlinedInput-root': {
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.palette.primary.main,
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.palette.primary.main,
+                  borderWidth: 2,
+                },
+              }
             }}
           >
-            <MenuItem value="">
-              <span className={styles.select}>Select boat class</span>
-            </MenuItem>
-            <MenuItem value="8+">8+ (Eight with Coxswain)</MenuItem>
-            <MenuItem value="4+">4+ (Four with Coxswain)</MenuItem>
-            <MenuItem value="4-">4- (Four without Coxswain)</MenuItem>
-            <MenuItem value="4x">4x (Quad Sculls)</MenuItem>
-            <MenuItem value="2-">2- (Coxless Pair)</MenuItem>
-            <MenuItem value="2x">2x (Double Sculls)</MenuItem>
-            <MenuItem value="1x">1x (Single Sculls)</MenuItem>
+            {boatClassOptions.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                <Box width="100%">
+                  <Typography variant="body2" fontWeight={600}>
+                    {option.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.description} • {option.seats} seat{option.seats > 1 ? 's' : ''}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>

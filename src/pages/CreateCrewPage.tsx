@@ -12,6 +12,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MdSave, MdArrowBack, MdCheckCircle, MdNavigateNext, MdNavigateBefore, MdCheck, MdDirectionsBoat, MdGroup, MdPreview } from 'react-icons/md';
+import RowingIcon from '@mui/icons-material/Rowing';
 import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
@@ -61,7 +62,7 @@ const CreateCrewPage: React.FC = () => {
   const steps = [
     {
       label: 'Crew Information',
-      icon: <MdDirectionsBoat />,
+      icon: <RowingIcon />,
       description: 'Basic details about your crew'
     },
     {
