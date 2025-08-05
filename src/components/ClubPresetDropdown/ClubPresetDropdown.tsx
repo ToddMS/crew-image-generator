@@ -17,7 +17,6 @@ import { useAuth } from '../../context/AuthContext';
 
 interface ClubPreset {
   id: number;
-  preset_name: string;
   club_name: string;
   primary_color: string;
   secondary_color: string;
@@ -72,6 +71,7 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Preset data from backend:', data);
         setPresets(data);
       }
     } catch (error) {
@@ -118,8 +118,7 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
     
     if (presetSearchQuery) {
       filtered = filtered.filter(preset => 
-        preset.club_name.toLowerCase().includes(presetSearchQuery.toLowerCase()) ||
-        preset.preset_name.toLowerCase().includes(presetSearchQuery.toLowerCase())
+        preset.club_name.toLowerCase().includes(presetSearchQuery.toLowerCase())
       );
     }
     
@@ -145,9 +144,14 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
     <FormControl fullWidth variant="outlined" className={className} sx={sx}>
       <InputLabel>{label}</InputLabel>
       <Select
-        value={value || ''}
+        value={value ?? ''}
         onChange={handlePresetSelection}
         label={label}
+        renderValue={(selected) => {
+          if (!selected) return '';
+          const selectedPreset = presets.find(p => p.id === selected);
+          return selectedPreset ? selectedPreset.club_name : '';
+        }}
         sx={{
           '& .MuiOutlinedInput-root': {
             '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -186,7 +190,15 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
         {getFilteredPresets().map((preset) => {
           const isRecent = recentPresets.includes(preset.id);
           return (
-            <MenuItem key={preset.id} value={preset.id}>
+            <MenuItem 
+              key={preset.id} 
+              value={preset.id}
+              sx={{
+                p: 1,
+                '& .MuiListItemText-root': { display: 'none' },
+                '& .MuiTypography-root:not(.MuiBox-root .MuiTypography-root)': { display: 'none' }
+              }}
+            >
               <Box display="flex" alignItems="center" gap={1.5} width="100%">
                 {/* Stacked color squares */}
                 <Box display="flex" flexDirection="column" gap={0.25}>
@@ -210,21 +222,15 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
                   />
                 </Box>
                 
-                {/* Club name and preset name */}
+                {/* Club name */}
                 <Box flex={1}>
                   <Typography variant="body2" fontWeight={isRecent ? 600 : 500}>
                     {preset.club_name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {preset.preset_name}
                   </Typography>
                 </Box>
                 
                 {/* Badges */}
                 <Box display="flex" gap={0.5} alignItems="center">
-                  {isRecent && (
-                    <Chip label="Recent" size="small" color="secondary" sx={{ fontSize: '0.7rem', height: 20 }} />
-                  )}
                   {preset.is_default && (
                     <MdStar style={{ color: theme.palette.warning.main, fontSize: 18 }} />
                   )}

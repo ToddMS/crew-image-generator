@@ -27,7 +27,6 @@ import LoginPrompt from '../components/Auth/LoginPrompt';
 
 interface ClubPreset {
   id: number;
-  preset_name: string;
   club_name: string;
   primary_color: string;
   secondary_color: string;
@@ -36,7 +35,6 @@ interface ClubPreset {
 }
 
 interface FormData {
-  preset_name: string;
   club_name: string;
   primary_color: string;
   secondary_color: string;
@@ -58,7 +56,6 @@ const ClubPresetsPage: React.FC = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
-    preset_name: '',
     club_name: '',
     primary_color: '#5E98C2',
     secondary_color: '#ffffff',
@@ -116,7 +113,6 @@ const ClubPresetsPage: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      preset_name: '',
       club_name: '',
       primary_color: '#5E98C2',
       secondary_color: '#ffffff',
@@ -132,7 +128,6 @@ const ClubPresetsPage: React.FC = () => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('preset_name', formData.preset_name);
       formDataToSend.append('club_name', formData.club_name);
       formDataToSend.append('primary_color', formData.primary_color);
       formDataToSend.append('secondary_color', formData.secondary_color);
@@ -163,7 +158,6 @@ const ClubPresetsPage: React.FC = () => {
         
         trackEvent('club_preset_saved', {
           action: editingPreset ? 'update' : 'create',
-          preset_name: formData.preset_name,
           club_name: formData.club_name,
           has_logo: !!logoFile
         });
@@ -182,7 +176,6 @@ const ClubPresetsPage: React.FC = () => {
   const handleEdit = (preset: ClubPreset) => {
     setEditingPreset(preset);
     setFormData({
-      preset_name: preset.preset_name,
       club_name: preset.club_name,
       primary_color: preset.primary_color,
       secondary_color: preset.secondary_color,
@@ -205,7 +198,6 @@ const ClubPresetsPage: React.FC = () => {
         showSuccess('Preset deleted successfully!');
         loadPresets();
         trackEvent('club_preset_deleted', {
-          preset_name: preset.preset_name,
           club_name: preset.club_name
         });
       } else {
@@ -300,16 +292,7 @@ const ClubPresetsPage: React.FC = () => {
             </Typography>
             
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Preset Name"
-                  value={formData.preset_name}
-                  onChange={(e) => setFormData({ ...formData, preset_name: e.target.value })}
-                  placeholder="e.g., Official Colors"
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Club Name"
@@ -403,7 +386,7 @@ const ClubPresetsPage: React.FC = () => {
             <Button
               variant="contained"
               onClick={handleSave}
-              disabled={loading || !formData.preset_name || !formData.club_name}
+              disabled={loading || !formData.club_name}
             >
               {editingPreset ? 'Update' : 'Create'} Preset
             </Button>
@@ -440,10 +423,10 @@ const ClubPresetsPage: React.FC = () => {
                 <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
                     <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600, fontSize: '1rem' }}>
-                      {preset.preset_name}
+                      {preset.club_name}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      {!!preset.is_default && (
+                      {preset.is_default && (
                         <Chip label="Default" size="small" color="primary" />
                       )}
                       <IconButton
@@ -457,10 +440,6 @@ const ClubPresetsPage: React.FC = () => {
                       </IconButton>
                     </Box>
                   </Box>
-                  
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {preset.club_name}
-                  </Typography>
                   
                   <Box display="flex" alignItems="center" gap={1} mb={1.5}>
                     <Box
@@ -549,7 +528,7 @@ const ClubPresetsPage: React.FC = () => {
         <DialogTitle>Delete Club Preset</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{presetToDelete?.preset_name}"? This action cannot be undone.
+            Are you sure you want to delete "{presetToDelete?.club_name}"? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
