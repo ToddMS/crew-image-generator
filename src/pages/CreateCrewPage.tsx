@@ -8,6 +8,7 @@ import {
   StepLabel,
   LinearProgress,
   useMediaQuery,
+  Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -15,7 +16,7 @@ import { MdSave, MdArrowBack, MdCheckCircle, MdNavigateNext, MdNavigateBefore, M
 import RowingIcon from '@mui/icons-material/Rowing';
 import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
-import LoginPrompt from '../components/Auth/LoginPrompt';
+import AuthModal from '../components/Auth/AuthModal';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
@@ -88,6 +89,8 @@ const CreateCrewPage: React.FC = () => {
   const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [showStep1Validation, setShowStep1Validation] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [preserveStateAfterLogin, setPreserveStateAfterLogin] = useState(false);
 
   // Clear fields and reset state when entering page
   const clearAllFields = () => {
@@ -108,6 +111,46 @@ const CreateCrewPage: React.FC = () => {
 
   // Load editing data if present, otherwise clear fields
   useEffect(() => {
+    // Check if we have pending save state (user just logged in from save step)
+    const pendingState = localStorage.getItem('rowgram_pending_save_state');
+    if (pendingState && user) {
+      // User just logged in and we have saved state - restore it directly
+      try {
+        const state = JSON.parse(pendingState);
+        
+        // Restore form state
+        setBoatClass(state.boatClass);
+        setClubName(state.clubName);
+        setRaceName(state.raceName);
+        setBoatName(state.boatName);
+        setCrewNames(state.crewNames);
+        setCoxName(state.coxName);
+        setActiveStep(state.activeStep);
+        setCompletedSteps(new Set(state.completedSteps));
+        setEditingCrewId(state.editingCrewId);
+        
+        // Clean up saved state
+        localStorage.removeItem('rowgram_pending_save_state');
+        
+        // Set flag to indicate this was a restoration for auto-save
+        localStorage.setItem('rowgram_was_restored', 'true');
+        
+        // Close the auth modal if it's open
+        setShowAuthModal(false);
+        
+        return;
+      } catch (error) {
+        console.error('Error restoring saved state:', error);
+        localStorage.removeItem('rowgram_pending_save_state');
+      }
+    }
+
+    // Skip clearing fields if we're preserving state after login
+    if (preserveStateAfterLogin) {
+      setPreserveStateAfterLogin(false);
+      return;
+    }
+
     const state = location.state as any;
     if (state?.editingCrew) {
       // Editing mode - load crew data
@@ -130,7 +173,7 @@ const CreateCrewPage: React.FC = () => {
         localStorage.removeItem(`rowgram_draft_${user.id}`);
       }
     }
-  }, [location.pathname, user]);
+  }, [location.pathname, user, preserveStateAfterLogin]);
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -148,10 +191,36 @@ const CreateCrewPage: React.FC = () => {
     }
   }, [boatClass, clubName, raceName, boatName, crewNames, coxName, user]);
 
+  // Auto-save crew after login if we're on the final step with complete data
+  useEffect(() => {
+    if (user && activeStep === 2 && // On final step
+        boatClass && clubName && raceName && boatName && // Step 1 complete
+        crewNames.every(name => name.trim()) && // Step 2 crew names complete
+        (!boatClassHasCox(boatClass) || coxName.trim()) && // Cox name if needed
+        !saving && !showAuthModal) { // Not already saving and modal is closed
+      
+      // Check if this was a post-login restoration
+      const wasRestored = localStorage.getItem('rowgram_was_restored');
+      if (wasRestored) {
+        localStorage.removeItem('rowgram_was_restored');
+        // Small delay to ensure all state is settled
+        setTimeout(() => {
+          handleSaveCrew();
+        }, 100);
+      }
+    }
+  }, [user, activeStep, boatClass, clubName, raceName, boatName, crewNames, coxName, saving, showAuthModal]);
+
   const clearDraft = () => {
     if (user) {
       localStorage.removeItem(`rowgram_draft_${user.id}`);
     }
+  };
+
+  const handleAuthSuccess = () => {
+    // The main restoration logic is handled by the useEffect above
+    // This function is mainly called by the AuthModal's onSuccess callback
+    setShowAuthModal(false);
   };
 
   // Wizard navigation
@@ -225,7 +294,21 @@ const CreateCrewPage: React.FC = () => {
 
   const handleSaveCrew = async () => {
     if (!user) {
-      console.error('User not authenticated');
+      // Save current state to localStorage before opening auth modal
+      const currentState = {
+        boatClass,
+        clubName,
+        raceName,
+        boatName,
+        crewNames,
+        coxName,
+        activeStep,
+        completedSteps: Array.from(completedSteps),
+        editingCrewId,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('rowgram_pending_save_state', JSON.stringify(currentState));
+      setShowAuthModal(true);
       return;
     }
 
@@ -376,15 +459,6 @@ const CreateCrewPage: React.FC = () => {
                 hideButton={true} // Hide the save button from this component
                 showValidation={showStep1Validation}
               />
-            )}
-            
-            {!user && canProceedFromStep(0) && (
-              <Box sx={{ mt: 3 }}>
-                <LoginPrompt 
-                  message="Sign in to save crews to your account"
-                  actionText="Continue"
-                />
-              </Box>
             )}
           </Box>
         );
@@ -545,15 +619,29 @@ const CreateCrewPage: React.FC = () => {
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           {activeStep === steps.length - 1 ? (
-            <Button
-              variant="contained"
-              onClick={handleSaveCrew}
-              disabled={saving || !canProceedFromStep(activeStep)}
-              endIcon={saving ? <MdCheckCircle /> : <MdSave />}
-              size="large"
+            <Tooltip 
+              title={!user ? "Please sign in to save your crew" : ""}
+              placement="top"
             >
-              {saving ? 'Saving...' : editingCrewId ? 'Update Crew' : 'Save Crew'}
-            </Button>
+              <span>
+                <Button
+                  variant="contained"
+                  onClick={handleSaveCrew}
+                  disabled={saving || !canProceedFromStep(activeStep)}
+                  endIcon={saving ? <MdCheckCircle /> : <MdSave />}
+                  size="large"
+                  sx={{
+                    opacity: !user ? 0.6 : 1,
+                    backgroundColor: !user ? theme.palette.grey[400] : undefined,
+                    '&:hover': {
+                      backgroundColor: !user ? theme.palette.grey[400] : undefined,
+                    }
+                  }}
+                >
+                  {saving ? 'Saving...' : editingCrewId ? 'Update Crew' : 'Save Crew'}
+                </Button>
+              </span>
+            </Tooltip>
           ) : (
             <Button
               variant="contained"
@@ -566,6 +654,13 @@ const CreateCrewPage: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        open={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </Box>
   );
 };
