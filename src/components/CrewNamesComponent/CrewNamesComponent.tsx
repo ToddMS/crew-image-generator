@@ -34,18 +34,18 @@ const getSeatLabels = (boatClass: string): string[] => {
         '4 Seat',
         '3 Seat',
         '2 Seat',
-        'Bow',
+        'Bow Seat',
       ];
     case '4+':
-      return ['Cox', 'Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+      return ['Cox', 'Stroke Seat', '3 Seat', '2 Seat', 'Bow Seat'];
     case '4-':
-      return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+      return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow Seat'];
     case '4x':
-      return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+      return ['Stroke Seat', '3 Seat', '2 Seat', 'Bow Seat'];
     case '2-':
-      return ['Stroke Seat', 'Bow'];
+      return ['Stroke Seat', 'Bow Seat'];
     case '2x':
-      return ['Stroke Seat', 'Bow'];
+      return ['Stroke Seat', 'Bow Seat'];
     case '1x':
       return ['Single'];
     default:

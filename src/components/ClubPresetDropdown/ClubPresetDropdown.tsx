@@ -188,8 +188,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
         {/* Preset options */}
         {getFilteredPresets().map((preset) => {
           const isRecent = recentPresets.includes(preset.id);
-          console.log('🔍 Rendering preset:', preset.club_name, 'is_default:', preset.is_default, 'type:', typeof preset.is_default);
-          console.log('🔍 Full preset object:', JSON.stringify(preset, null, 2));
           return (
             <MenuItem 
               key={preset.id} 
