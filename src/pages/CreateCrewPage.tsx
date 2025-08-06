@@ -261,9 +261,6 @@ const CreateCrewPage: React.FC = () => {
     setActiveStep((prev) => prev - 1);
   };
 
-  const handleStepClick = (step: number) => {
-    setActiveStep(step);
-  };
 
   const canProceedFromStep = (step: number): boolean => {
     switch (step) {
@@ -560,9 +557,7 @@ const CreateCrewPage: React.FC = () => {
       <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
         {steps.map((step, index) => (
           <Step key={step.label} completed={completedSteps.has(index)}>
-            <StepLabel 
-              onClick={() => handleStepClick(index)}
-              sx={{ cursor: 'pointer' }}
+            <StepLabel
               icon={
                 <Box
                   sx={{

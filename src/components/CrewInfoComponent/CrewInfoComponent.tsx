@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   FormControl,
@@ -61,7 +61,29 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   }, [initialValues]);
 
   const handleBoatClassChange = (event: SelectChangeEvent<string>) => {
-    setBoatClass(event.target.value as string);
+    handleFieldChange('boatClass', event.target.value as string);
+  };
+
+  // Call onSubmit when fields change through user interaction
+  const handleFieldChange = (field: string, value: string) => {
+    switch (field) {
+      case 'boatClass':
+        setBoatClass(value);
+        onSubmit(value, clubName, raceName, boatName);
+        break;
+      case 'clubName':
+        setClubName(value);
+        onSubmit(boatClass, value, raceName, boatName);
+        break;
+      case 'raceName':
+        setRaceName(value);
+        onSubmit(boatClass, clubName, value, boatName);
+        break;
+      case 'boatName':
+        setBoatName(value);
+        onSubmit(boatClass, clubName, raceName, value);
+        break;
+    }
   };
 
   const handlePresetModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,21 +93,14 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     if (!usePresetMode) {
       // Switching to manual mode
       setSelectedPresetId(null);
-      setClubName('');
+      handleFieldChange('clubName', '');
     }
   };
 
   const handlePresetSelection = (presetId: number, preset: any) => {
     setSelectedPresetId(presetId);
-    setClubName(preset.club_name);
+    handleFieldChange('clubName', preset.club_name);
   };
-
-
-  // Update parent component with current form state whenever fields change
-  useEffect(() => {
-    // Always call onSubmit to update the parent's state, even if fields are empty
-    onSubmit(boatClass, clubName, raceName, boatName);
-  }, [boatClass, clubName, raceName, boatName, onSubmit]);
 
 
   const boatClassOptions = [
@@ -168,7 +183,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             variant="outlined"
             className={styles.inputField}
             value={clubName}
-            onChange={e => setClubName(e.target.value)}
+            onChange={e => handleFieldChange('clubName', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
@@ -206,7 +221,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           variant="outlined"
           className={styles.inputField}
           value={raceName}
-          onChange={e => setRaceName(e.target.value)}
+          onChange={e => handleFieldChange('raceName', e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': {
@@ -243,7 +258,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           variant="outlined"
           className={styles.inputField}
           value={boatName}
-          onChange={e => setBoatName(e.target.value)}
+          onChange={e => handleFieldChange('boatName', e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': {
