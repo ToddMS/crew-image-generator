@@ -721,56 +721,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     width: '100%',
                     height: 'auto',
                     display: 'block',
-                    maxHeight: '60vh',
+                    maxHeight: '80vh',
                     objectFit: 'contain'
                   }}
                 />
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 1 }}>
-                    {selectedImage.image_name}
-                  </Typography>
-                  
-                  <Typography variant="body1" sx={{ color: theme.palette.primary.main, mb: 2 }}>
-                    {selectedImage.crew_name} • {selectedImage.race_name}
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-                    <Chip label={`Template ${selectedImage.template_id}`} />
-                    <Chip label={selectedImage.club_name} variant="outlined" />
-                    <Chip 
-                      label={new Date(selectedImage.created_at).toLocaleDateString()} 
-                      variant="outlined" 
-                    />
-                  </Box>
-                  
-                  {selectedImage.primary_color && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                        Colors:
-                      </Typography>
-                      <Box
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: 1,
-                          backgroundColor: selectedImage.primary_color,
-                          border: `1px solid ${theme.palette.divider}`
-                        }}
-                      />
-                      {selectedImage.secondary_color && (
-                        <Box
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 1,
-                            backgroundColor: selectedImage.secondary_color,
-                            border: `1px solid ${theme.palette.divider}`
-                          }}
-                        />
-                      )}
-                    </Box>
-                  )}
-                </Box>
               </Box>
             )}
           </DialogContent>
