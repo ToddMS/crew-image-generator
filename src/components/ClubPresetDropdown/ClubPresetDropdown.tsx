@@ -157,7 +157,40 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
             return <span style={{ color: '#999' }}>{placeholder}</span>;
           }
           const selectedPreset = presets.find(p => p.id === selected);
-          return selectedPreset ? selectedPreset.club_name : '';
+          if (!selectedPreset) return '';
+          
+          return (
+            <Box display="flex" alignItems="center" gap={1.5} width="100%">
+              {/* Color preview squares */}
+              <Box display="flex" gap={0.5}>
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 0.5,
+                    backgroundColor: selectedPreset.primary_color,
+                    border: '1px solid #ddd',
+                  }}
+                />
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 0.5,
+                    backgroundColor: selectedPreset.secondary_color,
+                    border: '1px solid #ddd',
+                  }}
+                />
+              </Box>
+              
+              {/* Club name */}
+              <Box flex={1}>
+                <Typography variant="body2" sx={{ color: 'inherit' }}>
+                  {selectedPreset.club_name}
+                </Typography>
+              </Box>
+            </Box>
+          );
         }}
         sx={{
           '& .MuiOutlinedInput-root': {
@@ -218,8 +251,8 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
               }}
             >
               <Box display="flex" alignItems="center" gap={1.5} width="100%">
-                {/* Stacked color squares */}
-                <Box display="flex" flexDirection="column" gap={0.25}>
+                {/* Side by side color squares */}
+                <Box display="flex" gap={0.5}>
                   <Box
                     sx={{
                       width: 12,

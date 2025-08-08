@@ -528,7 +528,7 @@ const MyCrewsPage: React.FC = () => {
           </Box>
           
           {/* Sort Dropdown */}
-          {savedCrews.length > 0 && selectedCrews.size === 0 && (
+          {savedCrews.length > 0 && (
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <InputLabel>Sort by</InputLabel>
               <Select
@@ -542,28 +542,6 @@ const MyCrewsPage: React.FC = () => {
                 <MenuItem value="boat_class">Boat Class</MenuItem>
               </Select>
             </FormControl>
-          )}
-          {selectedCrews.size > 0 && (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={handleBulkDelete}
-                size="small"
-              >
-                Delete {selectedCrews.size}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setSelectedCrews(new Set());
-                  setShowGeneratePanel(false);
-                }}
-                size="small"
-              >
-                Clear Selection
-              </Button>
-            </Box>
           )}
         </Box>
 
@@ -700,7 +678,25 @@ const MyCrewsPage: React.FC = () => {
               onClick={() => setSelectedCrews(new Set())}
               sx={{ color: theme.palette.text.secondary }}
             >
-              Clear All
+              Clear Selection
+            </Button>
+            
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleBulkDelete}
+              sx={{ 
+                minWidth: 120,
+                borderColor: theme.palette.error.main,
+                color: theme.palette.error.main,
+                '&:hover': {
+                  borderColor: theme.palette.error.dark,
+                  color: theme.palette.error.dark,
+                  backgroundColor: theme.palette.error.main + '08'
+                }
+              }}
+            >
+              Delete {selectedCrews.size}
             </Button>
             
             <Button

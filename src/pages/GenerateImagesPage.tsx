@@ -13,7 +13,9 @@ import {
   Select,
   MenuItem,
   Dialog,
-  DialogContent
+  DialogContent,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -384,26 +386,6 @@ const GenerateImagesPage: React.FC = () => {
         </Alert>
       )}
 
-      {/* Header */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              Choose Template & Customize
-            </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<MdArrowBack />}
-              onClick={() => navigate('/crews')}
-            >
-              Back to My Crews
-            </Button>
-          </Box>
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-            Choose a template and customize settings for your selected crews
-          </Typography>
-        </CardContent>
-      </Card>
 
       {/* Selected Crews - Simplified */}
       <Card sx={{ mb: 3 }}>
@@ -414,72 +396,67 @@ const GenerateImagesPage: React.FC = () => {
             </Typography>
           </Box>
           
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ 
+            maxHeight: 300, 
+            overflowY: 'auto',
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 1,
+            pr: 1 // Space for scrollbar
+          }}>
             {selectedCrews.map((crew) => (
               <Box
                 key={crew.id}
                 sx={{
-                  position: 'relative',
-                  width: 80,
-                  height: 80,
-                  borderRadius: 2,
-                  background: `linear-gradient(135deg, ${getBoatClassColor(crew.boatClass)} 0%, ${getBoatClassColor(crew.boatClass)}CC 100%)`,
                   display: 'flex',
-                  flexDirection: 'column',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  border: `2px solid ${theme.palette.divider}`,
+                  p: 1.5,
+                  border: `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1,
+                  backgroundColor: theme.palette.background.paper,
                   '&:hover': {
-                    transform: 'scale(1.05)',
-                    boxShadow: theme.shadows[4]
+                    backgroundColor: theme.palette.action.hover
                   }
                 }}
               >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.25 }}>
+                    {crew.boatName}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                      {crew.boatClub}
+                    </Typography>
+                    <Chip
+                      label={crew.boatClass}
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: '0.65rem',
+                        backgroundColor: theme.palette.primary.main,
+                        color: 'white',
+                        '& .MuiChip-label': {
+                          px: 1
+                        }
+                      }}
+                    />
+                  </Box>
+                </Box>
                 <IconButton
                   onClick={() => handleRemoveCrew(crew.id)}
                   size="small"
                   sx={{
-                    position: 'absolute',
-                    top: -6,
-                    right: -6,
-                    backgroundColor: theme.palette.error.main,
-                    color: 'white',
-                    width: 20,
-                    height: 20,
+                    ml: 1,
+                    color: theme.palette.text.secondary,
                     '&:hover': {
-                      backgroundColor: theme.palette.error.dark
+                      backgroundColor: theme.palette.error.light + '20',
+                      color: theme.palette.error.main
                     }
                   }}
                 >
-                  <MdClose size={12} />
+                  <MdClose size={16} />
                 </IconButton>
-                
-                <Typography variant="caption" sx={{ 
-                  fontWeight: 700, 
-                  fontSize: '0.7rem',
-                  textAlign: 'center',
-                  mb: 0.5,
-                  textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                }}>
-                  {crew.boatClass}
-                </Typography>
-                
-                <Typography variant="caption" sx={{ 
-                  fontSize: '0.6rem',
-                  textAlign: 'center',
-                  opacity: 0.9,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  width: '100%',
-                  px: 0.5,
-                  textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                }}>
-                  {crew.boatClub}
-                </Typography>
               </Box>
             ))}
           </Box>
@@ -495,7 +472,7 @@ const GenerateImagesPage: React.FC = () => {
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                🎨 Choose Template
+                Choose Template
               </Typography>
               
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
@@ -550,236 +527,6 @@ const GenerateImagesPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Color Configuration */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                🎨 Colors & Styling
-              </Typography>
-              
-              {/* Color Mode Toggle */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                  Color Mode
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    variant={!usePresetColors ? 'contained' : 'outlined'}
-                    onClick={() => setUsePresetColors(false)}
-                    size="small"
-                  >
-                    Custom Colors
-                  </Button>
-                  <Button
-                    variant={usePresetColors ? 'contained' : 'outlined'}
-                    onClick={() => setUsePresetColors(true)}
-                    size="small"
-                  >
-                    Club Presets
-                  </Button>
-                </Box>
-              </Box>
-
-              {usePresetColors ? (
-                /* Club Presets Dropdown */
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                    Select Club Preset
-                  </Typography>
-                  <ClubPresetDropdown
-                    value={selectedPresetId}
-                    onChange={handlePresetSelection}
-                    label="Choose a club preset"
-                    placeholder="Select a club preset"
-                  />
-                </Box>
-              ) : (
-                /* Custom Color Pickers with Club Logo */
-                <Box>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 3 }}>
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                        Primary Color
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <input
-                          type="color"
-                          value={primaryColor}
-                          onChange={(e) => setPrimaryColor(e.target.value)}
-                          style={{
-                            width: 50,
-                            height: 50,
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer'
-                          }}
-                        />
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {primaryColor}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                            Main brand color
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                    
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                        Secondary Color
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <input
-                          type="color"
-                          value={secondaryColor}
-                          onChange={(e) => setSecondaryColor(e.target.value)}
-                          style={{
-                            width: 50,
-                            height: 50,
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer'
-                          }}
-                        />
-                        <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                            {secondaryColor}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                            Accent color
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  {/* Club Logo Upload - Only for Custom Colors */}
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                      Club Logo (Optional)
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      sx={{ 
-                        py: 2,
-                        borderStyle: 'dashed',
-                        width: '100%',
-                        '&:hover': {
-                          borderStyle: 'solid',
-                          backgroundColor: theme.palette.action.hover
-                        }
-                      }}
-                    >
-                      {clubIcon ? 'Change Logo' : 'Upload Club Logo'}
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setClubIcon({
-                              type: 'upload',
-                              file: file,
-                              filename: file.name
-                            });
-                          }
-                        }}
-                      />
-                    </Button>
-                    
-                    {clubIcon && (
-                      <Box sx={{ 
-                        mt: 2,
-                        p: 2,
-                        border: `1px solid ${theme.palette.divider}`,
-                        borderRadius: 2,
-                        backgroundColor: theme.palette.background.default
-                      }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          {/* Image Preview */}
-                          <Box sx={{ 
-                            width: 48,
-                            height: 48,
-                            borderRadius: 1,
-                            overflow: 'hidden',
-                            border: `1px solid ${theme.palette.divider}`,
-                            backgroundColor: theme.palette.action.selected,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}>
-                            {clubIcon.file ? (
-                              <img 
-                                src={URL.createObjectURL(clubIcon.file)}
-                                alt="Club logo preview"
-                                style={{ 
-                                  width: '100%', 
-                                  height: '100%', 
-                                  objectFit: 'contain'
-                                }}
-                              />
-                            ) : (
-                              <Typography variant="caption" sx={{ 
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                color: theme.palette.text.secondary
-                              }}>
-                                📁
-                              </Typography>
-                            )}
-                          </Box>
-                          
-                          {/* File Info */}
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="body2" sx={{ 
-                              fontWeight: 500,
-                              color: theme.palette.success.main,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              ✓ Logo uploaded
-                            </Typography>
-                            <Typography variant="caption" sx={{ 
-                              color: theme.palette.text.secondary,
-                              display: 'block',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              {clubIcon.filename || 'Unknown file'}
-                            </Typography>
-                          </Box>
-                          
-                          {/* Remove Button */}
-                          <IconButton
-                            size="small"
-                            onClick={() => setClubIcon(null)}
-                            sx={{ 
-                              color: theme.palette.error.main,
-                              '&:hover': {
-                                backgroundColor: theme.palette.error.light + '20'
-                              }
-                            }}
-                          >
-                            <MdClose size={16} />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    )}
-                    
-                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block', mt: 1 }}>
-                      PNG, JPG, SVG recommended. Max 2MB.
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
 
         </Box>
 
@@ -790,7 +537,7 @@ const GenerateImagesPage: React.FC = () => {
           <Card sx={{ position: 'sticky', top: 20 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                🔍 Preview
+                Preview
               </Typography>
               
               <Box
@@ -842,7 +589,7 @@ const GenerateImagesPage: React.FC = () => {
                     }}
                   >
                     <Typography variant="caption" sx={{ color: 'white', fontWeight: 600 }}>
-                      📁
+                      IMG
                     </Typography>
                   </Box>
                 )}
@@ -915,7 +662,7 @@ const GenerateImagesPage: React.FC = () => {
 
                 {/* Instagram Format Badge */}
                 <Chip
-                  label="📷 Instagram Format"
+                  label="Instagram Format"
                   size="small"
                   sx={{
                     position: 'absolute',
@@ -939,57 +686,261 @@ const GenerateImagesPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Generate Button - Under Preview Card */}
-          <Button
-            variant="contained"
-            size="medium"
-            fullWidth
-            onClick={() => {
-              const colors = usePresetColors && selectedPresetId 
-                ? (() => {
-                    const preset = presets.find(p => p.id === selectedPresetId);
-                    return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
-                  })()
-                : { primary: primaryColor, secondary: secondaryColor };
+          {/* Color Configuration */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Template Colours
+              </Typography>
               
-              // Prepare club icon - either from custom upload or preset
-              let finalClubIcon = null;
-              if (usePresetColors && selectedPresetId) {
-                const selectedPreset = presets.find(p => p.id === selectedPresetId);
-                if (selectedPreset?.logo_filename) {
-                  finalClubIcon = {
-                    type: 'preset',
-                    filename: selectedPreset.logo_filename,
-                    format: 'instagram'
-                  };
-                }
-              } else if (clubIcon) {
-                finalClubIcon = {
-                  ...clubIcon,
-                  format: 'instagram'
-                };
-              }
-              
-              // Extended image generation with styling options
-              handleGenerateImages('', selectedTemplate, colors, true, finalClubIcon);
-            }}
-            disabled={generating || selectedCrews.length === 0}
-            sx={{
-              py: 1.5,
-              px: 3,
-              fontSize: '0.875rem',
-              fontWeight: 500
-            }}
-          >
-            {generating 
-              ? 'Generating...' 
-              : `Generate ${selectedCrews.length} Image${selectedCrews.length !== 1 ? 's' : ''}`
-            }
-          </Button>
+              {/* Color Mode Toggle */}
+              <Box sx={{ mb: 3 }}>
+                <Box display="flex" alignItems="center" gap={1.5} mb={2}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    Club Colours
+                  </Typography>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={usePresetColors}
+                        onChange={(e) => setUsePresetColors(e.target.checked)}
+                        sx={{
+                          '& .MuiSwitch-switchBase.Mui-checked': {
+                            color: theme.palette.primary.main,
+                          },
+                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                            backgroundColor: theme.palette.primary.main,
+                          },
+                        }}
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Use preset
+                      </Typography>
+                    }
+                    sx={{ ml: 'auto' }}
+                  />
+                </Box>
+              </Box>
+
+              {usePresetColors ? (
+                /* Club Presets Dropdown */
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.875rem' }}>
+                    Select Club Preset
+                  </Typography>
+                  <ClubPresetDropdown
+                    value={selectedPresetId}
+                    onChange={handlePresetSelection}
+                    label="Choose a club preset"
+                    placeholder="Select a club preset"
+                  />
+                </Box>
+              ) : (
+                /* Custom Color Pickers with Club Logo */
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  {/* Left Side - Colors stacked vertically */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {/* Primary Color */}
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    
+                    {/* Secondary Color */}
+                    <input
+                      type="color"
+                      value={secondaryColor}
+                      onChange={(e) => setSecondaryColor(e.target.value)}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  </Box>
+
+                  {/* Middle - Color Info */}
+                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', height: 36 }}>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}>
+                          Primary
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                          {primaryColor.toUpperCase()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', height: 36 }}>
+                      <Box>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}>
+                          Secondary
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                          {secondaryColor.toUpperCase()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {/* Right Side - Club Logo */}
+                  <Box sx={{ mt: -1 }}>
+                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem', display: 'block', textAlign: 'center', mb: 0.5 }}>
+                      Club Logo
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      sx={{ 
+                        width: 60,
+                        height: 60,
+                        borderStyle: 'dashed',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 0.5,
+                        '&:hover': {
+                          borderStyle: 'solid',
+                          backgroundColor: theme.palette.action.hover
+                        }
+                      }}
+                    >
+                      {clubIcon ? (
+                        clubIcon.file ? (
+                          <img 
+                            src={URL.createObjectURL(clubIcon.file)}
+                            alt="Club logo preview"
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'contain',
+                              borderRadius: '4px'
+                            }}
+                          />
+                        ) : (
+                          <Typography variant="caption" sx={{ fontSize: '0.55rem', textAlign: 'center' }}>
+                            IMG
+                          </Typography>
+                        )
+                      ) : (
+                        <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>
+                          +
+                        </Typography>
+                      )}
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setClubIcon({
+                              type: 'upload',
+                              file: file,
+                              filename: file.name
+                            });
+                          }
+                        }}
+                      />
+                    </Button>
+                    
+                    {clubIcon && (
+                      <Box sx={{ mt: 1, textAlign: 'center' }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => setClubIcon(null)}
+                          sx={{ 
+                            color: theme.palette.error.main,
+                            '&:hover': {
+                              backgroundColor: theme.palette.error.light + '20'
+                            }
+                          }}
+                        >
+                          <MdClose size={12} />
+                        </IconButton>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+
 
         </Box>
       </Box>
 
+      {/* Floating Generate Button */}
+      <Button
+        variant="contained"
+        size="large"
+        onClick={() => {
+          const colors = usePresetColors && selectedPresetId 
+            ? (() => {
+                const preset = presets.find(p => p.id === selectedPresetId);
+                return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
+              })()
+            : { primary: primaryColor, secondary: secondaryColor };
+          
+          // Prepare club icon - either from custom upload or preset
+          let finalClubIcon = null;
+          if (usePresetColors && selectedPresetId) {
+            const selectedPreset = presets.find(p => p.id === selectedPresetId);
+            if (selectedPreset?.logo_filename) {
+              finalClubIcon = {
+                type: 'preset',
+                filename: selectedPreset.logo_filename,
+                format: 'instagram'
+              };
+            }
+          } else if (clubIcon) {
+            finalClubIcon = {
+              ...clubIcon,
+              format: 'instagram'
+            };
+          }
+          
+          // Extended image generation with styling options
+          handleGenerateImages('', selectedTemplate, colors, true, finalClubIcon);
+        }}
+        disabled={generating || selectedCrews.length === 0}
+        sx={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          zIndex: 1000,
+          py: 1.5,
+          px: 3,
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          minWidth: 160,
+          boxShadow: theme.shadows[8],
+          '&:hover': {
+            boxShadow: theme.shadows[12],
+            transform: 'translateY(-2px)',
+          },
+          transition: 'all 0.2s ease'
+        }}
+      >
+        {generating 
+          ? 'Generating...' 
+          : `Generate ${selectedCrews.length} Image${selectedCrews.length !== 1 ? 's' : ''}`
+        }
+      </Button>
 
       {/* Preview Modal */}
       <Dialog
@@ -1067,7 +1018,7 @@ const GenerateImagesPage: React.FC = () => {
                   }}
                 >
                   <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-                    📁
+                    IMG
                   </Typography>
                 </Box>
               )}
@@ -1141,7 +1092,7 @@ const GenerateImagesPage: React.FC = () => {
 
               {/* Instagram Format Badge */}
               <Chip
-                label="📷 1080x1080"
+                label="1080x1080"
                 sx={{
                   position: 'absolute',
                   bottom: 16,

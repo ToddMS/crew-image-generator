@@ -35,8 +35,8 @@ const getPageInfo = (pathname: string) => {
       subtitle: 'Manage your saved crew lineups'
     },
     '/generate': {
-      title: 'Generate Images',
-      subtitle: 'Create crew lineup images'
+      title: 'Choose Template & Customize',
+      subtitle: 'Choose a template and customize settings for your selected crews'
     },
     '/gallery': {
       title: 'Gallery',
@@ -246,6 +246,17 @@ const PageHeader: React.FC<PageHeaderProps> = ({
               }}
             >
               {currentStep === 0 ? 'Dashboard' : 'Back'}
+            </Button>
+          )}
+          
+          {/* Auto-add Back button for Generate page */}
+          {location.pathname === '/generate' && (
+            <Button
+              variant="outlined"
+              startIcon={<MdArrowBack />}
+              onClick={() => navigate('/crews')}
+            >
+              Back to My Crews
             </Button>
           )}
           {actions}

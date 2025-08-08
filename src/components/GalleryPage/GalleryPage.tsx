@@ -475,9 +475,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
           {filteredImages.map((image) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
+            <Grid item xs={12/5} key={image.id} sx={{ display: 'flex', justifyContent: 'center', maxWidth: '20%', flexBasis: '20%' }}>
               <Card
                 onClick={() => handleImageSelection(image.id, !selectedImages.has(image.id))}
                 sx={{
@@ -490,6 +490,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   borderRadius: 2,
                   overflow: 'hidden',
                   transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  flexDirection: 'column',
                   '&:hover': {
                     transform: 'translateY(-2px)',
                     boxShadow: theme.shadows[8],
@@ -502,143 +504,171 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                   }
                 }}
               >
-                <CardMedia
-                  component="img"
-                  sx={{
-                    aspectRatio: '1/1',
-                    objectFit: 'cover',
-                    backgroundColor: theme.palette.grey[100]
-                  }}
-                  image={getImageUrl(image.image_url)}
-                  alt={image.image_name}
-                />
+                <Box sx={{ 
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <CardMedia
+                    component="img"
+                    sx={{
+                      height: 260,
+                      objectFit: 'contain',
+                      display: 'block'
+                    }}
+                    image={getImageUrl(image.image_url)}
+                    alt={image.image_name}
+                  />
                 
-                {/* Selection Checkbox */}
-                <Checkbox
-                  checked={selectedImages.has(image.id)}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    handleImageSelection(image.id, e.target.checked);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  size="small"
-                  sx={{ 
-                    position: 'absolute', 
-                    top: 8, 
-                    right: 8, 
-                    zIndex: 2,
-                    padding: '4px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    borderRadius: '50%',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    },
-                    '&.Mui-checked': {
-                      backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                  {/* Selection Checkbox */}
+                  <Checkbox
+                    checked={selectedImages.has(image.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleImageSelection(image.id, e.target.checked);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    size="small"
+                    sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      zIndex: 2,
+                      padding: '4px',
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
                       color: 'white',
                       '&:hover': {
-                        backgroundColor: 'rgba(25, 118, 210, 1)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
                       },
-                    },
-                  }}
-                />
-                
-                {/* Action buttons */}
-                <Box
-                  className="action-buttons"
-                  sx={{
-                    position: 'absolute',
-                    top: 8,
-                    left: 8,
-                    display: 'flex',
-                    gap: 1,
-                    opacity: 0,
-                    transition: 'opacity 0.2s ease',
-                  }}
-                >
-                <IconButton
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(25, 118, 210, 0.8)',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                    }
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleImageClick(image);
-                  }}
-                >
-                  <MdImage size={18} />
-                </IconButton>
-                
-                <IconButton
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(76, 175, 80, 0.8)',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(76, 175, 80, 0.9)',
-                    }
-                  }}
-                  onClick={(e) => handleDownloadImage(image, e)}
-                >
-                  <MdDownload size={18} />
-                </IconButton>
-                
-                <IconButton
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(244, 67, 54, 0.8)',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'rgba(244, 67, 54, 0.9)',
-                    }
-                  }}
-                  onClick={(e) => handleDeleteImage(image.id, e)}
-                >
-                  <MdDelete size={18} />
-                </IconButton>
+                      '&.Mui-checked': {
+                        backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(25, 118, 210, 1)',
+                        },
+                      },
+                    }}
+                  />
+                  
+                  {/* Action buttons */}
+                  <Box
+                    className="action-buttons"
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      left: 8,
+                      display: 'flex',
+                      gap: 1,
+                      opacity: 0,
+                      transition: 'opacity 0.2s ease',
+                    }}
+                  >
+                    <IconButton
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(25, 118, 210, 0.8)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleImageClick(image);
+                      }}
+                    >
+                      <MdImage size={18} />
+                    </IconButton>
+                    
+                    <IconButton
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(76, 175, 80, 0.9)',
+                        }
+                      }}
+                      onClick={(e) => handleDownloadImage(image, e)}
+                    >
+                      <MdDownload size={18} />
+                    </IconButton>
+                    
+                    <IconButton
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(244, 67, 54, 0.8)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(244, 67, 54, 0.9)',
+                        }
+                      }}
+                      onClick={(e) => handleDeleteImage(image.id, e)}
+                    >
+                      <MdDelete size={18} />
+                    </IconButton>
+                  </Box>
                 </Box>
                 
-                <Box sx={{ p: 2 }}>
+                <Box sx={{ 
+                  p: 1.5,
+                  maxWidth: 220,
+                  width: '100%'
+                }}>
+                  {/* Picture Name - Top */}
+                  <Tooltip 
+                    title={image.image_name.length > 30 ? image.image_name : ''} 
+                    arrow
+                    disableHoverListener={image.image_name.length <= 30}
+                  >
+                    <Typography 
+                      variant="subtitle2" 
+                      sx={{ 
+                        color: theme.palette.text.primary,
+                        fontWeight: 600,
+                        mb: 0.5,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontSize: '0.875rem',
+                        width: '100%',
+                        cursor: image.image_name.length > 30 ? 'pointer' : 'default'
+                      }}
+                    >
+                      {image.image_name}
+                    </Typography>
+                  </Tooltip>
+                  
+                  {/* Race Name - Middle */}
                   <Typography 
-                    variant="subtitle2" 
+                    variant="body2" 
                     sx={{ 
-                      color: theme.palette.text.primary,
-                      fontWeight: 600,
-                      mb: 0.5,
+                      color: theme.palette.text.secondary,
+                      mb: 0.25,
+                      fontSize: '0.8rem',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}
                   >
-                    {image.image_name}
+                    {image.race_name}
                   </Typography>
                   
+                  {/* Boat Name - Bottom */}
                   <Typography 
                     variant="body2" 
                     sx={{ 
                       color: theme.palette.primary.main,
-                      mb: 0.5,
-                      fontSize: '0.85rem'
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
                     }}
                   >
-                    {image.crew_name} • {image.race_name}
-                  </Typography>
-                  
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      color: theme.palette.text.secondary,
-                      fontSize: '0.75rem',
-                      display: 'block',
-                      mt: 1
-                    }}
-                  >
-                    {new Date(image.created_at).toLocaleDateString('en-GB')}
+                    {image.crew_name}
                   </Typography>
                 </Box>
               </Card>
