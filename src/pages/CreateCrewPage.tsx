@@ -58,6 +58,27 @@ const CreateCrewPage: React.FC = () => {
 
   // Wizard state
   const [activeStep, setActiveStep] = useState(0);
+  
+  // Update sessionStorage when step changes
+  useEffect(() => {
+    sessionStorage.setItem('create_crew_step', activeStep.toString());
+    // Notify PageHeader of step change
+    window.dispatchEvent(new CustomEvent('step-changed'));
+  }, [activeStep]);
+  
+  // Listen for header back button clicks
+  useEffect(() => {
+    const handleHeaderBack = () => {
+      if (activeStep === 0) {
+        navigate('/');
+      } else {
+        setActiveStep((prev) => prev - 1);
+      }
+    };
+    
+    window.addEventListener('navigate-back-step', handleHeaderBack);
+    return () => window.removeEventListener('navigate-back-step', handleHeaderBack);
+  }, [activeStep, navigate]);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const steps = [
@@ -107,6 +128,8 @@ const CreateCrewPage: React.FC = () => {
     setSaveSuccess(false);
     setShowValidation(false);
     setShowStep1Validation(false);
+    // Clear step from sessionStorage
+    sessionStorage.removeItem('create_crew_step');
   };
 
   // Load editing data if present, otherwise clear fields
@@ -258,7 +281,13 @@ const CreateCrewPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
+    if (activeStep === 0) {
+      // Navigate to dashboard from first step
+      navigate('/');
+    } else {
+      // Go to previous step
+      setActiveStep((prev) => prev - 1);
+    }
   };
 
 
@@ -462,42 +491,42 @@ const CreateCrewPage: React.FC = () => {
 
       case 2:
         return (
-          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
             {/* Crew Details */}
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
                 Crew Details
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Boat Class:</Typography>
-                  <Typography variant="body2">{boatClass} - {boatClassToBoatType(boatClass)?.name}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Boat Class:</Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{boatClass} - {boatClassToBoatType(boatClass)?.name}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Club:</Typography>
-                  <Typography variant="body2">{clubName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Club:</Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{clubName}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Race:</Typography>
-                  <Typography variant="body2">{raceName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Race:</Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{raceName}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Boat Name:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{boatName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Boat Name:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.825rem' }}>{boatName}</Typography>
                 </Box>
               </Box>
             </Box>
 
             {/* Crew Members */}
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
                 Crew Members
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                 {boatClassHasCox(boatClass) && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">Coxswain:</Typography>
-                    <Typography variant="body2">{coxName}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Coxswain:</Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{coxName}</Typography>
                   </Box>
                 )}
                 {crewNames.map((name, index) => {
@@ -507,8 +536,8 @@ const CreateCrewPage: React.FC = () => {
                                  `${seatNumber} Seat`;
                   return (
                     <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">{seatName}:</Typography>
-                      <Typography variant="body2">{name}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>{seatName}:</Typography>
+                      <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{name}</Typography>
                     </Box>
                   );
                 })}
@@ -527,15 +556,17 @@ const CreateCrewPage: React.FC = () => {
       maxWidth: 1000, 
       mx: 'auto',
       width: '100%',
-      px: { xs: 2, sm: 3 }
+      px: 3,
+      pt: 0,
+      pb: 0
     }}>
       {/* Progress Indicator */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
+      <Box sx={{ mb: 2.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">
             Step {activeStep + 1} of {steps.length}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="caption" color="text.secondary">
             {Math.round(((activeStep + 1) / steps.length) * 100)}% complete
           </Typography>
         </Box>
@@ -543,11 +574,11 @@ const CreateCrewPage: React.FC = () => {
           variant="determinate" 
           value={((activeStep + 1) / steps.length) * 100}
           sx={{ 
-            height: 8, 
-            borderRadius: 4,
+            height: 4, 
+            borderRadius: 2,
             backgroundColor: theme.palette.grey[200],
             '& .MuiLinearProgress-bar': {
-              borderRadius: 4
+              borderRadius: 2
             }
           }}
         />
@@ -561,8 +592,8 @@ const CreateCrewPage: React.FC = () => {
               icon={
                 <Box
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: 28,
+                    height: 28,
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
@@ -573,15 +604,17 @@ const CreateCrewPage: React.FC = () => {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {completedSteps.has(index) ? <MdCheck size={20} /> : step.icon}
+                  {completedSteps.has(index) ? <MdCheck size={14} /> : 
+                   index === 0 ? <RowingIcon sx={{ fontSize: 14 }} /> :
+                   React.cloneElement(step.icon as React.ReactElement, { size: 14 })}
                 </Box>
               }
             >
               <Box sx={{ textAlign: 'left' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
                   {step.label}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                   {step.description}
                 </Typography>
               </Box>
@@ -591,25 +624,26 @@ const CreateCrewPage: React.FC = () => {
       </Stepper>
 
       {/* Step Content */}
-      {renderStepContent(activeStep)}
+      <Box sx={{ mb: 4 }}>
+        {renderStepContent(activeStep)}
+      </Box>
 
       {/* Navigation */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        pt: 4,
-        mt: 4,
-        pb: 20,
+        pt: 1.5,
+        mt: 1,
+        pb: 0,
         borderTop: `1px solid ${theme.palette.divider}`
       }}>
         <Button
           variant="outlined"
           onClick={handleBack}
-          disabled={activeStep === 0}
           startIcon={<MdNavigateBefore />}
         >
-          Back
+          {activeStep === 0 ? 'Dashboard' : 'Back'}
         </Button>
 
         <Box sx={{ display: 'flex', gap: 2 }}>

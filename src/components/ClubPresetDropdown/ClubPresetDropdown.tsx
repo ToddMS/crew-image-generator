@@ -52,6 +52,7 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
   const [presets, setPresets] = useState<ClubPreset[]>([]);
   const [presetSearchQuery, setPresetSearchQuery] = useState('');
   const [recentPresets, setRecentPresets] = useState<number[]>([]);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   // Load presets when user is authenticated
   useEffect(() => {
@@ -140,14 +141,21 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
   };
 
   return (
-    <FormControl fullWidth variant="outlined" className={className} sx={sx}>
-      <InputLabel>{label}</InputLabel>
+    <FormControl fullWidth size="small" variant="outlined" className={className} sx={sx}>
       <Select
         value={value ?? ''}
         onChange={handlePresetSelection}
-        label={label}
+        displayEmpty
+        onKeyDown={(e) => {
+          // Disable keyboard navigation when search is focused
+          if (searchFocused) {
+            e.preventDefault();
+          }
+        }}
         renderValue={(selected) => {
-          if (!selected) return '';
+          if (!selected) {
+            return <span style={{ color: '#999' }}>{placeholder}</span>;
+          }
           const selectedPreset = presets.find(p => p.id === selected);
           return selectedPreset ? selectedPreset.club_name : '';
         }}
@@ -165,7 +173,11 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
       >
         {/* Search field - only show if showSearch is true AND more than 3 presets */}
         {showSearch && presets.length > 3 && (
-          <Box sx={{ p: 1, pb: 0 }}>
+          <Box 
+            sx={{ p: 1, pb: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <TextField
               size="small"
               placeholder="Search presets..."
@@ -181,6 +193,13 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
                 }
               }}
               onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onFocus={(e) => {
+                e.stopPropagation();
+                setSearchFocused(true);
+              }}
+              onBlur={() => setSearchFocused(false)}
+              onKeyDown={(e) => e.stopPropagation()}
             />
           </Box>
         )}

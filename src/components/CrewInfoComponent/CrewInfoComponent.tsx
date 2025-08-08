@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
-import styles from './CrewInfoComponent.module.css';
 import { useAuth } from '../../context/AuthContext';
 import ClubPresetDropdown from '../ClubPresetDropdown/ClubPresetDropdown';
 
@@ -117,8 +116,14 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   return (
     <Box 
       component="form"
-      className={styles.container} 
       sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        maxWidth: 400,
+        margin: '0 auto',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.12), 0 1.5px 6px rgba(0,0,0,0.08)',
+        borderRadius: 2,
+        p: 4,
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary
       }}
@@ -129,14 +134,14 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     >
 
       {/* Club Name Section with Preset Option */}
-      <Box sx={{ mb: 3 }}>
-        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+      <Box sx={{ mb: 2 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
             variant="subtitle1" 
             sx={{ 
               fontWeight: 600, 
               color: theme.palette.text.primary,
-              fontSize: '1.1rem'
+              fontSize: '0.9rem'
             }}
           >
             Club Name
@@ -172,7 +177,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           <ClubPresetDropdown
             value={selectedPresetId}
             onChange={handlePresetSelection}
-            className={styles.inputField}
           />
         ) : (
           <TextField
@@ -180,8 +184,8 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             placeholder="Enter club name"
             required
             fullWidth
+            size="small"
             variant="outlined"
-            className={styles.inputField}
             value={clubName}
             onChange={e => handleFieldChange('clubName', e.target.value)}
             sx={{
@@ -200,14 +204,14 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       </Box>
 
       {/* Race Name */}
-      <Box sx={{ mb: 3 }}>
-        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+      <Box sx={{ mb: 2 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
             variant="subtitle1" 
             sx={{ 
               fontWeight: 600, 
               color: theme.palette.text.primary,
-              fontSize: '1.1rem'
+              fontSize: '0.9rem'
             }}
           >
             Race Name
@@ -218,8 +222,8 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           placeholder="Enter race name"
           required
           fullWidth
+          size="small"
           variant="outlined"
-          className={styles.inputField}
           value={raceName}
           onChange={e => handleFieldChange('raceName', e.target.value)}
           sx={{
@@ -237,14 +241,14 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       </Box>
 
       {/* Boat Name */}
-      <Box sx={{ mb: 3 }}>
-        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+      <Box sx={{ mb: 2 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
             variant="subtitle1" 
             sx={{ 
               fontWeight: 600, 
               color: theme.palette.text.primary,
-              fontSize: '1.1rem'
+              fontSize: '0.9rem'
             }}
           >
             Boat Name
@@ -255,8 +259,8 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           placeholder="Enter boat name"
           required
           fullWidth
+          size="small"
           variant="outlined"
-          className={styles.inputField}
           value={boatName}
           onChange={e => handleFieldChange('boatName', e.target.value)}
           sx={{
@@ -273,26 +277,32 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         />
       </Box>
       {/* Boat Class */}
-      <Box sx={{ mb: 3 }}>
-        <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+      <Box sx={{ mb: 1.5 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
             variant="subtitle1" 
             sx={{ 
               fontWeight: 600, 
               color: theme.palette.text.primary,
-              fontSize: '1.1rem'
+              fontSize: '0.9rem'
             }}
           >
             Boat Class
           </Typography>
         </Box>
-        <FormControl fullWidth required variant="outlined" className={styles.inputField}>
-          <InputLabel>Select boat class</InputLabel>
+        <FormControl fullWidth required size="small" variant="outlined">
           <Select
             name="boatClass"
             value={boatClass}
             onChange={handleBoatClassChange}
-            label="Select boat class"
+            displayEmpty
+            renderValue={(selected) => {
+              if (!selected) {
+                return <span style={{ color: '#999' }}>Select boat class</span>;
+              }
+              const option = boatClassOptions.find(opt => opt.value === selected);
+              return option ? option.label : selected;
+            }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover .MuiOutlinedInput-notchedOutline': {
@@ -307,14 +317,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           >
             {boatClassOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
-                <Box width="100%">
-                  <Typography variant="body2" fontWeight={600}>
-                    {option.label}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.description} • {option.seats} seat{option.seats > 1 ? 's' : ''}
-                  </Typography>
-                </Box>
+                <Typography variant="body2" fontWeight={600}>
+                  {option.label}
+                </Typography>
               </MenuItem>
             ))}
           </Select>

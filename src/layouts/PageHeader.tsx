@@ -83,6 +83,23 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = React.useState(0);
+
+  // Listen for step changes on create page
+  React.useEffect(() => {
+    if (location.pathname === '/create') {
+      const updateStep = () => {
+        const step = parseInt(sessionStorage.getItem('create_crew_step') || '0');
+        setCurrentStep(step);
+      };
+
+      updateStep(); // Initial load
+      
+      // Listen for custom events
+      window.addEventListener('step-changed', updateStep);
+      return () => window.removeEventListener('step-changed', updateStep);
+    }
+  }, [location.pathname]);
 
   const pageInfo = getPageInfo(location.pathname);
   const displayTitle = title || pageInfo.title;
@@ -219,9 +236,16 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             <Button
               variant="outlined"
               startIcon={<MdArrowBack />}
-              onClick={() => navigate('/')}
+              onClick={() => {
+                if (currentStep === 0) {
+                  navigate('/');
+                } else {
+                  // Trigger step navigation by dispatching custom event
+                  window.dispatchEvent(new CustomEvent('navigate-back-step'));
+                }
+              }}
             >
-              Back
+              {currentStep === 0 ? 'Dashboard' : 'Back'}
             </Button>
           )}
           {actions}

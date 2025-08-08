@@ -110,8 +110,8 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
       onSubmit={handleFormSubmit}
     >
       {hasCox && (
-        <Box sx={{ mb: 2 }}>
-          <Typography className={styles.label} sx={{ mb: 0.5 }}>Cox</Typography>
+        <Box sx={{ mb: 1.5 }}>
+          <Typography className={styles.label} sx={{ mb: 0.5, fontSize: '0.9rem' }}>Cox</Typography>
           <TextField
             name="coxName"
             placeholder="Enter Cox name"
@@ -119,6 +119,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
             onChange={e => onCoxNameChange(e.target.value)}
             required
             fullWidth
+            size="small"
             className={styles.inputField}
           />
         </Box>
@@ -127,8 +128,8 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
       {crewNames.map((name, idx) => {
         const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
         return (
-          <Box key={idx} sx={{ mb: 2 }}>
-            <Typography className={styles.label} sx={{ mb: 0.5 }}>{label}</Typography>
+          <Box key={idx} sx={{ mb: 1.5 }}>
+            <Typography className={styles.label} sx={{ mb: 0.5, fontSize: '0.9rem' }}>{label}</Typography>
             <TextField
               name={`crewName-${idx}`}
               placeholder={`Enter ${label.toLowerCase()} name`}
@@ -136,6 +137,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
               onChange={e => onNameChange(idx, e.target.value)}
               required
               fullWidth
+              size="small"
               className={styles.inputField}
             />
           </Box>
@@ -163,7 +165,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            marginTop: '24px',
+            marginTop: '20px',
             justifyContent: 'center',
             fontSize: '1rem',
             fontWeight: 600,
