@@ -641,12 +641,27 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     </Typography>
                   </Tooltip>
                   
-                  {/* Race Name - Middle */}
+                  {/* Club and Crew Name - Middle */}
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: theme.palette.primary.main,
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      mb: 0.25,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {image.club_name} - {image.crew_name}
+                  </Typography>
+                  
+                  {/* Race Name - Bottom */}
                   <Typography 
                     variant="body2" 
                     sx={{ 
                       color: theme.palette.text.secondary,
-                      mb: 0.25,
                       fontSize: '0.8rem',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -654,21 +669,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     }}
                   >
                     {image.race_name}
-                  </Typography>
-                  
-                  {/* Boat Name - Bottom */}
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: theme.palette.primary.main,
-                      fontSize: '0.8rem',
-                      fontWeight: 500,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {image.crew_name}
                   </Typography>
                 </Box>
               </Card>
