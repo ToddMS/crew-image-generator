@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MdClose, MdArrowBack, MdImage } from 'react-icons/md';
+import { MdClose, MdArrowBack, MdImage, MdSwapVert } from 'react-icons/md';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import ClubPresetDropdown from '../components/ClubPresetDropdown/ClubPresetDropdown';
 import { useAuth } from '../context/AuthContext';
@@ -55,6 +55,7 @@ const GenerateImagesPage: React.FC = () => {
   const [presets, setPresets] = useState<any[]>([]);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [logoUrls, setLogoUrls] = useState<Record<string, string>>({});
+  const [swapPresetColors, setSwapPresetColors] = useState<boolean>(false);
 
   // Check if we came from crews page with selected crews
   useEffect(() => {
@@ -554,11 +555,19 @@ const GenerateImagesPage: React.FC = () => {
                   justifyContent: 'center',
                   backgroundImage: `linear-gradient(135deg, ${
                     usePresetColors && selectedPresetId 
-                      ? presets.find(p => p.id === selectedPresetId)?.primary_color || primaryColor
+                      ? (() => {
+                          const preset = presets.find(p => p.id === selectedPresetId);
+                          if (!preset) return primaryColor;
+                          return swapPresetColors ? preset.secondary_color : preset.primary_color;
+                        })()
                       : primaryColor
                   } 0%, ${
                     usePresetColors && selectedPresetId 
-                      ? presets.find(p => p.id === selectedPresetId)?.secondary_color || secondaryColor
+                      ? (() => {
+                          const preset = presets.find(p => p.id === selectedPresetId);
+                          if (!preset) return secondaryColor;
+                          return swapPresetColors ? preset.primary_color : preset.secondary_color;
+                        })()
                       : secondaryColor
                   } 100%)`,
                   border: `2px solid ${theme.palette.divider}`,
@@ -742,7 +751,7 @@ const GenerateImagesPage: React.FC = () => {
               </Box>
 
               {usePresetColors ? (
-                /* Club Presets Dropdown */
+                /* Club Presets Dropdown with swap option */
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.875rem' }}>
                     Select Club Preset
@@ -753,12 +762,66 @@ const GenerateImagesPage: React.FC = () => {
                     label="Choose a club preset"
                     placeholder="Select a club preset"
                   />
+                  
+                  {/* Swap Colors Toggle for Presets */}
+                  {selectedPresetId && (
+                    <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                        Swap Colors:
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => setSwapPresetColors(!swapPresetColors)}
+                        sx={{
+                          color: swapPresetColors ? theme.palette.primary.main : theme.palette.text.secondary,
+                          backgroundColor: swapPresetColors ? theme.palette.primary.light + '20' : 'transparent',
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                            color: theme.palette.primary.main
+                          }
+                        }}
+                      >
+                        <MdSwapVert size={18} />
+                      </IconButton>
+                      
+                      {/* Show current colors */}
+                      {(() => {
+                        const preset = presets.find(p => p.id === selectedPresetId);
+                        if (!preset) return null;
+                        const primaryColor = swapPresetColors ? preset.secondary_color : preset.primary_color;
+                        const secondaryColor = swapPresetColors ? preset.primary_color : preset.secondary_color;
+                        
+                        return (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 1 }}>
+                            <Box
+                              sx={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: 1,
+                                backgroundColor: primaryColor,
+                                border: '1px solid #ddd'
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                width: 16,
+                                height: 16,
+                                borderRadius: 1,
+                                backgroundColor: secondaryColor,
+                                border: '1px solid #ddd'
+                              }}
+                            />
+                          </Box>
+                        );
+                      })()}
+                    </Box>
+                  )}
                 </Box>
               ) : (
                 /* Custom Color Pickers with Club Logo */
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                  {/* Left Side - Colors stacked vertically */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Left Side - Colors with swap button in between */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                     {/* Primary Color */}
                     <input
                       type="color"
@@ -773,6 +836,28 @@ const GenerateImagesPage: React.FC = () => {
                       }}
                     />
                     
+                    {/* Swap Button */}
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        const temp = primaryColor;
+                        setPrimaryColor(secondaryColor);
+                        setSecondaryColor(temp);
+                      }}
+                      sx={{
+                        color: theme.palette.text.secondary,
+                        minWidth: 24,
+                        height: 24,
+                        p: 0,
+                        '&:hover': {
+                          backgroundColor: theme.palette.action.hover,
+                          color: theme.palette.primary.main
+                        }
+                      }}
+                    >
+                      <MdSwapVert size={16} />
+                    </IconButton>
+
                     {/* Secondary Color */}
                     <input
                       type="color"
@@ -789,8 +874,8 @@ const GenerateImagesPage: React.FC = () => {
                   </Box>
 
                   {/* Middle - Color Info */}
-                  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', height: 36 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, ml: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', height: 36, justifyContent: 'flex-start' }}>
                       <Box>
                         <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}>
                           Primary
@@ -800,7 +885,10 @@ const GenerateImagesPage: React.FC = () => {
                         </Typography>
                       </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', height: 36 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', height: 24, justifyContent: 'center' }}>
+                      {/* Spacer for swap button alignment */}
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', height: 36, justifyContent: 'flex-start' }}>
                       <Box>
                         <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}>
                           Secondary
@@ -908,7 +996,10 @@ const GenerateImagesPage: React.FC = () => {
           const colors = usePresetColors && selectedPresetId 
             ? (() => {
                 const preset = presets.find(p => p.id === selectedPresetId);
-                return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
+                if (!preset) return { primary: primaryColor, secondary: secondaryColor };
+                return swapPresetColors 
+                  ? { primary: preset.secondary_color, secondary: preset.primary_color }
+                  : { primary: preset.primary_color, secondary: preset.secondary_color };
               })()
             : { primary: primaryColor, secondary: secondaryColor };
           
@@ -1003,11 +1094,19 @@ const GenerateImagesPage: React.FC = () => {
                 justifyContent: 'center',
                 backgroundImage: `linear-gradient(135deg, ${
                   usePresetColors && selectedPresetId 
-                    ? presets.find(p => p.id === selectedPresetId)?.primary_color || primaryColor
+                    ? (() => {
+                        const preset = presets.find(p => p.id === selectedPresetId);
+                        if (!preset) return primaryColor;
+                        return swapPresetColors ? preset.secondary_color : preset.primary_color;
+                      })()
                     : primaryColor
                 } 0%, ${
                   usePresetColors && selectedPresetId 
-                    ? presets.find(p => p.id === selectedPresetId)?.secondary_color || secondaryColor
+                    ? (() => {
+                        const preset = presets.find(p => p.id === selectedPresetId);
+                        if (!preset) return secondaryColor;
+                        return swapPresetColors ? preset.primary_color : preset.secondary_color;
+                      })()
                     : secondaryColor
                 } 100%)`,
                 border: `4px solid ${theme.palette.divider}`,

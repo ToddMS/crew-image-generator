@@ -19,7 +19,7 @@ import {
   Chip
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { MdAdd, MdEdit, MdDelete, MdStar, MdStarBorder, MdUpload } from 'react-icons/md';
+import { MdAdd, MdEdit, MdDelete, MdStar, MdStarBorder, MdUpload, MdSwapHoriz } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
@@ -301,41 +301,69 @@ const ClubPresetsPage: React.FC = () => {
                   placeholder="e.g., Oxford University Boat Club"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
                 <Box>
-                  <Typography variant="body2" gutterBottom>Primary Color</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={formData.primary_color}
-                      onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                      style={{ width: 60, height: 40, border: 'none', borderRadius: 4, cursor: 'pointer' }}
-                    />
-                    <TextField
-                      value={formData.primary_color}
-                      onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                      size="small"
-                      sx={{ width: 120 }}
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Box>
-                  <Typography variant="body2" gutterBottom>Secondary Color</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <input
-                      type="color"
-                      value={formData.secondary_color}
-                      onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                      style={{ width: 60, height: 40, border: 'none', borderRadius: 4, cursor: 'pointer' }}
-                    />
-                    <TextField
-                      value={formData.secondary_color}
-                      onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                      size="small"
-                      sx={{ width: 120 }}
-                    />
+                  <Typography variant="body2" gutterBottom>Colors</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
+                    {/* Primary Color */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>Primary</Typography>
+                      <input
+                        type="color"
+                        value={formData.primary_color}
+                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                        style={{ width: 40, height: 40, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                      />
+                      <TextField
+                        value={formData.primary_color}
+                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                        size="small"
+                        sx={{ width: 80, '& .MuiInputBase-input': { textAlign: 'center', fontSize: '0.75rem' } }}
+                      />
+                    </Box>
+
+                    {/* Swap Button */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', pt: 3 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          const temp = formData.primary_color;
+                          setFormData({ 
+                            ...formData, 
+                            primary_color: formData.secondary_color,
+                            secondary_color: temp
+                          });
+                        }}
+                        sx={{
+                          color: theme.palette.text.secondary,
+                          minWidth: 30,
+                          height: 30,
+                          '&:hover': {
+                            backgroundColor: theme.palette.action.hover,
+                            color: theme.palette.primary.main
+                          }
+                        }}
+                      >
+                        <MdSwapHoriz size={18} />
+                      </IconButton>
+                    </Box>
+
+                    {/* Secondary Color */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>Secondary</Typography>
+                      <input
+                        type="color"
+                        value={formData.secondary_color}
+                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                        style={{ width: 40, height: 40, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                      />
+                      <TextField
+                        value={formData.secondary_color}
+                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                        size="small"
+                        sx={{ width: 80, '& .MuiInputBase-input': { textAlign: 'center', fontSize: '0.75rem' } }}
+                      />
+                    </Box>
                   </Box>
                 </Box>
               </Grid>
