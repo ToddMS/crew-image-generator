@@ -704,7 +704,23 @@ const GenerateImagesPage: React.FC = () => {
                       <Switch
                         size="small"
                         checked={usePresetColors}
-                        onChange={(e) => setUsePresetColors(e.target.checked)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setUsePresetColors(checked);
+                          
+                          // When toggling on, automatically select the favorite/default club
+                          if (checked && !selectedPresetId) {
+                            const favoritePreset = presets.find(p => p.is_default);
+                            if (favoritePreset) {
+                              setSelectedPresetId(favoritePreset.id);
+                            }
+                          }
+                          
+                          // When toggling off, clear the selection
+                          if (!checked) {
+                            setSelectedPresetId(null);
+                          }
+                        }}
                         sx={{
                           '& .MuiSwitch-switchBase.Mui-checked': {
                             color: theme.palette.primary.main,
