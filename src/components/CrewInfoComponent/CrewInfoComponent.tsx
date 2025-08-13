@@ -17,12 +17,13 @@ import ClubPresetDropdown from '../ClubPresetDropdown/ClubPresetDropdown';
 
 
 interface CrewInfoComponentProps {
-  onSubmit: (boatClass: string, clubName: string, raceName: string, boatName: string) => void;
+  onSubmit: (boatClass: string, clubName: string, raceName: string, boatName: string, coachName?: string) => void;
   initialValues?: {
     boatClass: string;
     clubName: string;
     raceName: string;
     boatName: string;
+    coachName?: string;
   };
   showValidation?: boolean;
 }
@@ -38,6 +39,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   const [clubName, setClubName] = useState('');
   const [raceName, setRaceName] = useState('');
   const [boatName, setBoatName] = useState('');
+  const [coachName, setCoachName] = useState('');
   
   // Preset state
   const [usePreset, setUsePreset] = useState(false);
@@ -51,6 +53,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       setClubName(initialValues.clubName);
       setRaceName(initialValues.raceName);
       setBoatName(initialValues.boatName);
+      setCoachName(initialValues.coachName || '');
       // Reset preset selection when form is cleared
       if (!initialValues.clubName) {
         setUsePreset(false);
@@ -68,19 +71,23 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     switch (field) {
       case 'boatClass':
         setBoatClass(value);
-        onSubmit(value, clubName, raceName, boatName);
+        onSubmit(value, clubName, raceName, boatName, coachName);
         break;
       case 'clubName':
         setClubName(value);
-        onSubmit(boatClass, value, raceName, boatName);
+        onSubmit(boatClass, value, raceName, boatName, coachName);
         break;
       case 'raceName':
         setRaceName(value);
-        onSubmit(boatClass, clubName, value, boatName);
+        onSubmit(boatClass, clubName, value, boatName, coachName);
         break;
       case 'boatName':
         setBoatName(value);
-        onSubmit(boatClass, clubName, raceName, value);
+        onSubmit(boatClass, clubName, raceName, value, coachName);
+        break;
+      case 'coachName':
+        setCoachName(value);
+        onSubmit(boatClass, clubName, raceName, boatName, value);
         break;
     }
   };
@@ -263,6 +270,42 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           variant="outlined"
           value={boatName}
           onChange={e => handleFieldChange('boatName', e.target.value)}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: theme.palette.primary.main,
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: theme.palette.primary.main,
+                borderWidth: 2,
+              },
+            }
+          }}
+        />
+      </Box>
+
+      {/* Coach Name (Optional) */}
+      <Box sx={{ mb: 2 }}>
+        <Box display="flex" alignItems="center" gap={1.5} mb={1}>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontWeight: 600, 
+              color: theme.palette.text.primary,
+              fontSize: '0.9rem'
+            }}
+          >
+            Coach Name <Typography component="span" sx={{ color: theme.palette.text.secondary, fontSize: '0.8rem' }}>(optional)</Typography>
+          </Typography>
+        </Box>
+        <TextField
+          name="coachName"
+          placeholder="Enter coach name (optional)"
+          fullWidth
+          size="small"
+          variant="outlined"
+          value={coachName}
+          onChange={e => handleFieldChange('coachName', e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': {

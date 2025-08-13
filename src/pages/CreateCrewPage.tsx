@@ -103,6 +103,7 @@ const CreateCrewPage: React.FC = () => {
   const [clubName, setClubName] = useState('');
   const [raceName, setRaceName] = useState('');
   const [boatName, setBoatName] = useState('');
+  const [coachName, setCoachName] = useState('');
   const [crewNames, setCrewNames] = useState<string[]>([]);
   const [coxName, setCoxName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -119,6 +120,7 @@ const CreateCrewPage: React.FC = () => {
     setClubName('');
     setRaceName('');
     setBoatName('');
+    setCoachName('');
     setCrewNames([]);
     setCoxName('');
     setActiveStep(0);
@@ -146,6 +148,7 @@ const CreateCrewPage: React.FC = () => {
         setClubName(state.clubName);
         setRaceName(state.raceName);
         setBoatName(state.boatName);
+        setCoachName(state.coachName || '');
         setCrewNames(state.crewNames);
         setCoxName(state.coxName);
         setActiveStep(state.activeStep);
@@ -183,6 +186,7 @@ const CreateCrewPage: React.FC = () => {
       setClubName(crew.clubName);
       setRaceName(crew.raceName);
       setBoatName(crew.boatName);
+      setCoachName(crew.coachName || '');
       setCrewNames(crew.crewNames);
       setCoxName(crew.coxName);
       
@@ -200,19 +204,20 @@ const CreateCrewPage: React.FC = () => {
 
   // Auto-save draft to localStorage
   useEffect(() => {
-    if (user && (boatClass || clubName || raceName || boatName || crewNames.some(n => n) || coxName)) {
+    if (user && (boatClass || clubName || raceName || boatName || coachName || crewNames.some(n => n) || coxName)) {
       const draft = {
         boatClass,
         clubName,
         raceName,
         boatName,
+        coachName,
         crewNames,
         coxName,
         timestamp: Date.now()
       };
       localStorage.setItem(`rowgram_draft_${user.id}`, JSON.stringify(draft));
     }
-  }, [boatClass, clubName, raceName, boatName, crewNames, coxName, user]);
+  }, [boatClass, clubName, raceName, boatName, coachName, crewNames, coxName, user]);
 
   // Auto-save crew after login if we're on the final step with complete data
   useEffect(() => {
@@ -303,11 +308,12 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
-  const handleCrewInfoSubmit = useCallback((newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string) => {
+  const handleCrewInfoSubmit = useCallback((newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string, newCoachName?: string) => {
     setBoatClass(newBoatClass);
     setClubName(newClubName);
     setRaceName(newRaceName);
     setBoatName(newBoatName);
+    setCoachName(newCoachName || '');
     setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
     setCoxName('');
   }, []);
@@ -326,6 +332,7 @@ const CreateCrewPage: React.FC = () => {
         clubName,
         raceName,
         boatName,
+        coachName,
         crewNames,
         coxName,
         activeStep,
@@ -374,7 +381,8 @@ const CreateCrewPage: React.FC = () => {
         clubName: clubName,
         raceName: raceName,
         boatType: boatType,
-        crewNames: allCrewNames
+        crewNames: allCrewNames,
+        coachName: coachName.trim() || undefined
       };
 
       let result;
@@ -444,7 +452,8 @@ const CreateCrewPage: React.FC = () => {
                 boatClass,
                 clubName,
                 raceName,
-                boatName
+                boatName,
+                coachName
               }}
               showValidation={showValidation}
             />
@@ -514,6 +523,12 @@ const CreateCrewPage: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Boat Name:</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.825rem' }}>{boatName}</Typography>
                 </Box>
+                {coachName && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Coach:</Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{coachName}</Typography>
+                  </Box>
+                )}
               </Box>
             </Box>
 
