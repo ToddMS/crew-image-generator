@@ -33,7 +33,8 @@ import {
   MdDarkMode,
   MdLogout,
   MdAccountCircle,
-  MdPalette
+  MdPalette,
+  MdBrush
 } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useTheme as useAppTheme } from '../context/ThemeContext';
@@ -72,6 +73,18 @@ const navigationItems: NavigationItem[] = [
     path: '/crews'
   },
   {
+    id: 'template-customizer',
+    label: 'Template Builder',
+    icon: <MdBrush size={24} />,
+    path: '/template-builder'
+  },
+  {
+    id: 'generate',
+    label: 'Generate Images',
+    icon: <MdImage size={24} />,
+    path: '/generate'
+  },
+  {
     id: 'gallery',
     label: 'Gallery',
     icon: <MdPhotoLibrary size={24} />,
@@ -82,19 +95,6 @@ const navigationItems: NavigationItem[] = [
     label: 'Club Presets',
     icon: <MdPalette size={24} />,
     path: '/club-presets'
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: <MdAnalytics size={24} />,
-    path: '/analytics',
-    adminOnly: true
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    icon: <MdSettings size={24} />,
-    path: '/settings'
   }
 ];
 
@@ -136,6 +136,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
 
   const handleProfileSettings = () => {
     navigate('/settings');
+    handleUserMenuClose();
+    if (isMobile) {
+      onToggle();
+    }
+  };
+
+  const handleAnalytics = () => {
+    navigate('/analytics');
     handleUserMenuClose();
     if (isMobile) {
       onToggle();
@@ -407,6 +415,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
               </ListItemIcon>
               <ListItemText primary="Settings" />
             </MenuItem>
+            {isAdmin() && (
+              <MenuItem onClick={handleAnalytics}>
+                <ListItemIcon>
+                  <MdAnalytics size={20} />
+                </ListItemIcon>
+                <ListItemText primary="Analytics" />
+              </MenuItem>
+            )}
             <Divider />
             <MenuItem onClick={handleLogout} sx={{ color: theme.palette.error.main }}>
               <ListItemIcon>

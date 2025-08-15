@@ -49,6 +49,10 @@ const getPageInfo = (pathname: string) => {
     '/settings': {
       title: 'Settings',
       subtitle: 'Manage your preferences'
+    },
+    '/template-builder': {
+      title: 'Template Builder',
+      subtitle: 'Mix and match different components to create your perfect template'
     }
   };
 
@@ -119,52 +123,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         py: 2
       }}
     >
-      {/* Breadcrumbs */}
-      {showBreadcrumbs && breadcrumbs.length > 1 && (
-        <Breadcrumbs
-          separator={<MdChevronRight size={16} />}
-          sx={{ mb: 2 }}
-        >
-          {breadcrumbs.map((crumb, index) => {
-            const isLast = index === breadcrumbs.length - 1;
-            
-            if (isLast) {
-              return (
-                <Typography
-                  key={crumb.path}
-                  variant="body2"
-                  sx={{
-                    color: theme.palette.text.primary,
-                    fontWeight: 500
-                  }}
-                >
-                  {crumb.label}
-                </Typography>
-              );
-            }
-            
-            return (
-              <Link
-                key={crumb.path}
-                component="button"
-                variant="body2"
-                onClick={() => handleBreadcrumbClick(crumb.path)}
-                sx={{
-                  color: theme.palette.text.secondary,
-                  textDecoration: 'none',
-                  '&:hover': {
-                    color: theme.palette.primary.main,
-                    textDecoration: 'underline'
-                  }
-                }}
-              >
-                {crumb.label}
-              </Link>
-            );
-          })}
-        </Breadcrumbs>
-      )}
-
       {/* Header Content */}
       <Box
         sx={{
@@ -231,34 +189,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             flexShrink: 0
           }}
         >
-          {/* Auto-add Back button for Create page */}
-          {location.pathname === '/create' && (
-            <Button
-              variant="outlined"
-              startIcon={<MdArrowBack />}
-              onClick={() => {
-                if (currentStep === 0) {
-                  navigate('/');
-                } else {
-                  // Trigger step navigation by dispatching custom event
-                  window.dispatchEvent(new CustomEvent('navigate-back-step'));
-                }
-              }}
-            >
-              {currentStep === 0 ? 'Dashboard' : 'Back'}
-            </Button>
-          )}
-          
-          {/* Auto-add Back button for Generate page */}
-          {location.pathname === '/generate' && (
-            <Button
-              variant="outlined"
-              startIcon={<MdArrowBack />}
-              onClick={() => navigate('/crews')}
-            >
-              Back to My Crews
-            </Button>
-          )}
           {actions}
         </Box>
       </Box>
