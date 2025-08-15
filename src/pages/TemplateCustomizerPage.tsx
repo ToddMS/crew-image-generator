@@ -21,6 +21,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { Palette, Brush, ViewModule, TextFields, Image, Save, Delete, CloudUpload, SwapVert } from '@mui/icons-material';
 import ClubPresetDropdown from '../components/ClubPresetDropdown/ClubPresetDropdown';
+import TemplatePreview from '../components/TemplatePreview/TemplatePreview';
 
 interface TemplateComponent {
   id: string;
@@ -59,8 +60,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
   const [components, setComponents] = useState<TemplateComponents | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [templateName, setTemplateName] = useState('');
   const [usePresetColors, setUsePresetColors] = useState(false);
@@ -68,6 +67,7 @@ const TemplateCustomizerPageCompact: React.FC = () => {
   const [clubIcon, setClubIcon] = useState<any>(null);
   const [presets, setPresets] = useState<any[]>([]);
   const [selectedBoatType, setSelectedBoatType] = useState<string>('8+');
+  const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(null);
 
   // Template configuration state
   const [config, setConfig] = useState<TemplateConfig>({
@@ -88,9 +88,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
         if (!response.ok) throw new Error('Failed to fetch components');
         const data = await response.json();
         setComponents(data);
-        
-        // Generate initial preview after components load
-        generatePreview();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -124,17 +121,13 @@ const TemplateCustomizerPageCompact: React.FC = () => {
 
   const loadPresets = async () => {
     try {
-      console.log('Loading presets from:', `${import.meta.env.VITE_API_URL}/api/club-presets`); // Debug log
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
         },
       });
-      console.log('Presets response status:', response.status); // Debug log
       if (!response.ok) throw new Error('Failed to load presets');
       const data = await response.json();
-      console.log('Raw presets data:', data); // Debug log
-      console.log('Loaded presets:', data.map(p => ({name: p.club_name, isDefault: p.is_default}))); // Debug log
       setPresets(data);
     } catch (error) {
       console.error('Error loading presets:', error);
@@ -142,7 +135,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
   };
 
   const handlePresetSelection = (presetId: number, preset: any) => {
-    console.log('Preset selected:', presetId, preset); // Debug log
     setSelectedPresetId(presetId);
     if (presetId && preset) {
       setConfig(prev => ({
@@ -167,16 +159,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     }
   };
 
-  // Auto-generate preview when config or clubIcon changes
-  useEffect(() => {
-    if (components) {
-      const timeoutId = setTimeout(() => {
-        generatePreview();
-      }, 500); // Debounce for 500ms to avoid too many API calls
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [config, components, clubIcon]);
 
   const handleConfigChange = (field: keyof TemplateConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }));
@@ -189,62 +171,10 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     }));
   };
 
-  const generatePreview = async () => {
-    setPreviewLoading(true);
-    try {
-      // Create a dummy crew for preview
-      const dummyCrewData = {
-        name: "Template Preview",
-        clubName: "Demo Club", 
-        raceName: "Head of the River",
-        boatType: { id: 1, value: "8+", name: "Eight" },
-        crewNames: ["Cox", "Julian", "Vian", "George", "Grayson", "Todd", "Alex", "Tim", ""],
-        coachName: "Demo Coach"
-      };
-      
-      console.log('Generating preview with club icon:', clubIcon); // Debug log
-      
-      // Convert uploaded file to base64 for preview
-      let processedClubIcon = clubIcon;
-      if (clubIcon && clubIcon.type === 'upload' && clubIcon.file) {
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(clubIcon.file);
-        });
-        const base64Data = await base64Promise;
-        processedClubIcon = {
-          type: 'upload',
-          base64: base64Data,
-          filename: clubIcon.filename
-        };
-        console.log('Converted uploaded file to base64 for preview'); // Debug log
-      }
-      
-      const response = await fetch('http://localhost:8080/api/crews/generate-custom-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          crewId: null, // We'll pass the crew data directly
-          crew: dummyCrewData, // Pass crew data for preview
-          templateConfig: config,
-          clubIcon: processedClubIcon, // Pass the processed club icon for preview
-          imageName: `custom_template_preview_${Date.now()}.png`
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate preview');
-
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-      setPreviewImage(imageUrl);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate preview');
-    } finally {
-      setPreviewLoading(false);
-    }
+  // Handle preview generation callback
+  const handlePreviewGenerated = (imageUrl: string) => {
+    // Store the preview URL for saving templates (but don't save boat type)
+    setCurrentPreviewUrl(imageUrl);
   };
 
   const saveTemplate = () => {
@@ -257,7 +187,7 @@ const TemplateCustomizerPageCompact: React.FC = () => {
       id: Date.now().toString(),
       name: templateName,
       config: { ...config },
-      previewUrl: previewImage || undefined,
+      previewUrl: currentPreviewUrl || undefined,
       createdAt: new Date().toISOString()
     };
 
@@ -340,6 +270,88 @@ const TemplateCustomizerPageCompact: React.FC = () => {
           
           {/* Component Selectors with Headers */}
           <Grid container spacing={3} sx={{ mb: 3 }}>
+            {/* Boat Type Selector */}
+            <Grid item xs={12} sm={6} md={4}>
+              <Box>
+                <Typography variant="subtitle2" sx={{ 
+                  mb: 1, 
+                  fontWeight: 600, 
+                  fontSize: '0.875rem'
+                }}>
+                  Boat Type
+                </Typography>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={selectedBoatType}
+                    onChange={(e) => setSelectedBoatType(e.target.value)}
+                    size="small"
+                    displayEmpty
+                    renderValue={(selected) => {
+                      if (!selected) return 'Select...';
+                      const boatNames = {
+                        '8+': 'Eight (8+)',
+                        '4+': 'Coxed Four (4+)',
+                        '4-': 'Coxless Four (4-)',
+                        '2x': 'Double Sculls (2x)',
+                        '2-': 'Coxless Pair (2-)',
+                        '1x': 'Single Sculls (1x)'
+                      };
+                      return boatNames[selected as keyof typeof boatNames] || selected;
+                    }}
+                  >
+                    <MenuItem value="8+">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Eight (8+)</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          8 rowers + coxswain
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="4+">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Coxed Four (4+)</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          4 rowers + coxswain
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="4-">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Coxless Four (4-)</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          4 rowers, no coxswain
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="2x">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Double Sculls (2x)</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          2 scullers with 2 oars each
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="2-">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Coxless Pair (2-)</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          2 rowers with 1 oar each
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="1x">
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Single Sculls (1x)</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          1 sculler with 2 oars
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </Grid>
+            
             {components && Object.entries(components).map(([type, items]) => {
               // Comment out boat styles for now
               if (type === 'boatStyles') return null;
@@ -362,11 +374,11 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                         displayEmpty
                         renderValue={(selected) => {
                           if (!selected) return 'Select...';
-                          const selectedItem = items.find(item => item.id === selected);
+                          const selectedItem = items.find((item: TemplateComponent) => item.id === selected);
                           return selectedItem ? selectedItem.name : selected;
                         }}
                       >
-                        {items.map((item) => (
+                        {items.map((item: TemplateComponent) => (
                           <MenuItem key={item.id} value={item.id}>
                             <Box>
                               <Typography variant="body2" sx={{ fontWeight: 500 }}>{item.name}</Typography>
@@ -439,20 +451,16 @@ const TemplateCustomizerPageCompact: React.FC = () => {
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}>
-              {/* Left Side - Colors or Preset Dropdown */}
               {usePresetColors ? (
-                /* Club Preset Selection */
                 <Box sx={{ flex: 1 }}>
                   <ClubPresetDropdown
                     value={selectedPresetId}
                     onChange={handlePresetSelection}
                     label="Select Club"
                     placeholder="Choose a club preset"
-                    size="small"
                   />
                 </Box>
               ) : (
-                /* Custom Colors */
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
                   {/* Color Pickers Horizontal */}
                   <Box sx={{ display: 'flex', gap: 1 }}>
@@ -686,48 +694,38 @@ const TemplateCustomizerPageCompact: React.FC = () => {
               Preview
             </Typography>
 
-            {previewLoading && (
-              <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 300 }}>
-                <CircularProgress size={40} />
-              </Box>
-            )}
-
-            {previewImage && !previewLoading && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <img
-                  src={previewImage}
-                  alt="Template Preview"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: '400px',
-                    objectFit: 'contain',
-                    borderRadius: 8,
-                    border: '1px solid #ddd'
-                  }}
-                />
-                
-                {/* Template Name Input */}
-                <TextField
-                  placeholder="Enter template name..."
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  size="small"
-                  sx={{ mt: 2, width: '100%' }}
-                />
-                
-                {/* Save Button */}
-                <Button
-                  variant="contained"
-                  onClick={saveTemplate}
-                  startIcon={<Save sx={{ fontSize: 16 }} />}
-                  disabled={!templateName.trim()}
-                  sx={{ mt: 1, width: '100%' }}
-                >
-                  Save Template
-                </Button>
-              </Box>
-            )}
+            {/* Template Preview Component */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <TemplatePreview
+                templateConfig={config}
+                clubIcon={clubIcon}
+                selectedBoatType={selectedBoatType}
+                width={300}
+                height={375}
+                onPreviewGenerated={handlePreviewGenerated}
+                debounceMs={500}
+              />
+              
+              {/* Template Name Input */}
+              <TextField
+                placeholder="Enter template name..."
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                size="small"
+                sx={{ mt: 2, width: '100%' }}
+              />
+              
+              {/* Save Button */}
+              <Button
+                variant="contained"
+                onClick={saveTemplate}
+                startIcon={<Save sx={{ fontSize: 16 }} />}
+                disabled={!templateName.trim()}
+                sx={{ mt: 1, width: '100%' }}
+              >
+                Save Template
+              </Button>
+            </Box>
           </Box>
         </Grid>
       </Grid>
