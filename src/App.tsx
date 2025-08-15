@@ -9,7 +9,7 @@ import ClubPresetsPage from './pages/ClubPresetsPage';
 import GalleryPageEnhanced from './pages/GalleryPageEnhanced';
 import SettingsPage from './pages/SettingsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import TemplateCustomizerPage from './pages/TemplateCustomizerPage';
+import TemplateCustomizerPageCompact from './pages/TemplateCustomizerPageCompact';
 import { NotificationProvider } from './context/NotificationContext';
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
             <Route path="/generate" element={<GenerateImagesPageSimplified />} />
             <Route path="/club-presets" element={<ClubPresetsPage />} />
             <Route path="/gallery" element={<GalleryPageEnhanced />} />
-            <Route path="/template-builder" element={<TemplateCustomizerPage />} />
+            <Route path="/template-builder" element={<TemplateCustomizerPageCompact />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
