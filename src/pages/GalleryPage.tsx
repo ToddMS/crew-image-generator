@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-
   Grid,
   Card,
   CardMedia,
@@ -10,7 +9,6 @@ import {
   Dialog,
   DialogContent,
   CircularProgress,
-  Chip,
   TextField,
   InputAdornment,
   Button,
@@ -19,10 +17,10 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react-icons/md';
-import { ApiService } from '../../services/api.service';
-import { useAuth } from '../../context/AuthContext';
-import { useAnalytics } from '../../context/AnalyticsContext';
-import { useNotification } from '../../context/NotificationContext';
+import { ApiService } from '../services/api.service';
+import { useAuth } from '../context/AuthContext';
+import { useAnalytics } from '../context/AnalyticsContext';
+import { useNotification } from '../context/NotificationContext';
 
 interface SavedImage {
   id: number;
@@ -65,7 +63,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const { showSuccess, showError } = useNotification();
   const theme = useTheme();
   const [allImages, setAllImages] = useState<SavedImage[]>([]);
-  const [crews, setCrews] = useState<Crew[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,12 +75,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     
     setLoading(true);
     try {
-      // Load crews first
       const crewsResponse = await ApiService.getCrews();
       if (crewsResponse.data && !crewsResponse.error) {
-        setCrews(crewsResponse.data);
         
-        // Load all images for all crews
         const imagePromises = crewsResponse.data.map(async (crew: Crew) => {
           const imagesResponse = await ApiService.getSavedImages(crew.id);
           if (imagesResponse.data && !imagesResponse.error) {
@@ -100,7 +94,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         const allImagesArrays = await Promise.all(imagePromises);
         const flatImages = allImagesArrays.flat();
         
-        // Sort by creation date (newest first)
         flatImages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         
         setAllImages(flatImages);
@@ -116,7 +109,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     loadAllData();
   }, [user]);
 
-  // Refresh when images are generated
   useEffect(() => {
     if (refreshTrigger && refreshTrigger > 0) {
       loadAllData();
@@ -145,7 +137,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           setSelectedImage(null);
         }
         
-        // Show success notification
         showSuccess(`Image "${imageToDelete?.image_name || 'image'}" deleted successfully!`);
       }
     } catch (error) {
@@ -154,7 +145,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   };
 
-  // Bulk delete function
   const handleBulkDelete = async () => {
     if (selectedImages.size === 0) return;
     
@@ -170,18 +160,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       
       await Promise.all(deletePromises);
       
-      // Remove deleted images from the state
       setAllImages(prev => prev.filter(img => !selectedImages.has(img.id)));
       
-      // Clear selection
       setSelectedImages(new Set());
       
-      // Track bulk delete
       trackEvent('gallery_bulk_delete', {
         imageCount: selectedCount
       });
       
-      // Show success notification
       showSuccess(`Successfully deleted ${selectedCount} image${selectedCount > 1 ? 's' : ''}!`);
       
     } catch (error) {
@@ -207,7 +193,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      // Track single image download
       trackEvent('gallery_download', {
         type: 'single',
         imageName: image.image_name,
@@ -215,7 +200,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         raceName: image.race_name
       });
       
-      // Show success notification
       showSuccess(`Downloaded "${image.image_name}" successfully!`);
     } catch (error) {
       console.error('Error downloading image:', error);
@@ -223,7 +207,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   };
 
-  // Handle bulk image selection
   const handleImageSelection = (imageId: number, checked: boolean) => {
     const newSelected = new Set(selectedImages);
     if (checked) {
@@ -234,15 +217,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     setSelectedImages(newSelected);
   };
 
-  const handleSelectAll = () => {
-    if (selectedImages.size === filteredImages.length) {
-      setSelectedImages(new Set());
-    } else {
-      setSelectedImages(new Set(filteredImages.map(img => img.id)));
-    }
-  };
-
-  // Bulk download function with auto-zip
   const handleBulkDownload = async () => {
     if (selectedImages.size === 0) return;
     
@@ -252,11 +226,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       const selectedImageData = allImages.filter(img => selectedImages.has(img.id));
       console.log('Selected images for download:', selectedImageData.length, selectedImageData.map(img => img.image_name));
       
-      // Import JSZip dynamically
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
       
-      // Add all images to zip
       for (let i = 0; i < selectedImageData.length; i++) {
         const image = selectedImageData[i];
         try {
@@ -272,7 +244,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           const blob = await response.blob();
           console.log(`Image ${image.image_name} blob size:`, blob.size);
           
-          // Create a unique filename with crew, race info, and image ID
           const cleanFileName = `${image.crew_name}_${image.race_name}_${image.image_name}_${image.id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
           zip.file(`${cleanFileName}.png`, blob);
           console.log(`Added ${cleanFileName}.png to zip`);
@@ -282,15 +253,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         }
       }
       
-      // Generate zip file
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       
-      // Create download link for zip
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Create zip filename with timestamp
       const timestamp = new Date().toISOString().split('T')[0];
       const clubNames = [...new Set(selectedImageData.map(img => img.club_name))];
       const zipFileName = clubNames.length === 1 
@@ -303,7 +271,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      // Track bulk ZIP download
       trackEvent('gallery_download', {
         type: 'bulk_zip',
         imageCount: selectedImageData.length,
@@ -311,10 +278,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         clubs: [...new Set(selectedImageData.map(img => img.club_name))]
       });
       
-      // Show success notification
       showSuccess(`Successfully downloaded ${selectedImageData.length} image${selectedImageData.length > 1 ? 's' : ''} as ZIP file!`);
       
-      // Clear selection after download
       setSelectedImages(new Set());
     } catch (error) {
       console.error('Error in bulk download:', error);
@@ -334,7 +299,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   };
 
 
-  // Filter images by search term only
   const filteredImages = allImages.filter(image => {
     if (!searchTerm) return true;
     

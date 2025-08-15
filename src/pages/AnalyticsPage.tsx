@@ -8,7 +8,6 @@ const AnalyticsPage: React.FC = () => {
   const theme = useTheme();
   const { isAdmin } = useAuth();
 
-  // Redirect if not admin
   if (!isAdmin()) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>

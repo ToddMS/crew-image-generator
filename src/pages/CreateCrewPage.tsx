@@ -200,8 +200,8 @@ const CreateCrewPage: React.FC = () => {
     if (user && activeStep === 2 && 
         boatClass && clubName && raceName && boatName &&
         crewNames.every(name => name.trim()) &&
-        (!boatClassHasCox(boatClass) || coxName.trim()) &&
-        !saving && !showAuthModal) {
+        (!boatClassHasCox(boatClass) || coxName.trim()) && 
+        !saving && !showAuthModal) { 
       
       const wasRestored = localStorage.getItem('rowgram_was_restored');
       if (wasRestored) {
@@ -225,24 +225,20 @@ const CreateCrewPage: React.FC = () => {
 
   const handleNext = () => {
     const currentForm = document.querySelector(`[data-step="${activeStep}"] form`);
-    proceedToNextStep();
-    // if (currentForm) {
-    //   const submitButton = document.createElement('button');
-    //   submitButton.type = 'submit';
-    //   submitButton.style.display = 'none';
-    //   currentForm.appendChild(submitButton);
-    //   submitButton.click();
-    //   currentForm.removeChild(submitButton);
-      
-    //   // if (currentForm.checkValidity()) {
-    //   //   proceedToNextStep();
-    //   // }
-    // } else {
-    //   if (canProceedFromStep(activeStep)) {
-        
-    //   }
-    // }
+  
+    if (currentForm instanceof HTMLFormElement) {
+      currentForm.requestSubmit();
+  
+      if (currentForm.checkValidity()) {
+        proceedToNextStep();
+      }
+    } else {
+      if (canProceedFromStep(activeStep)) {
+        proceedToNextStep();
+      }
+    }
   };
+  
 
   const proceedToNextStep = () => {
     const newCompleted = new Set(completedSteps);
@@ -258,6 +254,19 @@ const CreateCrewPage: React.FC = () => {
       navigate('/');
     } else {
       setActiveStep((prev) => prev - 1);
+    }
+  };
+
+
+  const canProceedFromStep = (step: number): boolean => {
+    switch (step) {
+      case 0:
+        return !!(boatClass && clubName && raceName && boatName);
+      case 1:
+        return crewNames.every(name => name.trim().length > 0) && 
+               (!boatClassHasCox(boatClass) || coxName.trim().length > 0);
+      default:
+        return true;
     }
   };
 
@@ -349,7 +358,7 @@ const CreateCrewPage: React.FC = () => {
             }
           }
           
-          const filtered = recentCrews.map(id => String(id)).filter(id => id !== crewId);
+          const filtered = recentCrews.map((id: string) => String(id)).filter((id: string) => id !== crewId);
           const newRecent = [crewId, ...filtered].slice(0, 5);
           localStorage.setItem(recentKey, JSON.stringify(newRecent));
         }
@@ -388,14 +397,27 @@ const CreateCrewPage: React.FC = () => {
       case 1:
         return (
           <Box data-step="1">
-            (
+            {!canProceedFromStep(0) ? (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 8,
+                color: theme.palette.text.secondary 
+              }}>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  ⬅️ Please complete crew information first
+                </Typography>
+                <Typography variant="body2">
+                  Go back to fill in boat class, club name, race name, and boat name
+                </Typography>
+              </Box>
+            ) : (
               <CrewNamesComponent
                 boatClass={boatClass}
                 crewNames={crewNames}
                 coxName={coxName}
                 onNameChange={handleNameChange}
                 onCoxNameChange={handleCoxNameChange}
-                onSaveCrew={() => {}}
+                onSaveCrew={() => {}} // Empty function, save happens in step 3
                 clubName={clubName}
                 raceName={raceName}
                 boatName={boatName}
@@ -403,10 +425,10 @@ const CreateCrewPage: React.FC = () => {
                 canSave={false}
                 user={user}
                 isEditing={!!editingCrewId}
-                hideButton={true}
+                hideButton={true} // Hide the save button from this component
                 showValidation={showStep1Validation}
               />
-            )
+            )}
           </Box>
         );
 
@@ -529,7 +551,9 @@ const CreateCrewPage: React.FC = () => {
                 >
                   {completedSteps.has(index) ? <MdCheck size={14} /> : 
                    index === 0 ? <RowingIcon sx={{ fontSize: 14 }} /> :
-                   React.cloneElement(step.icon as React.ReactElement, { size: 14 })}
+                   React.cloneElement(
+                    step.icon as React.ReactElement<{ size?: number }>, { size: 14 })
+                  }
                 </Box>
               }
             >
