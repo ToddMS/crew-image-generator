@@ -68,7 +68,6 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   canSave = false,
   user,
   isEditing = false,
-  showValidation = false,
   hideButton = false,
 }) => {
   const theme = useTheme();
@@ -76,7 +75,6 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   const hasCox = boatClass === '8+' || boatClass === '4+';
 
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {

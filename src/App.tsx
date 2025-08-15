@@ -1,15 +1,14 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import DashboardPage from './pages/DashboardPage';
 import CreateCrewPage from './pages/CreateCrewPage';
 import MyCrewsPage from './pages/MyCrewsPage';
-import GenerateImagesPageSimplified from './pages/GenerateImagesPageSimplified';
+import GenerateImagesPageSimplified from './pages/GenerateImagesPage';
 import ClubPresetsPage from './pages/ClubPresetsPage';
-import GalleryPageEnhanced from './pages/GalleryPageEnhanced';
+import GalleryPage from './pages/GalleryPage';
 import SettingsPage from './pages/SettingsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import TemplateCustomizerPageCompact from './pages/TemplateCustomizerPageCompact';
+import TemplateCustomizerPage from './pages/TemplateCustomizerPage';
 import { NotificationProvider } from './context/NotificationContext';
 
 function App() {
@@ -23,8 +22,8 @@ function App() {
             <Route path="/crews" element={<MyCrewsPage />} />
             <Route path="/generate" element={<GenerateImagesPageSimplified />} />
             <Route path="/club-presets" element={<ClubPresetsPage />} />
-            <Route path="/gallery" element={<GalleryPageEnhanced />} />
-            <Route path="/template-builder" element={<TemplateCustomizerPageCompact />} />
+            <Route path="/gallery" element={<GalleryPage />} />
+            <Route path="/template-builder" element={<TemplateCustomizerPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>

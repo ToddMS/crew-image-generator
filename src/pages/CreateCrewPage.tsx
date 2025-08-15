@@ -7,12 +7,11 @@ import {
   Step,
   StepLabel,
   LinearProgress,
-  useMediaQuery,
   Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdSave, MdArrowBack, MdCheckCircle, MdNavigateNext, MdNavigateBefore, MdCheck, MdDirectionsBoat, MdGroup, MdPreview } from 'react-icons/md';
+import { MdSave, MdCheckCircle, MdNavigateNext, MdNavigateBefore, MdCheck, MdGroup } from 'react-icons/md';
 import RowingIcon from '@mui/icons-material/Rowing';
 import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
@@ -54,19 +53,14 @@ const CreateCrewPage: React.FC = () => {
   const { user } = useAuth();
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Wizard state
   const [activeStep, setActiveStep] = useState(0);
   
-  // Update sessionStorage when step changes
   useEffect(() => {
     sessionStorage.setItem('create_crew_step', activeStep.toString());
-    // Notify PageHeader of step change
     window.dispatchEvent(new CustomEvent('step-changed'));
   }, [activeStep]);
   
-  // Listen for header back button clicks
   useEffect(() => {
     const handleHeaderBack = () => {
       if (activeStep === 0) {
@@ -107,14 +101,12 @@ const CreateCrewPage: React.FC = () => {
   const [crewNames, setCrewNames] = useState<string[]>([]);
   const [coxName, setCoxName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
   const [showStep1Validation, setShowStep1Validation] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [preserveStateAfterLogin, setPreserveStateAfterLogin] = useState(false);
 
-  // Clear fields and reset state when entering page
   const clearAllFields = () => {
     setBoatClass('');
     setClubName('');
@@ -127,23 +119,17 @@ const CreateCrewPage: React.FC = () => {
     setCompletedSteps(new Set());
     setEditingCrewId(null);
     setSaving(false);
-    setSaveSuccess(false);
     setShowValidation(false);
     setShowStep1Validation(false);
-    // Clear step from sessionStorage
     sessionStorage.removeItem('create_crew_step');
   };
 
-  // Load editing data if present, otherwise clear fields
   useEffect(() => {
-    // Check if we have pending save state (user just logged in from save step)
     const pendingState = localStorage.getItem('rowgram_pending_save_state');
     if (pendingState && user) {
-      // User just logged in and we have saved state - restore it directly
       try {
         const state = JSON.parse(pendingState);
         
-        // Restore form state
         setBoatClass(state.boatClass);
         setClubName(state.clubName);
         setRaceName(state.raceName);
@@ -155,13 +141,10 @@ const CreateCrewPage: React.FC = () => {
         setCompletedSteps(new Set(state.completedSteps));
         setEditingCrewId(state.editingCrewId);
         
-        // Clean up saved state
         localStorage.removeItem('rowgram_pending_save_state');
         
-        // Set flag to indicate this was a restoration for auto-save
         localStorage.setItem('rowgram_was_restored', 'true');
         
-        // Close the auth modal if it's open
         setShowAuthModal(false);
         
         return;
@@ -171,7 +154,6 @@ const CreateCrewPage: React.FC = () => {
       }
     }
 
-    // Skip clearing fields if we're preserving state after login
     if (preserveStateAfterLogin) {
       setPreserveStateAfterLogin(false);
       return;
@@ -179,7 +161,6 @@ const CreateCrewPage: React.FC = () => {
 
     const state = location.state as any;
     if (state?.editingCrew) {
-      // Editing mode - load crew data
       const crew = state.editingCrew;
       setEditingCrewId(crew.id);
       setBoatClass(crew.boatClass);
@@ -190,19 +171,15 @@ const CreateCrewPage: React.FC = () => {
       setCrewNames(crew.crewNames);
       setCoxName(crew.coxName);
       
-      // Clear the navigation state to prevent re-loading on refresh
       navigate(location.pathname, { replace: true });
     } else {
-      // New crew mode - clear all fields and start fresh
       clearAllFields();
-      // Also clear any existing draft
       if (user) {
         localStorage.removeItem(`rowgram_draft_${user.id}`);
       }
     }
   }, [location.pathname, user, preserveStateAfterLogin]);
 
-  // Auto-save draft to localStorage
   useEffect(() => {
     if (user && (boatClass || clubName || raceName || boatName || coachName || crewNames.some(n => n) || coxName)) {
       const draft = {
@@ -219,19 +196,16 @@ const CreateCrewPage: React.FC = () => {
     }
   }, [boatClass, clubName, raceName, boatName, coachName, crewNames, coxName, user]);
 
-  // Auto-save crew after login if we're on the final step with complete data
   useEffect(() => {
-    if (user && activeStep === 2 && // On final step
-        boatClass && clubName && raceName && boatName && // Step 1 complete
-        crewNames.every(name => name.trim()) && // Step 2 crew names complete
-        (!boatClassHasCox(boatClass) || coxName.trim()) && // Cox name if needed
-        !saving && !showAuthModal) { // Not already saving and modal is closed
+    if (user && activeStep === 2 && 
+        boatClass && clubName && raceName && boatName &&
+        crewNames.every(name => name.trim()) &&
+        (!boatClassHasCox(boatClass) || coxName.trim()) &&
+        !saving && !showAuthModal) {
       
-      // Check if this was a post-login restoration
       const wasRestored = localStorage.getItem('rowgram_was_restored');
       if (wasRestored) {
         localStorage.removeItem('rowgram_was_restored');
-        // Small delay to ensure all state is settled
         setTimeout(() => {
           handleSaveCrew();
         }, 100);
@@ -246,34 +220,28 @@ const CreateCrewPage: React.FC = () => {
   };
 
   const handleAuthSuccess = () => {
-    // The main restoration logic is handled by the useEffect above
-    // This function is mainly called by the AuthModal's onSuccess callback
     setShowAuthModal(false);
   };
 
-  // Wizard navigation
   const handleNext = () => {
-    // Try to trigger native form validation by finding the form and calling requestSubmit
     const currentForm = document.querySelector(`[data-step="${activeStep}"] form`);
-    if (currentForm) {
-      // Create a temporary submit button to trigger validation
-      const submitButton = document.createElement('button');
-      submitButton.type = 'submit';
-      submitButton.style.display = 'none';
-      currentForm.appendChild(submitButton);
-      submitButton.click();
-      currentForm.removeChild(submitButton);
+    proceedToNextStep();
+    // if (currentForm) {
+    //   const submitButton = document.createElement('button');
+    //   submitButton.type = 'submit';
+    //   submitButton.style.display = 'none';
+    //   currentForm.appendChild(submitButton);
+    //   submitButton.click();
+    //   currentForm.removeChild(submitButton);
       
-      // Check if form is valid after native validation
-      if (currentForm.checkValidity()) {
-        proceedToNextStep();
-      }
-    } else {
-      // Fallback to manual validation if no form found
-      if (canProceedFromStep(activeStep)) {
-        proceedToNextStep();
-      }
-    }
+    //   // if (currentForm.checkValidity()) {
+    //   //   proceedToNextStep();
+    //   // }
+    // } else {
+    //   if (canProceedFromStep(activeStep)) {
+        
+    //   }
+    // }
   };
 
   const proceedToNextStep = () => {
@@ -287,24 +255,9 @@ const CreateCrewPage: React.FC = () => {
 
   const handleBack = () => {
     if (activeStep === 0) {
-      // Navigate to dashboard from first step
       navigate('/');
     } else {
-      // Go to previous step
       setActiveStep((prev) => prev - 1);
-    }
-  };
-
-
-  const canProceedFromStep = (step: number): boolean => {
-    switch (step) {
-      case 0:
-        return !!(boatClass && clubName && raceName && boatName);
-      case 1:
-        return crewNames.every(name => name.trim()) && 
-               (!boatClassHasCox(boatClass) || coxName.trim());
-      default:
-        return true;
     }
   };
 
@@ -326,7 +279,6 @@ const CreateCrewPage: React.FC = () => {
 
   const handleSaveCrew = async () => {
     if (!user) {
-      // Save current state to localStorage before opening auth modal
       const currentState = {
         boatClass,
         clubName,
@@ -347,26 +299,6 @@ const CreateCrewPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const getSeatLabel = (idx: number, totalRowers: number, hasCox: boolean) => {
-        if (hasCox && idx === 0) return 'Cox';
-        const rowerIdx = hasCox ? idx - 1 : idx;
-        
-        if (totalRowers === 8) {
-          const seats = ['Stroke Seat', '7 Seat', '6 Seat', '5 Seat', '4 Seat', '3 Seat', '2 Seat', 'Bow'];
-          return seats[rowerIdx];
-        } else if (totalRowers === 4) {
-          const seats = ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
-          return seats[rowerIdx];
-        } else if (totalRowers === 2) {
-          const seats = ['Stroke Seat', 'Bow'];
-          return seats[rowerIdx];
-        } else if (totalRowers === 1) {
-          return 'Single';
-        }
-        return `${rowerIdx + 1} Seat`;
-      };
-      
-      const totalRowers = boatClassToSeats[boatClass] || 0;
       const hasCox = boatClassHasCox(boatClass);
       const allNames = hasCox ? [coxName, ...crewNames] : crewNames;
       
@@ -387,10 +319,8 @@ const CreateCrewPage: React.FC = () => {
 
       let result;
       if (editingCrewId) {
-        // Update existing crew
         result = await ApiService.updateCrew(editingCrewId, { ...crewData, id: editingCrewId });
       } else {
-        // Create new crew
         result = await ApiService.createCrew(crewData);
       }
       
@@ -404,7 +334,6 @@ const CreateCrewPage: React.FC = () => {
           raceName
         });
 
-        // Add to recently saved crews
         const crewId = String(editingCrewId || result.data?.id);
         console.log('Crew saved, ID:', crewId, 'Result:', result);
         if (user && crewId && crewId !== 'undefined') {
@@ -420,16 +349,13 @@ const CreateCrewPage: React.FC = () => {
             }
           }
           
-          // Ensure all IDs are strings and add to front, remove if already exists, keep only 5
           const filtered = recentCrews.map(id => String(id)).filter(id => id !== crewId);
           const newRecent = [crewId, ...filtered].slice(0, 5);
           localStorage.setItem(recentKey, JSON.stringify(newRecent));
         }
 
-        // Show success notification
         showSuccess(`Crew "${boatName}" ${editingCrewId ? 'updated' : 'created'} successfully!`);
 
-        // Navigate immediately
         navigate('/crews');
       }
     } catch (error) {
@@ -440,7 +366,6 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
-  // Step content renderer
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -463,27 +388,14 @@ const CreateCrewPage: React.FC = () => {
       case 1:
         return (
           <Box data-step="1">
-            {!canProceedFromStep(0) ? (
-              <Box sx={{ 
-                textAlign: 'center', 
-                py: 8,
-                color: theme.palette.text.secondary 
-              }}>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  ⬅️ Please complete crew information first
-                </Typography>
-                <Typography variant="body2">
-                  Go back to fill in boat class, club name, race name, and boat name
-                </Typography>
-              </Box>
-            ) : (
+            (
               <CrewNamesComponent
                 boatClass={boatClass}
                 crewNames={crewNames}
                 coxName={coxName}
                 onNameChange={handleNameChange}
                 onCoxNameChange={handleCoxNameChange}
-                onSaveCrew={() => {}} // Empty function, save happens in step 3
+                onSaveCrew={() => {}}
                 clubName={clubName}
                 raceName={raceName}
                 boatName={boatName}
@@ -491,17 +403,16 @@ const CreateCrewPage: React.FC = () => {
                 canSave={false}
                 user={user}
                 isEditing={!!editingCrewId}
-                hideButton={true} // Hide the save button from this component
+                hideButton={true}
                 showValidation={showStep1Validation}
               />
-            )}
+            )
           </Box>
         );
 
       case 2:
         return (
           <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-            {/* Crew Details */}
             <Box sx={{ flex: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
                 Crew Details
@@ -532,7 +443,6 @@ const CreateCrewPage: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Crew Members */}
             <Box sx={{ flex: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
                 Crew Members
@@ -575,7 +485,6 @@ const CreateCrewPage: React.FC = () => {
       pt: 0,
       pb: 0
     }}>
-      {/* Progress Indicator */}
       <Box sx={{ mb: 2.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Typography variant="caption" color="text.secondary">
@@ -599,7 +508,6 @@ const CreateCrewPage: React.FC = () => {
         />
       </Box>
 
-      {/* Stepper */}
       <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
         {steps.map((step, index) => (
           <Step key={step.label} completed={completedSteps.has(index)}>
@@ -638,12 +546,10 @@ const CreateCrewPage: React.FC = () => {
         ))}
       </Stepper>
 
-      {/* Step Content */}
       <Box sx={{ mb: 4 }}>
         {renderStepContent(activeStep)}
       </Box>
 
-      {/* Navigation */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
@@ -699,7 +605,6 @@ const CreateCrewPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Auth Modal */}
       <AuthModal 
         open={showAuthModal} 
         onClose={() => setShowAuthModal(false)}

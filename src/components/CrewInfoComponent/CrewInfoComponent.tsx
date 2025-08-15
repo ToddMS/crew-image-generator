@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   FormControl,
@@ -8,7 +8,6 @@ import {
   Typography,
   FormControlLabel,
   Switch,
-  InputLabel,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -31,7 +30,6 @@ interface CrewInfoComponentProps {
 const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   onSubmit,
   initialValues,
-  showValidation = false,
 }) => {
   const { user } = useAuth();
   const theme = useTheme();
@@ -41,12 +39,10 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   const [boatName, setBoatName] = useState('');
   const [coachName, setCoachName] = useState('');
   
-  // Preset state
   const [usePreset, setUsePreset] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
   
 
-  // Update component state when initialValues change (e.g., on logout)
   useEffect(() => {
     if (initialValues) {
       setBoatClass(initialValues.boatClass);
@@ -54,7 +50,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       setRaceName(initialValues.raceName);
       setBoatName(initialValues.boatName);
       setCoachName(initialValues.coachName || '');
-      // Reset preset selection when form is cleared
       if (!initialValues.clubName) {
         setUsePreset(false);
         setSelectedPresetId(null);
@@ -66,7 +61,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     handleFieldChange('boatClass', event.target.value as string);
   };
 
-  // Call onSubmit when fields change through user interaction
   const handleFieldChange = (field: string, value: string) => {
     switch (field) {
       case 'boatClass':
@@ -97,7 +91,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     setUsePreset(usePresetMode);
     
     if (!usePresetMode) {
-      // Switching to manual mode
       setSelectedPresetId(null);
       handleFieldChange('clubName', '');
     }
@@ -136,11 +129,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
       }}
       onSubmit={(e) => {
         e.preventDefault();
-        // Form validation will be triggered by the browser
       }}
     >
 
-      {/* Club Name Section with Preset Option */}
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
@@ -210,7 +201,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         )}
       </Box>
 
-      {/* Race Name */}
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
@@ -247,7 +237,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         />
       </Box>
 
-      {/* Boat Name */}
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
@@ -284,7 +273,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         />
       </Box>
 
-      {/* Coach Name (Optional) */}
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 
@@ -319,7 +307,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           }}
         />
       </Box>
-      {/* Boat Class */}
       <Box sx={{ mb: 1.5 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
           <Typography 

@@ -35,7 +35,6 @@ submitButton {
   background-color: #4177a6 !important;
 }
 
-/* Optional: force gray placeholder for MUI Select */
 .MuiSelect-root[aria-expanded="false"][value=""] {
   color: #888 !important;
 }

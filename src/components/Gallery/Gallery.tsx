@@ -8,8 +8,8 @@ import {
   CircularProgress,
   Card,
   CardMedia,
-  Grid,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdClose, MdImage } from 'react-icons/md';
 import { ApiService } from '../../services/api.service';
@@ -31,7 +31,7 @@ interface SavedImage {
 
 interface GalleryProps {
   crewId: string;
-  refreshTrigger?: number; // To trigger refresh when new images are saved
+  refreshTrigger?: number;
 }
 
 const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
@@ -165,9 +165,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
       </Typography>
       
       <Grid container spacing={2}>
-        {console.log('Rendering', savedImages.length, 'images')}
         {savedImages.map((image) => (
-          <Grid item xs={6} sm={4} md={3} key={image.id}>
+          <Grid size={{ xs: 6, sm: 4, md: 3 }} key={image.id}>
             <Card
               sx={{
                 position: 'relative',

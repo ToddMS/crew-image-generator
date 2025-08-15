@@ -10,7 +10,6 @@ import {
   Switch,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
-import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Brightness4, Brightness7 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';

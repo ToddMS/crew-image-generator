@@ -1,13 +1,11 @@
 import React from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
 import AnalyticsDashboard from '../components/Analytics/AnalyticsDashboard';
 import { useAuth } from '../context/AuthContext';
 
 const AnalyticsPage: React.FC = () => {
   const theme = useTheme();
-  const navigate = useNavigate();
   const { isAdmin } = useAuth();
 
   // Redirect if not admin

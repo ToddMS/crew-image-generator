@@ -53,7 +53,7 @@ interface Crew {
     seats: number;
     name: string;
   };
-}
+} 
 
 interface GalleryPageProps {
   refreshTrigger?: number;

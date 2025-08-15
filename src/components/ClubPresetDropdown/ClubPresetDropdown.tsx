@@ -8,8 +8,6 @@ import {
   Select,
   TextField,
   Typography,
-  Chip,
-  InputLabel,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -38,7 +36,6 @@ interface ClubPresetDropdownProps {
 const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
   value,
   onChange,
-  label = "Select Club Preset",
   placeholder = "Choose a club preset",
   className,
   sx,
@@ -54,7 +51,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
   const [recentPresets, setRecentPresets] = useState<number[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
 
-  // Load presets when user is authenticated
   useEffect(() => {
     if (user) {
       loadPresets();
@@ -112,7 +108,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
     }
   };
 
-  // Helper functions
   const getFilteredPresets = () => {
     let filtered = presets;
     
@@ -122,12 +117,9 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
       );
     }
     
-    // Sort by: favorite first, then recent usage, then alphabetical
     return filtered.sort((a, b) => {
-      // Favorite (is_default) always comes first
       if (a.is_default !== b.is_default) return a.is_default ? -1 : 1;
       
-      // Then by recent usage
       const aRecent = recentPresets.indexOf(a.id);
       const bRecent = recentPresets.indexOf(b.id);
       
@@ -135,7 +127,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
       if (aRecent !== -1) return -1;
       if (bRecent !== -1) return 1;
       
-      // Finally alphabetical
       return a.club_name.localeCompare(b.club_name);
     });
   };
@@ -147,7 +138,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
         onChange={handlePresetSelection}
         displayEmpty
         onKeyDown={(e) => {
-          // Disable keyboard navigation when search is focused
           if (searchFocused) {
             e.preventDefault();
           }
@@ -161,7 +151,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
           
           return (
             <Box display="flex" alignItems="center" gap={1.5} width="100%">
-              {/* Color preview squares */}
               <Box display="flex" gap={0.5}>
                 <Box
                   sx={{
@@ -183,7 +172,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
                 />
               </Box>
               
-              {/* Club name */}
               <Box flex={1}>
                 <Typography variant="body2" sx={{ color: 'inherit' }}>
                   {selectedPreset.club_name}
@@ -204,7 +192,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
           }
         }}
       >
-        {/* Search field - only show if showSearch is true AND more than 3 presets */}
         {showSearch && presets.length > 3 && (
           <Box 
             sx={{ p: 1, pb: 1 }}
@@ -237,7 +224,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
           </Box>
         )}
         
-        {/* Preset options */}
         {getFilteredPresets().map((preset) => {
           const isRecent = recentPresets.includes(preset.id);
           return (
@@ -251,7 +237,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
               }}
             >
               <Box display="flex" alignItems="center" gap={1.5} width="100%">
-                {/* Side by side color squares */}
                 <Box display="flex" gap={0.5}>
                   <Box
                     sx={{
@@ -273,14 +258,12 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
                   />
                 </Box>
                 
-                {/* Club name */}
                 <Box flex={1}>
                   <Typography variant="body2" fontWeight={isRecent ? 600 : 500}>
                     {preset.club_name}
                   </Typography>
                 </Box>
                 
-                {/* Badges */}
                 <Box display="flex" gap={0.5} alignItems="center">
                   {preset.is_default && (
                     <MdStar style={{ color: theme.palette.warning.main, fontSize: 18 }} />
@@ -291,7 +274,6 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
           );
         })}
         
-        {/* Create preset option */}
         {showCreateOption && (
           <MenuItem 
             value=""

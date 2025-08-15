@@ -4,7 +4,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Grid,
   Button,
   Chip,
   Dialog,
@@ -15,6 +14,7 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { MdDownload, MdDelete, MdInsights, MdSchedule, MdImage } from 'react-icons/md';
 import { useAnalytics } from '../../context/AnalyticsContext';
@@ -92,7 +92,7 @@ const AnalyticsDashboard: React.FC = () => {
 
       <Grid container spacing={3}>
         {/* Overview Stats */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ color: theme.palette.primary.main, mb: 1 }}>
@@ -105,7 +105,7 @@ const AnalyticsDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ color: theme.palette.success.main, mb: 1 }}>
@@ -118,7 +118,7 @@ const AnalyticsDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ color: theme.palette.info.main, mb: 1 }}>
@@ -131,7 +131,7 @@ const AnalyticsDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ color: theme.palette.warning.main, mb: 1 }}>
@@ -144,8 +144,7 @@ const AnalyticsDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Popular Templates */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
@@ -175,8 +174,7 @@ const AnalyticsDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Peak Usage Hours */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
@@ -206,15 +204,14 @@ const AnalyticsDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Activity Breakdown */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12}}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Activity Breakdown
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}>
                       {stats.crewsCreated}
@@ -224,7 +221,7 @@ const AnalyticsDashboard: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: theme.palette.info.main, fontWeight: 'bold' }}>
                       {stats.imagesGenerated}
@@ -234,7 +231,7 @@ const AnalyticsDashboard: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: theme.palette.warning.main, fontWeight: 'bold' }}>
                       {stats.bulkGenerations}
@@ -244,7 +241,7 @@ const AnalyticsDashboard: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid>
-                <Grid item xs={6} sm={3}>
+                <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" sx={{ color: theme.palette.error.main, fontWeight: 'bold' }}>
                       {stats.galleryDownloads}
@@ -260,7 +257,6 @@ const AnalyticsDashboard: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Clear Data Confirmation Dialog */}
       <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
         <DialogTitle>Clear Analytics Data</DialogTitle>
         <DialogContent>
