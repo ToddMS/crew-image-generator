@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MdClose, MdImage, MdChevronLeft, MdChevronRight } from 'react-icons/md';
+import { MdImage, MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
@@ -55,7 +55,6 @@ const GenerateImagesPage: React.FC = () => {
   const [allCrews, setAllCrews] = useState<any[]>([]);
   const [crewsLoading, setCrewsLoading] = useState(false);
   const [selectedCrewIdsSet, setSelectedCrewIdsSet] = useState<Set<string>>(new Set());
-  const hasAutoSelectedRef = useRef(false);
 
   useEffect(() => {
     const state = location.state as any;
@@ -77,14 +76,12 @@ const GenerateImagesPage: React.FC = () => {
     }
   }, [selectedCrewIds]);
 
-  // Reset preview index when crews change
   useEffect(() => {
     if (selectedCrews.length > 0) {
       setPreviewCrewIndex(Math.min(previewCrewIndex, selectedCrews.length - 1));
     }
   }, [selectedCrews]);
 
-  // Load all crews for selection when no crews are selected
   useEffect(() => {
     if (selectedCrews.length === 0) {
       loadAllCrews();
@@ -111,10 +108,8 @@ const GenerateImagesPage: React.FC = () => {
     const newSelectedSet = new Set(selectedCrewIdsSet);
     
     if (newSelectedSet.has(crewIdStr)) {
-      // Deselect crew
       newSelectedSet.delete(crewIdStr);
     } else {
-      // Select crew
       newSelectedSet.add(crewIdStr);
     }
     
@@ -122,9 +117,7 @@ const GenerateImagesPage: React.FC = () => {
     const newSelectedIds = Array.from(newSelectedSet);
     setSelectedCrewIds(newSelectedIds);
     
-    // If we just selected a crew (not deselected), update preview to show the newly selected crew
     if (!selectedCrewIdsSet.has(crewIdStr) && newSelectedSet.has(crewIdStr)) {
-      // Find the index of the newly selected crew in the current selected crews
       const currentSelectedCrews = allCrews.filter(c => newSelectedIds.includes(c.id.toString()));
       const newCrewIndex = currentSelectedCrews.findIndex(c => c.id.toString() === crewIdStr);
       if (newCrewIndex !== -1) {
@@ -133,11 +126,9 @@ const GenerateImagesPage: React.FC = () => {
     }
   };
 
-  // Load saved templates
   useEffect(() => {
     loadSavedTemplates();
     
-    // Listen for localStorage changes (when templates are saved from Template Builder)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'savedTemplates') {
         loadSavedTemplates();
@@ -146,7 +137,6 @@ const GenerateImagesPage: React.FC = () => {
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also check periodically for changes (in case both pages are open in same browser)
     const interval = setInterval(loadSavedTemplates, 2000);
     
     return () => {
@@ -157,21 +147,17 @@ const GenerateImagesPage: React.FC = () => {
 
   const loadSavedTemplates = () => {
     try {
-      // Load templates from localStorage where Template Builder saves them
       const savedTemplatesData = localStorage.getItem('savedTemplates');
       if (savedTemplatesData) {
         const templates = JSON.parse(savedTemplatesData) as SavedTemplate[];
         setSavedTemplates(templates);
-        // Always auto-select first template when templates load (if none selected)
         if (templates.length > 0 && !selectedTemplate) {
           setSelectedTemplate(templates[0]);
         }
-        // If the currently selected template no longer exists, clear selection
         if (selectedTemplate && !templates.find(t => t.id === selectedTemplate.id)) {
           setSelectedTemplate(templates.length > 0 ? templates[0] : null);
         }
       } else {
-        // No saved templates from Template Builder
         setSavedTemplates([]);
         setSelectedTemplate(null);
       }
@@ -196,7 +182,7 @@ const GenerateImagesPage: React.FC = () => {
   const loadSelectedCrews = async () => {
     try {
       const result = await ApiService.getCrews();
-      const crews = result.data || result; // Handle both direct array and {data: array} responses
+      const crews = result.data || result;
       
       if (crews && Array.isArray(crews)) {
         const selected = crews.filter(crew => {
@@ -238,7 +224,6 @@ const GenerateImagesPage: React.FC = () => {
 
           if (response.ok) {
             successCount++;
-            // Track successful generation
             trackEvent('image_generated', {
               template: selectedTemplate.id,
               crewName: crew.boatName,
@@ -254,7 +239,6 @@ const GenerateImagesPage: React.FC = () => {
       if (successCount > 0) {
         showSuccess(`Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`);
         
-        // Navigate to gallery
         setTimeout(() => {
           navigate('/gallery');
         }, 1500);
@@ -266,13 +250,6 @@ const GenerateImagesPage: React.FC = () => {
     } finally {
       setGenerating(false);
     }
-  };
-
-  const removeSelectedCrew = (crewId: string) => {
-    const newSelectedSet = new Set(selectedCrewIdsSet);
-    newSelectedSet.delete(crewId);
-    setSelectedCrewIdsSet(newSelectedSet);
-    setSelectedCrewIds(Array.from(newSelectedSet));
   };
 
   if (!user) {
@@ -442,7 +419,6 @@ const GenerateImagesPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Template Selection */}
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
@@ -469,7 +445,6 @@ const GenerateImagesPage: React.FC = () => {
                       onClick={() => setSelectedTemplate(template)}
                     >
                       <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
-                        {/* Always show color gradient preview (blob URLs don't persist) */}
                         <Box
                           sx={{
                             width: '100%',
@@ -521,10 +496,8 @@ const GenerateImagesPage: React.FC = () => {
           </Card>
         </Box>
 
-        {/* Right Column - Preview */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           
-          {/* Live Preview */}
           <Card sx={{ position: 'sticky', top: 20 }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -555,7 +528,6 @@ const GenerateImagesPage: React.FC = () => {
                     debounceMs={300}
                   />
                   
-                  {/* Cycling Controls - only show if multiple crews */}
                   {selectedCrews.length > 1 && (
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2, gap: 2 }}>
                       <IconButton
@@ -566,7 +538,6 @@ const GenerateImagesPage: React.FC = () => {
                         <MdChevronLeft size={20} />
                       </IconButton>
                       
-                      {/* Dots indicator */}
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
                         {selectedCrews.map((_, index) => (
                           <Box
@@ -601,7 +572,6 @@ const GenerateImagesPage: React.FC = () => {
                 </Box>
               ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                  {/* No Template Message */}
                   <Box sx={{ 
                     p: 3, 
                     backgroundColor: theme.palette.background.paper,
@@ -626,7 +596,6 @@ const GenerateImagesPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Floating Generate Button */}
       {savedTemplates.length > 0 && (
         <Tooltip 
           title={selectedCrewIds.length === 0 ? "Please select at least one crew" : ""}
