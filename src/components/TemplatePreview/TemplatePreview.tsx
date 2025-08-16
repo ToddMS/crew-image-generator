@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   CircularProgress,
-  Typography
+  Typography,
+  Button,
+  IconButton
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
 interface TemplateConfig {
   background: string;
@@ -41,6 +44,17 @@ interface TemplatePreviewProps {
   height?: number;
   onPreviewGenerated?: (imageUrl: string) => void;
   debounceMs?: number;
+  showGenerateButton?: boolean; // Whether to show the generate button
+  onGenerate?: () => void; // Callback for generate button
+  generating?: boolean; // Whether generation is in progress
+  selectedCrewCount?: number; // Number of selected crews for button text
+  mode?: 'template-builder' | 'generate-images'; // What mode the preview is in
+  showCyclingControls?: boolean; // Whether to show cycling controls
+  currentIndex?: number; // Current preview index
+  totalCount?: number; // Total number of items
+  onPrevious?: () => void; // Previous button callback
+  onNext?: () => void; // Next button callback
+  onIndexSelect?: (index: number) => void; // Dot selection callback
 }
 
 const TemplatePreview: React.FC<TemplatePreviewProps> = ({
@@ -51,7 +65,18 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   width = 300,
   height = 300,
   onPreviewGenerated,
-  debounceMs = 500
+  debounceMs = 500,
+  showGenerateButton = false,
+  onGenerate,
+  generating = false,
+  selectedCrewCount = 0,
+  mode = 'template-builder',
+  showCyclingControls = false,
+  currentIndex = 0,
+  totalCount = 0,
+  onPrevious,
+  onNext,
+  onIndexSelect
 }) => {
   const theme = useTheme();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -93,6 +118,14 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   };
 
   const generatePreview = async () => {
+    // In generate-images mode, don't generate preview if no crew data is provided
+    if (mode === 'generate-images' && !crewData) {
+      setPreviewImage(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    
     // Create a hash of the current configuration to avoid unnecessary regeneration
     const configHash = JSON.stringify({
       templateConfig,
@@ -220,62 +253,165 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   }, [previewImage]);
 
   return (
-    <Box
-      sx={{
-        width: width,
-        height: height,
-        backgroundColor: theme.palette.grey[100],
-        borderRadius: 2,
-        border: `1px solid ${theme.palette.divider}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        position: 'relative'
-      }}
-    >
-      {loading && (
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+      <Box
+        sx={{
+          width: width,
+          height: height,
+          backgroundColor: theme.palette.grey[100],
+          borderRadius: 2,
+          border: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
-          width: '100%',
-          height: '100%',
-          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100]
-        }}>
-          <CircularProgress 
-            size={40} 
-            sx={{ 
-              color: theme.palette.mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[600]
-            }} 
-          />
-        </Box>
-      )}
-
-      {previewImage && !loading && (
-        <img
-          src={previewImage}
-          alt="Template Preview"
-          style={{
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+      >
+        {loading && (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
             width: '100%',
             height: '100%',
-            objectFit: 'cover'
+            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100]
+          }}>
+            <CircularProgress 
+              size={40} 
+              sx={{ 
+                color: theme.palette.mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[600]
+              }} 
+            />
+          </Box>
+        )}
+
+        {previewImage && !loading && (
+          <>
+            <img
+              src={previewImage}
+              alt="Template Preview"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+            />
+            
+            {/* Cycling Controls Overlay - Show when showCyclingControls is true */}
+            {showCyclingControls && totalCount > 1 && (
+              <Box sx={{ 
+                position: 'absolute',
+                bottom: 8,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                borderRadius: 2,
+                px: 1.5,
+                py: 0.5
+              }}>
+                <IconButton
+                  size="small"
+                  onClick={onPrevious}
+                  sx={{ 
+                    color: 'white',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                  }}
+                >
+                  <MdChevronLeft size={16} />
+                </IconButton>
+                
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                  {Array.from({ length: totalCount }).map((_, index) => (
+                    <Box
+                      key={index}
+                      onClick={() => onIndexSelect?.(index)}
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        backgroundColor: index === currentIndex 
+                          ? 'white' 
+                          : 'rgba(255, 255, 255, 0.5)',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
+                
+                <IconButton
+                  size="small"
+                  onClick={onNext}
+                  sx={{ 
+                    color: 'white',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                  }}
+                >
+                  <MdChevronRight size={16} />
+                </IconButton>
+              </Box>
+            )}
+          </>
+        )}
+
+        {error && !loading && (
+          <Box sx={{ textAlign: 'center', p: 2 }}>
+            <Typography variant="caption" sx={{ color: theme.palette.error.main }}>
+              Failed to generate preview
+            </Typography>
+          </Box>
+        )}
+
+        {!previewImage && !loading && !error && (
+          <Box sx={{ textAlign: 'center', p: 2 }}>
+            {mode === 'generate-images' ? (
+              <>
+                <Typography variant="h6" sx={{ color: theme.palette.text.primary, mb: 1 }}>
+                  Select Crews & Template
+                </Typography>
+                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                  Choose crews and a template to see the preview
+                </Typography>
+              </>
+            ) : (
+              <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                Preview will appear here
+              </Typography>
+            )}
+          </Box>
+        )}
+      </Box>
+      
+      {/* Generate Button - Show when preview is ready and showGenerateButton is true */}
+      {showGenerateButton && previewImage && !loading && !error && onGenerate && (
+        <Button
+          variant="contained"
+          size="large"
+          onClick={onGenerate}
+          disabled={generating}
+          sx={{
+            mt: 2,
+            py: 1.5,
+            px: 3,
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            minWidth: 200,
+            width: '100%',
+            maxWidth: width
           }}
-        />
-      )}
-
-      {error && !loading && (
-        <Box sx={{ textAlign: 'center', p: 2 }}>
-          <Typography variant="caption" sx={{ color: theme.palette.error.main }}>
-            Failed to generate preview
-          </Typography>
-        </Box>
-      )}
-
-      {!previewImage && !loading && !error && (
-        <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-          Preview will appear here
-        </Typography>
+        >
+          {generating 
+            ? 'Generating...' 
+            : `Generate ${selectedCrewCount} Image${selectedCrewCount !== 1 ? 's' : ''}`
+          }
+        </Button>
       )}
     </Box>
   );

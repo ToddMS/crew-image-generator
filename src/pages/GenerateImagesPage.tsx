@@ -7,13 +7,11 @@ import {
   Card,
   CardContent,
   Chip,
-  IconButton,
-  Tooltip,
   CircularProgress
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MdImage, MdChevronLeft, MdChevronRight } from 'react-icons/md';
+import { MdImage } from 'react-icons/md';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
@@ -511,7 +509,7 @@ const GenerateImagesPage: React.FC = () => {
                 )}
               </Box>
               
-              {selectedTemplate && selectedCrews.length > 0 ? (
+              {selectedTemplate && selectedCrewIds.length > 0 && selectedCrews.length > 0 && selectedCrews[previewCrewIndex] ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <TemplatePreview
                     templateConfig={selectedTemplate.config}
@@ -523,52 +521,20 @@ const GenerateImagesPage: React.FC = () => {
                       crewNames: selectedCrews[previewCrewIndex].crewNames || selectedCrews[previewCrewIndex].crewMembers?.map((member: any) => member.name) || [],
                       coachName: selectedCrews[previewCrewIndex].coachName
                     }}
-                    width={350}
-                    height={438}
+                    width={420}
+                    height={525}
                     debounceMs={300}
+                    showGenerateButton={true}
+                    onGenerate={handleGenerateImages}
+                    generating={generating}
+                    selectedCrewCount={selectedCrewIds.length}
+                    showCyclingControls={selectedCrews.length > 1}
+                    currentIndex={previewCrewIndex}
+                    totalCount={selectedCrews.length}
+                    onPrevious={() => setPreviewCrewIndex((prev) => (prev - 1 + selectedCrews.length) % selectedCrews.length)}
+                    onNext={() => setPreviewCrewIndex((prev) => (prev + 1) % selectedCrews.length)}
+                    onIndexSelect={setPreviewCrewIndex}
                   />
-                  
-                  {selectedCrews.length > 1 && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 2, gap: 2 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => setPreviewCrewIndex((prev) => (prev - 1 + selectedCrews.length) % selectedCrews.length)}
-                        sx={{ color: theme.palette.primary.main }}
-                      >
-                        <MdChevronLeft size={20} />
-                      </IconButton>
-                      
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        {selectedCrews.map((_, index) => (
-                          <Box
-                            key={index}
-                            onClick={() => setPreviewCrewIndex(index)}
-                            sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              backgroundColor: index === previewCrewIndex 
-                                ? theme.palette.primary.main 
-                                : theme.palette.divider,
-                              cursor: 'pointer',
-                              transition: 'background-color 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: theme.palette.primary.light
-                              }
-                            }}
-                          />
-                        ))}
-                      </Box>
-                      
-                      <IconButton
-                        size="small"
-                        onClick={() => setPreviewCrewIndex((prev) => (prev + 1) % selectedCrews.length)}
-                        sx={{ color: theme.palette.primary.main }}
-                      >
-                        <MdChevronRight size={20} />
-                      </IconButton>
-                    </Box>
-                  )}
                 </Box>
               ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -596,45 +562,6 @@ const GenerateImagesPage: React.FC = () => {
         </Box>
       </Box>
 
-      {savedTemplates.length > 0 && (
-        <Tooltip 
-          title={selectedCrewIds.length === 0 ? "Please select at least one crew" : ""}
-          arrow
-        >
-          <span>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleGenerateImages}
-              disabled={generating || selectedCrewIds.length === 0 || !selectedTemplate}
-              sx={{
-                position: 'fixed',
-                bottom: 24,
-                right: 24,
-                zIndex: 1000,
-                py: 1.5,
-                px: 3,
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                minWidth: 160,
-                boxShadow: theme.shadows[8],
-                '&:hover': {
-                  boxShadow: theme.shadows[12],
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {generating 
-                ? 'Generating...' 
-                : selectedCrewIds.length > 0 
-                  ? `Generate ${selectedCrewIds.length} Image${selectedCrewIds.length !== 1 ? 's' : ''}`
-                  : 'Generate Images'
-              }
-            </Button>
-          </span>
-        </Tooltip>
-      )}
 
     </Box>
   );
