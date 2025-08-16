@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Snackbar, Alert, AlertColor } from '@mui/material';
+import { Alert, AlertColor } from '@mui/material';
 
 interface Notification {
   id: string;

@@ -244,7 +244,6 @@ const GenerateImagesPage: React.FC = () => {
           );
 
           if (response.ok) {
-            const responseData = await response.json();
             successCount++;
             trackEvent('image_generated', {
               template: selectedTemplate.id,

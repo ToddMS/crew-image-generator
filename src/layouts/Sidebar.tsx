@@ -25,7 +25,6 @@ import {
   MdGroup,
   MdImage,
   MdPhotoLibrary,
-  MdSettings,
   MdAnalytics,
   MdMenu,
   MdChevronLeft,

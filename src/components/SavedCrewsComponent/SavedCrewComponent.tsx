@@ -10,7 +10,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { MdDelete, MdEdit, MdSearch, MdClear } from 'react-icons/md';
+import { MdEdit, MdSearch, MdClear } from 'react-icons/md';
 
 interface CrewMember {
   seat: string;
@@ -39,12 +39,10 @@ interface SavedCrewsComponentProps {
 
 const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
   savedCrews,
-  onDeleteCrew,
   onEditCrew,
   bulkMode = false,
   selectedCrews = new Set(),
   onCrewSelection,
-  onBulkDelete,
 }) => {
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,18 +72,6 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
     );
   });
 
-  const getBoatClassColor = (boatClass: string) => {
-    const colors: Record<string, string> = {
-      '8+': '#FF6B6B',
-      '4+': '#4ECDC4',
-      '4-': '#45B7D1',
-      '4x': '#96CEB4',
-      '2-': '#E67E22',
-      '2x': '#DDA0DD',
-      '1x': '#FFB347',
-    };
-    return colors[boatClass] || '#9E9E9E';
-  };
 
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
@@ -134,7 +120,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
           gap: 0,
         }}
       >
-        {filteredCrews.map((crew, index) => {
+        {filteredCrews.map((crew) => {
           const originalIndex = savedCrews.findIndex((c) => c === crew);
           const boatClass = getBoatClass(crew);
 

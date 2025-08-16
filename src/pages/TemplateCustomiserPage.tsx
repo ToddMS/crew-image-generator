@@ -684,7 +684,7 @@ const TemplateCustomiser: React.FC = () => {
                       onError={(e) => {
                         console.error(
                           'Failed to load logo:',
-                          `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`,
+                          `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`, e
                         );
                         console.error('Club icon object:', clubIcon);
                       }}

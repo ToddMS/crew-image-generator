@@ -41,7 +41,6 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { user } = useAuth();
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
 
-  // Load events from localStorage on mount
   useEffect(() => {
     const savedEvents = localStorage.getItem('rowgram_analytics');
     if (savedEvents) {
@@ -62,7 +61,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const analyticsEvent: AnalyticsEvent = {
       event,
       timestamp: Date.now(),
-      userId: user?.id,
+      userId: user?.id?.toString(),
       metadata,
     };
 

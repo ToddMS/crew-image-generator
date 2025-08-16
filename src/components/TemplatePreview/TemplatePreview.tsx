@@ -162,7 +162,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
         const reader = new FileReader();
         const base64Promise = new Promise<string>((resolve) => {
           reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(clubIcon.file);
+          reader.readAsDataURL(clubIcon.file!);
         });
         const base64Data = await base64Promise;
         processedClubIcon = {

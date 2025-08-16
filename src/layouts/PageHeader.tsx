@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Typography, IconButton, Breadcrumbs, Link, Button } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { MdMenu, MdChevronRight, MdArrowBack } from 'react-icons/md';
+import { useLocation } from 'react-router-dom';
+import { MdMenu } from 'react-icons/md';
 
 interface PageHeaderProps {
   title?: string;
@@ -10,7 +10,6 @@ interface PageHeaderProps {
   actions?: React.ReactNode;
   onMenuClick?: () => void;
   showMenuButton?: boolean;
-  showBreadcrumbs?: boolean;
 }
 
 const getPageInfo = (pathname: string) => {
@@ -52,22 +51,6 @@ const getPageInfo = (pathname: string) => {
   return routes[pathname] || { title: 'RowGram', subtitle: '' };
 };
 
-const getBreadcrumbs = (pathname: string) => {
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const breadcrumbs = [{ label: 'Dashboard', path: '/' }];
-
-  let currentPath = '';
-  pathSegments.forEach((segment) => {
-    currentPath += `/${segment}`;
-    const pageInfo = getPageInfo(currentPath);
-    breadcrumbs.push({
-      label: pageInfo.title,
-      path: currentPath,
-    });
-  });
-
-  return breadcrumbs;
-};
 
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,
@@ -75,37 +58,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
   onMenuClick,
   showMenuButton = false,
-  showBreadcrumbs = true,
 }) => {
   const theme = useTheme();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = React.useState(0);
-
-  // Listen for step changes on create page
-  React.useEffect(() => {
-    if (location.pathname === '/create') {
-      const updateStep = () => {
-        const step = parseInt(sessionStorage.getItem('create_crew_step') || '0');
-        setCurrentStep(step);
-      };
-
-      updateStep(); // Initial load
-
-      // Listen for custom events
-      window.addEventListener('step-changed', updateStep);
-      return () => window.removeEventListener('step-changed', updateStep);
-    }
-  }, [location.pathname]);
 
   const pageInfo = getPageInfo(location.pathname);
   const displayTitle = title || pageInfo.title;
   const displaySubtitle = subtitle || pageInfo.subtitle;
-  const breadcrumbs = getBreadcrumbs(location.pathname);
-
-  const handleBreadcrumbClick = (path: string) => {
-    navigate(path);
-  };
 
   return (
     <Box

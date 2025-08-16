@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
   Typography,
   Alert,
-  Card,
-  CardContent,
   Chip,
-  IconButton,
-  Divider,
   FormControl,
   InputLabel,
   Select,
@@ -16,7 +12,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdPersonAdd, MdClose, MdExpandMore, MdExpandLess, MdSettings } from 'react-icons/md';
+import { MdPersonAdd } from 'react-icons/md';
 import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
@@ -24,30 +20,7 @@ import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 
-const boatClassToSeats: Record<string, number> = {
-  '8+': 8,
-  '4+': 4,
-  '4-': 4,
-  '4x': 4,
-  '2-': 2,
-  '2x': 2,
-  '1x': 1,
-};
-
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
-
-const boatClassToBoatType = (boatClass: string) => {
-  const mapping: Record<string, any> = {
-    '8+': { id: 1, value: '8+', seats: 8, name: 'Eight with Coxswain' },
-    '4+': { id: 2, value: '4+', seats: 4, name: 'Four with Coxswain' },
-    '4-': { id: 3, value: '4-', seats: 4, name: 'Four without Coxswain' },
-    '4x': { id: 6, value: '4x', seats: 4, name: 'Quad Sculls' },
-    '2-': { id: 7, value: '2-', seats: 2, name: 'Coxless Pair' },
-    '2x': { id: 4, value: '2x', seats: 2, name: 'Double Sculls' },
-    '1x': { id: 5, value: '1x', seats: 1, name: 'Single Sculls' },
-  };
-  return mapping[boatClass];
-};
 
 const MyCrewsPage: React.FC = () => {
   const theme = useTheme();
@@ -64,31 +37,18 @@ const MyCrewsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('1');
-  const [primaryColor, setPrimaryColor] = useState<string>('#5E98C2');
-  const [secondaryColor, setSecondaryColor] = useState<string>('#ffffff');
-  const [usePresetColors, setUsePresetColors] = useState<boolean>(false);
-  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
-  const [clubIcon, setClubIcon] = useState<any>(null);
-  const [presets, setPresets] = useState<any[]>([]);
   const [showGeneratePanel, setShowGeneratePanel] = useState<boolean>(false);
-  const [generating, setGenerating] = useState(false);
-  const generateSectionRef = useRef<HTMLDivElement>(null);
-  const crewsSectionRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     loadCrews();
-    loadPresets();
   }, [user]);
 
   useEffect(() => {
-    // Check for success message from navigation state
     const state = location.state as any;
     if (state?.successMessage) {
       setSuccessMessage(state.successMessage);
-      // Clear the navigation state
       navigate(location.pathname, { replace: true });
-      // Auto-hide after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000);
     }
   }, [location.state, navigate, location.pathname]);
@@ -155,8 +115,8 @@ const MyCrewsPage: React.FC = () => {
           try {
             const recentIds = JSON.parse(recentlyViewed);
 
-            const stringIds = recentIds.map((id) => String(id));
-            setRecentCrews(stringIds.slice(0, 5)); // Keep only last 5
+            const stringIds = recentIds.map((id: string) => String(id));
+            setRecentCrews(stringIds.slice(0, 5));
           } catch (error) {
             console.error('Error parsing recent crews:', error);
           }
@@ -174,28 +134,6 @@ const MyCrewsPage: React.FC = () => {
     }
   };
 
-  const loadPresets = async () => {
-    if (!user) {
-      setPresets([]);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPresets(data);
-      }
-    } catch (error) {
-      console.error('Error loading presets:', error);
-    }
-  };
-
   const updateRecentCrews = (crewId: string) => {
     if (!user) return;
 
@@ -203,9 +141,8 @@ const MyCrewsPage: React.FC = () => {
     setRecentCrews((prev) => {
       const stringPrev = prev.map((id) => String(id));
       const filtered = stringPrev.filter((id) => id !== stringId);
-      const newRecent = [stringId, ...filtered].slice(0, 5);
+      const newRecent = [stringId, ...filtered].slice(0, 5).map((id) => parseInt(id));
 
-      // Save to localStorage
       localStorage.setItem(`recently_saved_crews_${user.id}`, JSON.stringify(newRecent));
 
       return newRecent;
@@ -217,7 +154,6 @@ const MyCrewsPage: React.FC = () => {
 
     switch (sortBy) {
       case 'recent':
-        // Default: by creation date (newest first)
         return crewsCopy.sort(
           (a, b) =>
             new Date(b.created_at || b.createdAt || 0).getTime() -
@@ -279,7 +215,6 @@ const MyCrewsPage: React.FC = () => {
   const handleEditCrew = (index: number) => {
     const crew = savedCrews[index];
     updateRecentCrews(crew.id);
-    // Navigate to create page with crew data for editing
     navigate('/create', {
       state: {
         editingCrew: {
@@ -308,106 +243,8 @@ const MyCrewsPage: React.FC = () => {
     }
     setSelectedCrews(newSelected);
 
-    // Auto-show generate panel when crews are selected
     if (newSelected.size > 0 && !showGeneratePanel) {
       setShowGeneratePanel(true);
-    }
-  };
-
-  const handleGenerateImages = async () => {
-    if (selectedCrews.size === 0) {
-      setError('Please select at least one crew to generate images.');
-      return;
-    }
-
-    setGenerating(true);
-    setError(null);
-
-    try {
-      let successCount = 0;
-      const selectedCrewsArray = savedCrews.filter((crew) => selectedCrews.has(crew.id));
-
-      // Prepare colors based on preset selection
-      const colors =
-        usePresetColors && selectedPresetId
-          ? (() => {
-              const preset = presets.find((p) => p.id === selectedPresetId);
-              return preset
-                ? { primary: preset.primary_color, secondary: preset.secondary_color }
-                : { primary: primaryColor, secondary: secondaryColor };
-            })()
-          : { primary: primaryColor, secondary: secondaryColor };
-
-      for (let i = 0; i < selectedCrewsArray.length; i++) {
-        const crew = selectedCrewsArray[i];
-
-        try {
-          const imageBlob = await ApiService.generateImage(
-            crew.id,
-            `${crew.boatName}_${crew.raceName}`,
-            selectedTemplate,
-            colors,
-            clubIcon,
-          );
-
-          if (imageBlob) {
-            await ApiService.saveImage(
-              crew.id,
-              `${crew.boatName}_${crew.raceName}`,
-              selectedTemplate,
-              colors,
-              imageBlob,
-            );
-            successCount++;
-
-            trackEvent('image_generated', {
-              template: selectedTemplate,
-              primaryColor: colors.primary,
-              secondaryColor: colors.secondary,
-              crewName: crew.boatName,
-              raceName: crew.raceName,
-              boatClass: crew.boatClass,
-            });
-          }
-        } catch (error) {
-          console.error(`Error generating image for crew ${crew.boatName}:`, error);
-        }
-
-        // Small delay between generations
-        if (i < selectedCrewsArray.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      }
-
-      if (successCount > 0) {
-        trackEvent('bulk_generation', {
-          template: selectedTemplate,
-          crewCount: successCount,
-          primaryColor: colors.primary,
-          secondaryColor: colors.secondary,
-        });
-
-        // Show success notification
-        showSuccess(
-          `Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`,
-        );
-
-        // Clear selections and hide panel after successful generation
-        setSelectedCrews(new Set());
-        setShowGeneratePanel(false);
-
-        // Navigate to gallery after successful generation
-        navigate('/gallery');
-      } else {
-        showError('Failed to generate any images. Please try again.');
-        setError('Failed to generate any images. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error during bulk generation:', error);
-      showError('Failed to generate images. Please try again.');
-      setError('Failed to generate images. Please try again.');
-    } finally {
-      setGenerating(false);
     }
   };
 
@@ -419,36 +256,19 @@ const MyCrewsPage: React.FC = () => {
     if (crewsToDelete.length === 0) return;
 
     try {
-      // Delete all crews
       await Promise.all(crewsToDelete.map((crew) => ApiService.deleteCrew(crew.id)));
 
-      // Update local state
       setSavedCrews((prev) => prev.filter((crew) => !selectedCrews.has(crew.id)));
 
-      // Show success notification
       showSuccess(
         `Successfully deleted ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}!`,
       );
 
-      // Clear selection
       setSelectedCrews(new Set());
     } catch (error) {
       console.error('Error in bulk delete:', error);
       showError('Failed to delete some crews. Please try again.');
     }
-  };
-
-  const getBoatClassColor = (boatClass: string) => {
-    const colors: Record<string, string> = {
-      '8+': '#FF6B6B',
-      '4+': '#4ECDC4',
-      '4-': '#45B7D1',
-      '4x': '#96CEB4',
-      '2-': '#E67E22',
-      '2x': '#DDA0DD',
-      '1x': '#FFB347',
-    };
-    return colors[boatClass] || '#9E9E9E';
   };
 
   if (!user) {

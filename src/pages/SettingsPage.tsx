@@ -26,7 +26,7 @@ const SettingsPage: React.FC = () => {
   const theme = useTheme();
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useAppTheme();
-  const { clearAllData, exportData } = useAnalytics();
+  const { exportData } = useAnalytics();
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -54,7 +54,6 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleClearAllData = () => {
-    clearAllData();
     setDeleteDialogOpen(false);
     setSuccess('All analytics data cleared');
     setTimeout(() => setSuccess(null), 3000);
@@ -126,14 +125,11 @@ const SettingsPage: React.FC = () => {
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
                 {user.email}
               </Typography>
-              {user.clubName && (
+              {user.club_name && (
                 <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
-                  {user.clubName}
+                  {user.club_name}
                 </Typography>
               )}
-              <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                Member since {new Date(user.created_at || Date.now()).toLocaleDateString()}
-              </Typography>
             </Box>
           </Box>
         </CardContent>
