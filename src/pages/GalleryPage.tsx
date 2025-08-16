@@ -224,7 +224,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     
     try {
       const selectedImageData = allImages.filter(img => selectedImages.has(img.id));
-      console.log('Selected images for download:', selectedImageData.length, selectedImageData.map(img => img.image_name));
       
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
@@ -233,7 +232,6 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         const image = selectedImageData[i];
         try {
           const imageUrl = getImageUrl(image.image_url);
-          console.log(`Downloading image ${i + 1}/${selectedImageData.length}:`, imageUrl);
           const response = await fetch(imageUrl);
           
           if (!response.ok) {
@@ -242,11 +240,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           }
           
           const blob = await response.blob();
-          console.log(`Image ${image.image_name} blob size:`, blob.size);
           
           const cleanFileName = `${image.crew_name}_${image.race_name}_${image.image_name}_${image.id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
           zip.file(`${cleanFileName}.png`, blob);
-          console.log(`Added ${cleanFileName}.png to zip`);
           
         } catch (error) {
           console.error(`Error adding image ${image.image_name} to zip:`, error);

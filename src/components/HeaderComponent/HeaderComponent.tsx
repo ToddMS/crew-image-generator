@@ -58,7 +58,6 @@ const HeaderComponent: React.FC = () => {
 
   const handleAnalyticsClick = () => {
     if (!isAdmin()) {
-      console.log('Access denied: User is not admin');
       return;
     }
     trackEvent('analytics_viewed');

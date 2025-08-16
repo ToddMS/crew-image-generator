@@ -31,6 +31,11 @@ interface SavedTemplate {
     dimensions: { width: number; height: number };
     colors: { primary: string; secondary: string };
   };
+  clubIcon?: {
+    type: 'upload' | 'preset';
+    filename?: string;
+    base64?: string;
+  };
   previewUrl?: string;
   createdAt: string;
 }
@@ -133,13 +138,9 @@ const GenerateImagesPage: React.FC = () => {
       }
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    
-    const interval = setInterval(loadSavedTemplates, 2000);
-    
+    window.addEventListener('storage', handleStorageChange);    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
@@ -186,10 +187,8 @@ const GenerateImagesPage: React.FC = () => {
         const selected = crews.filter(crew => {
           const crewIdStr = crew.id?.toString();
           const isSelected = selectedCrewIds.includes(crewIdStr) || selectedCrewIds.includes(crew.id);
-          console.log(`Crew ${crew.name} (ID: ${crew.id}/${crewIdStr}) - Selected: ${isSelected}`);
           return isSelected;
         });
-        console.log('Selected crews found:', selected.length);
         setSelectedCrews(selected);
       } else {
         console.error('No crews data received or not an array:', crews);
@@ -210,17 +209,38 @@ const GenerateImagesPage: React.FC = () => {
     try {
       for (const crew of selectedCrews) {
         try {
+          let clubIconForApi = undefined;
+          if (selectedTemplate.clubIcon) {
+            if (selectedTemplate.clubIcon.type === 'preset') {
+              clubIconForApi = {
+                type: 'preset',
+                filename: selectedTemplate.clubIcon.filename
+              };
+            } else if (selectedTemplate.clubIcon.type === 'upload') {
+              clubIconForApi = {
+                type: 'upload',
+                base64: selectedTemplate.clubIcon.base64,
+                filename: selectedTemplate.clubIcon.filename
+              };
+            }
+          }
+
           const response = await fetch(`${import.meta.env.VITE_API_URL}/api/crews/generate-custom-image`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+            },
             body: JSON.stringify({
               crewId: crew.id,
               templateConfig: selectedTemplate.config,
+              clubIcon: clubIconForApi,
               imageName: `${crew.name}_${crew.boatType.value}_${Date.now()}.png`
             }),
           });
 
           if (response.ok) {
+            const responseData = await response.json();
             successCount++;
             trackEvent('image_generated', {
               template: selectedTemplate.id,
@@ -236,10 +256,7 @@ const GenerateImagesPage: React.FC = () => {
 
       if (successCount > 0) {
         showSuccess(`Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`);
-        
-        setTimeout(() => {
-          navigate('/gallery');
-        }, 1500);
+        navigate('/gallery');
       } else {
         showError('Failed to generate any images. Please try again.');
       }
@@ -440,7 +457,9 @@ const GenerateImagesPage: React.FC = () => {
                           boxShadow: theme.shadows[2]
                         }
                       }}
-                      onClick={() => setSelectedTemplate(template)}
+                      onClick={() => {
+                        setSelectedTemplate(template);
+                      }}
                     >
                       <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
                         <Box
@@ -521,6 +540,11 @@ const GenerateImagesPage: React.FC = () => {
                       crewNames: selectedCrews[previewCrewIndex].crewNames || selectedCrews[previewCrewIndex].crewMembers?.map((member: any) => member.name) || [],
                       coachName: selectedCrews[previewCrewIndex].coachName
                     }}
+                    clubIcon={selectedTemplate.clubIcon ? {
+                      type: selectedTemplate.clubIcon.type,
+                      filename: selectedTemplate.clubIcon.filename,
+                      base64: selectedTemplate.clubIcon.base64
+                    } : undefined}
                     width={420}
                     height={525}
                     debounceMs={300}

@@ -141,14 +141,11 @@ const MyCrewsPage: React.FC = () => {
         });
         setSavedCrews(transformedCrews);
         
-        // Load recently saved crews from localStorage
         const recentlyViewed = localStorage.getItem(`recently_saved_crews_${user.id}`);
-        console.log('Loading recent crews for user:', user.id, 'Data:', recentlyViewed);
         if (recentlyViewed) {
           try {
             const recentIds = JSON.parse(recentlyViewed);
-            console.log('Parsed recent crew IDs:', recentIds);
-            // Ensure all IDs are strings for consistent comparison
+
             const stringIds = recentIds.map(id => String(id));
             setRecentCrews(stringIds.slice(0, 5)); // Keep only last 5
           } catch (error) {
@@ -233,13 +230,11 @@ const MyCrewsPage: React.FC = () => {
       .map(crewId => {
         const stringId = String(crewId);
         const found = savedCrews.find(crew => String(crew.id) === stringId);
-        console.log('Looking for crew ID:', stringId, 'Found:', found?.boatName || 'NOT FOUND');
         return found;
       })
       .filter(crew => crew !== undefined)
       .slice(0, 5);
     
-    console.log('Recent crews result:', recent.length, recent.map(c => c.boatName));
     return recent;
   };
 

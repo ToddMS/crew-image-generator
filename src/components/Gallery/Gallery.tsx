@@ -47,11 +47,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
     setLoading(true);
     try {
       const response = await ApiService.getSavedImages(crewId);
-      console.log('API Response:', response);
       if (response.data && !response.error) {
-        console.log('Saved images data:', response.data);
-        console.log('First image URL:', response.data[0]?.image_url);
-        console.log('Constructed URL:', getImageUrl(response.data[0]?.image_url));
         setSavedImages(response.data);
       }
     } catch (error) {
@@ -98,7 +94,6 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
 
   const getImageUrl = (imageUrl: string) => {
     const fullUrl = `${import.meta.env.VITE_API_URL}${imageUrl}`;
-    console.log('Image URL constructed:', fullUrl);
     return fullUrl;
   };
 

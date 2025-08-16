@@ -50,6 +50,11 @@ interface SavedTemplate {
   id: string;
   name: string;
   config: TemplateConfig;
+  clubIcon?: {
+    type: 'upload' | 'preset';
+    filename?: string;
+    base64?: string;
+  };
   previewUrl?: string;
   createdAt: string;
 }
@@ -102,12 +107,9 @@ const TemplateCustomiser: React.FC = () => {
   useEffect(() => {
     if (presets.length > 0 && !selectedPresetId && usePresetColors) {
       const favoritePreset = presets.find(p => p.is_default);
-      console.log('Presets loaded, looking for favorite preset:', favoritePreset);
       if (favoritePreset) {
-        console.log('Setting default preset:', favoritePreset.club_name);
         handlePresetSelection(favoritePreset.id, favoritePreset);
       } else if (presets.length > 0) {
-        console.log('No favorite preset found, selecting first preset:', presets[0].club_name);
         handlePresetSelection(presets[0].id, presets[0]);
       }
     }
@@ -173,10 +175,49 @@ const TemplateCustomiser: React.FC = () => {
       return;
     }
 
+    // Prepare clubIcon data for saving
+    let savedClubIcon = undefined;
+    if (clubIcon) {
+      if (clubIcon.type === 'preset' && clubIcon.filename) {
+        savedClubIcon = {
+          type: 'preset' as const,
+          filename: clubIcon.filename
+        };
+      } else if (clubIcon.type === 'upload' && clubIcon.file) {
+        // Convert file to base64 for storage
+        const reader = new FileReader();
+        reader.readAsDataURL(clubIcon.file);
+        reader.onload = () => {
+          const base64Data = reader.result as string;
+          savedClubIcon = {
+            type: 'upload' as const,
+            base64: base64Data,
+            filename: clubIcon.filename
+          };
+          
+          const newTemplate: SavedTemplate = {
+            id: Date.now().toString(),
+            name: templateName,
+            config: { ...config },
+            clubIcon: savedClubIcon,
+            previewUrl: currentPreviewUrl || undefined,
+            createdAt: new Date().toISOString()
+          };
+
+          const updated = [...savedTemplates, newTemplate];
+          setSavedTemplates(updated);
+          localStorage.setItem('savedTemplates', JSON.stringify(updated));
+          setTemplateName('');
+        };
+        return;
+      }
+    }
+
     const newTemplate: SavedTemplate = {
       id: Date.now().toString(),
       name: templateName,
       config: { ...config },
+      clubIcon: savedClubIcon,
       previewUrl: currentPreviewUrl || undefined,
       createdAt: new Date().toISOString()
     };
@@ -185,12 +226,27 @@ const TemplateCustomiser: React.FC = () => {
     setSavedTemplates(updated);
     localStorage.setItem('savedTemplates', JSON.stringify(updated));
     setTemplateName('');
-    
-    console.log('Template saved successfully!');
-  };
+      };
 
   const loadTemplate = (template: SavedTemplate) => {
     setConfig(template.config);
+    // Load the club icon if it exists
+    if (template.clubIcon) {
+      if (template.clubIcon.type === 'preset') {
+        setClubIcon({
+          type: 'preset',
+          filename: template.clubIcon.filename
+        });
+      } else if (template.clubIcon.type === 'upload' && template.clubIcon.base64) {
+        setClubIcon({
+          type: 'upload',
+          base64: template.clubIcon.base64,
+          filename: template.clubIcon.filename
+        });
+      }
+    } else {
+      setClubIcon(null);
+    }
   };
 
   const deleteTemplate = (templateId: string) => {
@@ -396,7 +452,6 @@ const TemplateCustomiser: React.FC = () => {
                       } else {
                         if (presets.length > 0) {
                           const favoritePreset = presets.find(p => p.is_default);
-                          console.log('Toggling club preset on, favorite preset:', favoritePreset); 
                           if (favoritePreset) {
                             handlePresetSelection(favoritePreset.id, favoritePreset);
                           } else {

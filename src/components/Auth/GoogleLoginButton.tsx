@@ -42,11 +42,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
 
   const initializeGoogleSignIn = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    console.log('Google Client ID:', clientId);
-    console.log('window.google:', window.google);
     
     if (!window.google) {
-      console.log('Google script not loaded yet');
       return;
     }
 
@@ -63,7 +60,6 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
     });
 
     if (googleButtonRef.current) {
-      console.log('Rendering Google button to element:', googleButtonRef.current);
       window.google.accounts.id.renderButton(
         googleButtonRef.current,
         {
@@ -73,13 +69,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
           text: 'signin_with',
         }
       );
-      console.log('Google button render completed');
     } else {
       console.error('googleButtonRef.current is null - retrying in 200ms...');
-      // Retry after a short delay
       setTimeout(() => {
         if (googleButtonRef.current && window.google) {
-          console.log('Retry: Rendering Google button to element:', googleButtonRef.current);
           window.google.accounts.id.renderButton(
             googleButtonRef.current,
             {
@@ -89,7 +82,6 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
               text: 'signin_with',
             }
           );
-          console.log('Retry: Google button render completed');
         } else {
           console.error('Retry failed: googleButtonRef still null');
         }

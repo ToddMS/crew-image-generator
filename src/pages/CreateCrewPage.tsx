@@ -344,7 +344,6 @@ const CreateCrewPage: React.FC = () => {
         });
 
         const crewId = String(editingCrewId || result.data?.id);
-        console.log('Crew saved, ID:', crewId, 'Result:', result);
         if (user && crewId && crewId !== 'undefined') {
           const recentKey = `recently_saved_crews_${user.id}`;
           const existing = localStorage.getItem(recentKey);

@@ -73,14 +73,10 @@ export class ApiService {
 
   static async generateImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }, clubIcon?: any): Promise<Blob | null> {
     try {
-      console.log('API: generateImage called with clubIcon:', clubIcon);
       
-      // Check if we need to upload a file
       const hasFileUpload = clubIcon?.type === 'upload' && clubIcon?.file;
       
       if (hasFileUpload) {
-        console.log('API: Using FormData for file upload');
-        // Use FormData for file uploads
         const formData = new FormData();
         formData.append('crewId', crewId);
         formData.append('imageName', imageName);
@@ -90,7 +86,6 @@ export class ApiService {
           formData.append('colors', JSON.stringify(colors));
         }
         
-        // Add club icon data
         formData.append('clubIconType', 'upload');
         formData.append('clubIconFile', clubIcon.file);
 
@@ -108,8 +103,7 @@ export class ApiService {
 
         return await response.blob();
       } else {
-        console.log('API: Using JSON for preset logo or no club icon');
-        // Use JSON for preset logos or no club icon
+
         const payload: any = {
           crewId,
           imageName,
@@ -117,7 +111,6 @@ export class ApiService {
           colors
         };
 
-        // Add club icon information if provided (preset type)
         if (clubIcon) {
           payload.clubIcon = clubIcon;
         }
