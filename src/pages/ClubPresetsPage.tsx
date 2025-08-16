@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  Grid,
   TextField,
   FormControlLabel,
   Switch,
@@ -17,6 +16,7 @@ import {
   DialogActions,
   Chip
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { MdAdd, MdEdit, MdDelete, MdStar, MdStarBorder, MdUpload, MdSwapHoriz } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
@@ -291,7 +291,7 @@ const ClubPresetsPage: React.FC = () => {
             </Typography>
             
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label="Club Name"
@@ -300,7 +300,7 @@ const ClubPresetsPage: React.FC = () => {
                   placeholder="e.g., Oxford University Boat Club"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Box>
                   <Typography variant="body2" gutterBottom>Colors</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
@@ -366,7 +366,7 @@ const ClubPresetsPage: React.FC = () => {
                   </Box>
                 </Box>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Box>
                   <Typography variant="body2" gutterBottom>Club Logo</Typography>
                   <Button
@@ -393,7 +393,7 @@ const ClubPresetsPage: React.FC = () => {
                   )}
                 </Box>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -445,7 +445,7 @@ const ClubPresetsPage: React.FC = () => {
       ) : (
         <Grid container spacing={2}>
           {presets.map((preset) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={preset.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={preset.id}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>

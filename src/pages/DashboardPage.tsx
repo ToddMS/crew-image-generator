@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Box,
-  Grid,
   Card,
   CardContent,
   Typography,
@@ -9,6 +8,7 @@ import {
   Paper,
   Avatar
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -142,7 +142,7 @@ const DashboardPage: React.FC = () => {
           
           <Grid container spacing={4}>
             {steps.map((step, index) => (
-              <Grid item xs={12} md={4} key={index}>
+              <Grid size={{ xs: 12, md: 4 }} key={index}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Box
                     sx={{
@@ -196,7 +196,7 @@ const DashboardPage: React.FC = () => {
           
           <Grid container spacing={3}>
             {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                 <Box sx={{ textAlign: 'center', p: 2 }}>
                   <MdCheckCircle 
                     size={32} 

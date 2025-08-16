@@ -3,9 +3,7 @@ import {
   Container,
   Typography,
   Box,
-  Grid,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Button,
@@ -18,8 +16,9 @@ import {
   Switch,
   FormControlLabel
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
-import { Palette, Brush, ViewModule, TextFields, Image, Save, Delete, CloudUpload, SwapVert } from '@mui/icons-material';
+import { Image, Save, Delete, SwapVert } from '@mui/icons-material';
 import ClubPresetDropdown from '../components/ClubPresetDropdown/ClubPresetDropdown';
 import TemplatePreview from '../components/TemplatePreview/TemplatePreview';
 
@@ -55,7 +54,7 @@ interface SavedTemplate {
   createdAt: string;
 }
 
-const TemplateCustomizerPageCompact: React.FC = () => {
+const TemplateCustomiser: React.FC = () => {
   const theme = useTheme();
   const [components, setComponents] = useState<TemplateComponents | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +68,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
   const [selectedBoatType, setSelectedBoatType] = useState<string>('8+');
   const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(null);
 
-  // Template configuration state
   const [config, setConfig] = useState<TemplateConfig>({
     background: 'diagonal',
     nameDisplay: 'labeled',
@@ -80,7 +78,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     colors: { primary: '#DAA520', secondary: '#2C3E50' }
   });
 
-  // Load available components
   useEffect(() => {
     const fetchComponents = async () => {
       try {
@@ -98,22 +95,19 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     fetchComponents();
   }, []);
 
-  // Load presets and set default to favorite
   useEffect(() => {
     loadPresets();
   }, []);
 
-  // Set default preset to favorite when presets load
   useEffect(() => {
     if (presets.length > 0 && !selectedPresetId && usePresetColors) {
       const favoritePreset = presets.find(p => p.is_default);
-      console.log('Presets loaded, looking for favorite preset:', favoritePreset); // Debug log
+      console.log('Presets loaded, looking for favorite preset:', favoritePreset);
       if (favoritePreset) {
-        console.log('Setting default preset:', favoritePreset.club_name); // Debug log
+        console.log('Setting default preset:', favoritePreset.club_name);
         handlePresetSelection(favoritePreset.id, favoritePreset);
       } else if (presets.length > 0) {
-        // Fallback to first preset if no favorite
-        console.log('No favorite preset found, selecting first preset:', presets[0].club_name); // Debug log
+        console.log('No favorite preset found, selecting first preset:', presets[0].club_name);
         handlePresetSelection(presets[0].id, presets[0]);
       }
     }
@@ -144,8 +138,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
           secondary: preset.secondary_color
         }
       }));
-      // Set the club icon from the preset
-      console.log('Setting club icon:', preset.logo_filename); // Debug log
       if (preset.logo_filename) {
         setClubIcon({
           type: 'preset',
@@ -171,9 +163,7 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     }));
   };
 
-  // Handle preview generation callback
   const handlePreviewGenerated = (imageUrl: string) => {
-    // Store the preview URL for saving templates (but don't save boat type)
     setCurrentPreviewUrl(imageUrl);
   };
 
@@ -196,7 +186,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     localStorage.setItem('savedTemplates', JSON.stringify(updated));
     setTemplateName('');
     
-    // Show success message
     console.log('Template saved successfully!');
   };
 
@@ -210,24 +199,12 @@ const TemplateCustomizerPageCompact: React.FC = () => {
     localStorage.setItem('savedTemplates', JSON.stringify(updated));
   };
 
-  // Load saved templates on mount
   useEffect(() => {
     const saved = localStorage.getItem('savedTemplates');
     if (saved) {
       setSavedTemplates(JSON.parse(saved));
     }
   }, []);
-
-  const getComponentIcon = (type: string) => {
-    switch (type) {
-      case 'backgrounds': return <Palette sx={{ fontSize: 16 }} />;
-      case 'nameDisplays': return <TextFields sx={{ fontSize: 16 }} />;
-      case 'boatStyles': return <ViewModule sx={{ fontSize: 16 }} />;
-      case 'textLayouts': return <TextFields sx={{ fontSize: 16 }} />;
-      case 'logoPositions': return <Image sx={{ fontSize: 16 }} />;
-      default: return <Brush sx={{ fontSize: 16 }} />;
-    }
-  };
 
   if (loading) {
     return (
@@ -249,7 +226,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
-      {/* Compact Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -260,18 +236,14 @@ const TemplateCustomizerPageCompact: React.FC = () => {
           </Typography>
         </Box>
         
-        {/* Empty space for better alignment */}
         <Box />
       </Box>
 
       <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
-        {/* Left Panel - Component Selectors */}
-        <Grid item xs={12} lg={7}>
+        <Grid size={{ xs: 12, lg: 7 }}>
           
-          {/* Component Selectors with Headers */}
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            {/* Boat Type Selector */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box>
                 <Typography variant="subtitle2" sx={{ 
                   mb: 1, 
@@ -353,11 +325,10 @@ const TemplateCustomizerPageCompact: React.FC = () => {
             </Grid>
             
             {components && Object.entries(components).map(([type, items]) => {
-              // Comment out boat styles for now
               if (type === 'boatStyles') return null;
               
               return (
-                <Grid item xs={12} sm={6} md={4} key={type}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={type}>
                   <Box>
                     <Typography variant="subtitle2" sx={{ 
                       mb: 1, 
@@ -396,7 +367,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
             })}
           </Grid>
 
-          {/* Colors & Logo Section */}
           <Box sx={{ 
             p: 1.5, 
             backgroundColor: theme.palette.background.paper,
@@ -413,7 +383,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                 Colors & Logo
               </Typography>
               
-              {/* Club Preset Toggle */}
               <FormControlLabel
                 control={
                   <Switch
@@ -425,21 +394,14 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                         setSelectedPresetId(null);
                         setClubIcon(null);
                       } else {
-                        // Auto-select favorite preset when toggling on
-                        console.log('Available presets:', presets.length); // Debug log
                         if (presets.length > 0) {
                           const favoritePreset = presets.find(p => p.is_default);
-                          console.log('Toggling club preset on, favorite preset:', favoritePreset); // Debug log
+                          console.log('Toggling club preset on, favorite preset:', favoritePreset); 
                           if (favoritePreset) {
-                            console.log('Auto-selecting favorite preset:', favoritePreset.club_name); // Debug log
                             handlePresetSelection(favoritePreset.id, favoritePreset);
                           } else {
-                            // Fallback to first preset if no favorite
-                            console.log('No favorite preset, selecting first preset:', presets[0].club_name); // Debug log
                             handlePresetSelection(presets[0].id, presets[0]);
                           }
-                        } else {
-                          console.log('Presets not loaded yet, will auto-select when they load'); // Debug log
                         }
                       }
                     }}
@@ -462,7 +424,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                 </Box>
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  {/* Color Pickers Horizontal */}
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                       <input
@@ -531,7 +492,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                 </Box>
               )}
               
-              {/* Right Side - Logo Upload (Always present) */}
               <Box sx={{ position: 'relative' }}>
                 <Button
                   variant="outlined"
@@ -607,7 +567,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Saved Templates - Horizontal List */}
           {savedTemplates.length > 0 && (
             <Box>
               <Typography variant="h6" sx={{ mb: 2, fontSize: '1rem', fontWeight: 600 }}>
@@ -682,8 +641,7 @@ const TemplateCustomizerPageCompact: React.FC = () => {
           )}
         </Grid>
 
-        {/* Right Panel - Preview */}
-        <Grid item xs={12} lg={5}>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <Box sx={{ 
             position: 'sticky', 
             top: 20,
@@ -697,7 +655,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
               Preview
             </Typography>
 
-            {/* Template Preview Component */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <TemplatePreview
                 templateConfig={config}
@@ -709,7 +666,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                 debounceMs={500}
               />
               
-              {/* Template Name Input */}
               <TextField
                 placeholder="Enter template name..."
                 value={templateName}
@@ -718,7 +674,6 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                 sx={{ mt: 2, width: '100%' }}
               />
               
-              {/* Save Button */}
               <Button
                 variant="contained"
                 onClick={saveTemplate}
@@ -736,4 +691,4 @@ const TemplateCustomizerPageCompact: React.FC = () => {
   );
 };
 
-export default TemplateCustomizerPageCompact;
+export default TemplateCustomiser;

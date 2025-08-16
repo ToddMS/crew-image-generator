@@ -8,7 +8,7 @@ import ClubPresetsPage from './pages/ClubPresetsPage';
 import GalleryPage from './pages/GalleryPage';
 import SettingsPage from './pages/SettingsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import TemplateCustomizerPage from './pages/TemplateCustomizerPage';
+import TemplateCustomizerPage from './pages/TemplateCustomiserPage';
 import { NotificationProvider } from './context/NotificationContext';
 
 function App() {

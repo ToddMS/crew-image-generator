@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardMedia,
   IconButton,
@@ -15,6 +14,7 @@ import {
   Checkbox,
   Tooltip,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react-icons/md';
 import { ApiService } from '../services/api.service';
@@ -441,7 +441,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       ) : (
         <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
           {filteredImages.map((image) => (
-            <Grid item xs={12/5} key={image.id} sx={{ display: 'flex', justifyContent: 'center', maxWidth: '20%', flexBasis: '20%' }}>
+            <Grid size={{ xs: 12/5 }} key={image.id} sx={{ display: 'flex', justifyContent: 'center', maxWidth: '20%', flexBasis: '20%' }}>
               <Card
                 onClick={() => handleImageSelection(image.id, !selectedImages.has(image.id))}
                 sx={{
