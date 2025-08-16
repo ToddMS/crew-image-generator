@@ -1,0 +1,46 @@
+{
+  "name": "crew-image-generator-monorepo",
+  "homepage": "https://ToddMS.github.io/crew-image-generator",
+  "version": "1.0.0",
+  "description": "Crew image generator with frontend and backend",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "clean": "npm run clean:frontend && npm run clean:backend",
+    "clean:frontend": "cd frontend && rm -rf node_modules",
+    "clean:backend": "cd backend && rm -rf node_modules",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "concurrently": "^8.2.2",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "gh-pages": "^6.3.0",
+    "prettier": "^3.6.2"
+  },
+  "keywords": [
+    "crew",
+    "rowing",
+    "image-generator",
+    "react",
+    "nodejs",
+    "express"
+  ],
+  "dependencies": {
+    "react-router-dom": "^7.8.1"
+  }
+}

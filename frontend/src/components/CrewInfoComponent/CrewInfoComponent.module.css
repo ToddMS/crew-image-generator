@@ -1,0 +1,42 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin: 0 auto 0 auto;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 1.5px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+
+  padding: 32px;
+}
+
+.label {
+  font-weight: 500;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+
+.select {
+  font-style: normal;
+}
+
+.inputField {
+  border-radius: 8px;
+}
+
+submitButton {
+  background-color: #5e98c2 !important;
+  color: #13375f !important;
+  padding: 12px;
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 600;
+}
+.submitButton:hover {
+  background-color: #4177a6 !important;
+}
+
+.MuiSelect-root[aria-expanded='false'][value=''] {
+  color: #888 !important;
+}
