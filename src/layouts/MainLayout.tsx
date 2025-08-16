@@ -17,7 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   pageTitle,
   pageSubtitle,
   headerActions,
-  showHeader = true
+  showHeader = true,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -30,7 +30,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar open={sidebarOpen} onToggle={handleSidebarToggle} />
-      
+
       <Box
         component="main"
         sx={{
@@ -40,8 +40,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           backgroundColor: theme.palette.background.default,
           transition: theme.transitions.create('margin', {
             easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen
-          })
+            duration: theme.transitions.duration.leavingScreen,
+          }),
         }}
       >
         {showHeader && (
@@ -53,13 +53,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             showMenuButton={isMobile}
           />
         )}
-        
+
         <Box
           sx={{
             flex: 1,
             p: { xs: 2, sm: 3 },
             maxWidth: '100%',
-            overflow: 'auto'
+            overflow: 'auto',
           }}
         >
           {children}

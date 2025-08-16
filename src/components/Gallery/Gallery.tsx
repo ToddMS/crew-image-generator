@@ -43,7 +43,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
 
   const loadSavedImages = async () => {
     if (!crewId) return;
-    
+
     setLoading(true);
     try {
       const response = await ApiService.getSavedImages(crewId);
@@ -68,7 +68,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
 
   const handleDeleteImage = async (imageId: number, event: React.MouseEvent) => {
     event.stopPropagation();
-    
+
     if (!window.confirm('Are you sure you want to delete this image?')) {
       return;
     }
@@ -76,7 +76,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
     try {
       const response = await ApiService.deleteSavedImage(imageId);
       if (!response.error) {
-        setSavedImages(prev => prev.filter(img => img.id !== imageId));
+        setSavedImages((prev) => prev.filter((img) => img.id !== imageId));
         if (selectedImage?.id === imageId) {
           setDialogOpen(false);
           setSelectedImage(null);
@@ -99,16 +99,16 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           py: 4,
           backgroundColor: theme.palette.background.paper,
           borderRadius: '8px',
           border: `1px solid ${theme.palette.divider}`,
-          mt: 2
+          mt: 2,
         }}
       >
         <CircularProgress size={24} />
@@ -121,22 +121,22 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
 
   if (savedImages.length === 0) {
     return (
-      <Box 
-        sx={{ 
+      <Box
+        sx={{
           textAlign: 'center',
           py: 4,
           backgroundColor: theme.palette.background.paper,
           borderRadius: '8px',
           border: `1px solid ${theme.palette.divider}`,
-          mt: 2
+          mt: 2,
         }}
       >
         <MdImage size={48} color={theme.palette.text.disabled} />
-        <Typography 
-          variant="body2" 
-          sx={{ 
+        <Typography
+          variant="body2"
+          sx={{
             color: theme.palette.text.secondary,
-            mt: 1
+            mt: 1,
           }}
         >
           No saved images yet. Generate and save images to see them here.
@@ -147,18 +147,18 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
 
   return (
     <Box sx={{ mt: 2 }}>
-      <Typography 
-        variant="h6" 
-        sx={{ 
-          mb: 2, 
+      <Typography
+        variant="h6"
+        sx={{
+          mb: 2,
           color: theme.palette.text.primary,
           fontWeight: 500,
-          fontSize: '1.1rem'
+          fontSize: '1.1rem',
         }}
       >
         Saved Images ({savedImages.length})
       </Typography>
-      
+
       <Grid container spacing={2}>
         {savedImages.map((image) => (
           <Grid size={{ xs: 6, sm: 4, md: 3 }} key={image.id}>
@@ -176,8 +176,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                   boxShadow: theme.shadows[4],
                   '& .delete-button': {
                     opacity: 1,
-                  }
-                }
+                  },
+                },
               }}
               onClick={() => handleImageClick(image)}
             >
@@ -186,12 +186,12 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                 sx={{
                   height: 120,
                   objectFit: 'cover',
-                  backgroundColor: theme.palette.grey[100]
+                  backgroundColor: theme.palette.grey[100],
                 }}
                 image={getImageUrl(image.image_url)}
                 alt={image.image_name}
               />
-              
+
               <IconButton
                 className="delete-button"
                 size="small"
@@ -205,33 +205,33 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                   transition: 'opacity 0.2s ease',
                   '&:hover': {
                     backgroundColor: 'rgba(244, 67, 54, 0.8)',
-                  }
+                  },
                 }}
                 onClick={(e) => handleDeleteImage(image.id, e)}
               >
                 <MdDelete size={16} />
               </IconButton>
-              
+
               <Box sx={{ p: 1 }}>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
+                <Typography
+                  variant="caption"
+                  sx={{
                     color: theme.palette.text.primary,
                     fontWeight: 500,
                     display: 'block',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {image.image_name}
                 </Typography>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
+                <Typography
+                  variant="caption"
+                  sx={{
                     color: theme.palette.text.secondary,
                     fontSize: '0.7rem',
-                    display: 'block'
+                    display: 'block',
                   }}
                 >
                   Template {image.template_id}
@@ -251,8 +251,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
         PaperProps={{
           sx: {
             backgroundColor: theme.palette.background.paper,
-            borderRadius: '12px'
-          }
+            borderRadius: '12px',
+          },
         }}
       >
         <Box sx={{ position: 'relative' }}>
@@ -267,12 +267,12 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
               color: 'white',
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              }
+              },
             }}
           >
             <MdClose />
           </IconButton>
-          
+
           <DialogContent sx={{ p: 0 }}>
             {selectedImage && (
               <Box>
@@ -282,7 +282,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                   style={{
                     width: '100%',
                     height: 'auto',
-                    display: 'block'
+                    display: 'block',
                   }}
                 />
                 <Box sx={{ p: 2 }}>
@@ -290,7 +290,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                     {selectedImage.image_name}
                   </Typography>
                   <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
-                    Template {selectedImage.template_id} • Created {new Date(selectedImage.created_at).toLocaleDateString()}
+                    Template {selectedImage.template_id} • Created{' '}
+                    {new Date(selectedImage.created_at).toLocaleDateString()}
                   </Typography>
                   {selectedImage.primary_color && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
@@ -303,7 +304,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                           height: 20,
                           borderRadius: 1,
                           backgroundColor: selectedImage.primary_color,
-                          border: `1px solid ${theme.palette.divider}`
+                          border: `1px solid ${theme.palette.divider}`,
                         }}
                       />
                       {selectedImage.secondary_color && (
@@ -313,7 +314,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                             height: 20,
                             borderRadius: 1,
                             backgroundColor: selectedImage.secondary_color,
-                            border: `1px solid ${theme.palette.divider}`
+                            border: `1px solid ${theme.palette.divider}`,
                           }}
                         />
                       )}

@@ -53,7 +53,6 @@ const getSeatLabels = (boatClass: string): string[] => {
   }
 };
 
-
 const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   boatClass,
   crewNames,
@@ -73,7 +72,6 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
   const theme = useTheme();
   const seatLabels = getSeatLabels(boatClass);
   const hasCox = boatClass === '8+' || boatClass === '4+';
-
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -96,25 +94,26 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
     }
   };
 
-
   return (
-    <Box 
-      component="form" 
-      className={styles.container} 
-      sx={{ 
+    <Box
+      component="form"
+      className={styles.container}
+      sx={{
         backgroundColor: theme.palette.background.paper,
-        color: theme.palette.text.primary
-      }} 
+        color: theme.palette.text.primary,
+      }}
       onSubmit={handleFormSubmit}
     >
       {hasCox && (
         <Box sx={{ mb: 1.5 }}>
-          <Typography className={styles.label} sx={{ mb: 0.5, fontSize: '0.9rem' }}>Cox</Typography>
+          <Typography className={styles.label} sx={{ mb: 0.5, fontSize: '0.9rem' }}>
+            Cox
+          </Typography>
           <TextField
             name="coxName"
             placeholder="Enter Cox name"
             value={coxName}
-            onChange={e => onCoxNameChange(e.target.value)}
+            onChange={(e) => onCoxNameChange(e.target.value)}
             required
             fullWidth
             size="small"
@@ -122,17 +121,19 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           />
         </Box>
       )}
-      
+
       {crewNames.map((name, idx) => {
         const label = seatLabels[hasCox ? idx + 1 : idx] || `Seat ${idx + 1}`;
         return (
           <Box key={idx} sx={{ mb: 1.5 }}>
-            <Typography className={styles.label} sx={{ mb: 0.5, fontSize: '0.9rem' }}>{label}</Typography>
+            <Typography className={styles.label} sx={{ mb: 0.5, fontSize: '0.9rem' }}>
+              {label}
+            </Typography>
             <TextField
               name={`crewName-${idx}`}
               placeholder={`Enter ${label.toLowerCase()} name`}
               value={name}
-              onChange={e => onNameChange(idx, e.target.value)}
+              onChange={(e) => onNameChange(idx, e.target.value)}
               required
               fullWidth
               size="small"
@@ -141,7 +142,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           </Box>
         );
       })}
-      
+
       {!hideButton && onSaveCrew && user && (
         <Button
           type="submit"
@@ -170,7 +171,7 @@ const CrewNamesComponent: React.FC<CrewNamesComponentProps> = ({
           }}
           startIcon={saving ? undefined : <MdSave size={20} />}
         >
-          {saving ? 'Saving...' : (isEditing ? 'Update Crew' : 'Save Crew')}
+          {saving ? 'Saving...' : isEditing ? 'Update Crew' : 'Save Crew'}
         </Button>
       )}
     </Box>

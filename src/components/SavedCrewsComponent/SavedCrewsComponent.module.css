@@ -9,7 +9,9 @@
 }
 
 .crewCard {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1.5px 6px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 1.5px 6px rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   padding: 16px;
   background: #fff;
@@ -31,7 +33,7 @@
 
 .generateButton {
   margin-top: 16px;
-  background-color: #5E98C2;
+  background-color: #5e98c2;
   color: #fff;
   text-transform: none;
 }

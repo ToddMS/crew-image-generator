@@ -27,7 +27,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (user) {
       const onboardingKey = `rowgram_onboarding_${user.id}`;
       const hasCompletedOnboarding = localStorage.getItem(onboardingKey);
-      
+
       if (!hasCompletedOnboarding) {
         // Small delay to let the UI settle
         setTimeout(() => {
@@ -58,12 +58,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   return (
-    <OnboardingContext.Provider 
-      value={{ 
-        shouldShowOnboarding, 
-        showOnboarding, 
-        completeOnboarding, 
-        resetOnboarding 
+    <OnboardingContext.Provider
+      value={{
+        shouldShowOnboarding,
+        showOnboarding,
+        completeOnboarding,
+        resetOnboarding,
       }}
     >
       {children}

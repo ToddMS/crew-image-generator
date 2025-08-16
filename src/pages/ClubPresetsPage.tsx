@@ -14,11 +14,19 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip
+  Chip,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
-import { MdAdd, MdEdit, MdDelete, MdStar, MdStarBorder, MdUpload, MdSwapHoriz } from 'react-icons/md';
+import {
+  MdAdd,
+  MdEdit,
+  MdDelete,
+  MdStar,
+  MdStarBorder,
+  MdUpload,
+  MdSwapHoriz,
+} from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
@@ -58,7 +66,7 @@ const ClubPresetsPage: React.FC = () => {
     club_name: '',
     primary_color: '#5E98C2',
     secondary_color: '#ffffff',
-    is_default: false
+    is_default: false,
   });
 
   useEffect(() => {
@@ -67,13 +75,12 @@ const ClubPresetsPage: React.FC = () => {
     }
   }, [user]);
 
-
   const loadPresets = async () => {
     setLoading(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+          Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
         },
       });
 
@@ -115,7 +122,7 @@ const ClubPresetsPage: React.FC = () => {
       club_name: '',
       primary_color: '#5E98C2',
       secondary_color: '#ffffff',
-      is_default: false
+      is_default: false,
     });
     setLogoFile(null);
     setEditingPreset(null);
@@ -136,29 +143,31 @@ const ClubPresetsPage: React.FC = () => {
         formDataToSend.append('logo', logoFile);
       }
 
-      const url = editingPreset 
+      const url = editingPreset
         ? `${import.meta.env.VITE_API_URL}/api/club-presets/${editingPreset.id}`
         : `${import.meta.env.VITE_API_URL}/api/club-presets`;
-      
+
       const method = editingPreset ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+          Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
         },
         body: formDataToSend,
       });
 
       if (response.ok) {
-        showSuccess(editingPreset ? 'Preset updated successfully!' : 'Preset created successfully!');
+        showSuccess(
+          editingPreset ? 'Preset updated successfully!' : 'Preset created successfully!',
+        );
         resetForm();
         loadPresets();
-        
+
         trackEvent('club_preset_saved', {
           action: editingPreset ? 'update' : 'create',
           club_name: formData.club_name,
-          has_logo: !!logoFile
+          has_logo: !!logoFile,
         });
       } else {
         const errorData = await response.json();
@@ -178,7 +187,7 @@ const ClubPresetsPage: React.FC = () => {
       club_name: preset.club_name,
       primary_color: preset.primary_color,
       secondary_color: preset.secondary_color,
-      is_default: preset.is_default
+      is_default: preset.is_default,
     });
     setIsCreating(true);
   };
@@ -186,18 +195,21 @@ const ClubPresetsPage: React.FC = () => {
   const handleDelete = async (preset: ClubPreset) => {
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets/${preset.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/club-presets/${preset.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
+          },
         },
-      });
+      );
 
       if (response.ok) {
         showSuccess('Preset deleted successfully!');
         loadPresets();
         trackEvent('club_preset_deleted', {
-          club_name: preset.club_name
+          club_name: preset.club_name,
         });
       } else {
         showError('Failed to delete preset');
@@ -215,14 +227,17 @@ const ClubPresetsPage: React.FC = () => {
   const handleSetDefault = async (presetId: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets/${presetId}/default`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/club-presets/${presetId}/default`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
-      
+      );
+
       if (response.ok) {
         showSuccess('Default preset updated!');
         loadPresets();
@@ -252,7 +267,7 @@ const ClubPresetsPage: React.FC = () => {
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
           Create and manage your club's colors and logos for consistent image generation
         </Typography>
-        <LoginPrompt 
+        <LoginPrompt
           message="Sign in to create and manage your club presets"
           actionText="Manage Club Presets"
         />
@@ -270,7 +285,7 @@ const ClubPresetsPage: React.FC = () => {
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
           Create and manage your club's colors and logos for consistent image generation
         </Typography>
-        
+
         <Button
           variant="contained"
           startIcon={<MdAdd />}
@@ -281,7 +296,6 @@ const ClubPresetsPage: React.FC = () => {
         </Button>
       </Box>
 
-
       {/* Create/Edit Form */}
       {isCreating && (
         <Card sx={{ mb: 4 }}>
@@ -289,7 +303,7 @@ const ClubPresetsPage: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               {editingPreset ? 'Edit Preset' : 'Create New Preset'}
             </Typography>
-            
+
             <Grid container spacing={3}>
               <Grid size={{ xs: 12 }}>
                 <TextField
@@ -302,22 +316,46 @@ const ClubPresetsPage: React.FC = () => {
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Box>
-                  <Typography variant="body2" gutterBottom>Colors</Typography>
+                  <Typography variant="body2" gutterBottom>
+                    Colors
+                  </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
                     {/* Primary Color */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>Primary</Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                        Primary
+                      </Typography>
                       <input
                         type="color"
                         value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
-                        style={{ width: 40, height: 40, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                        onChange={(e) =>
+                          setFormData({ ...formData, primary_color: e.target.value })
+                        }
+                        style={{
+                          width: 40,
+                          height: 40,
+                          border: 'none',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                        }}
                       />
                       <TextField
                         value={formData.primary_color}
-                        onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, primary_color: e.target.value })
+                        }
                         size="small"
-                        sx={{ width: 80, '& .MuiInputBase-input': { textAlign: 'center', fontSize: '0.75rem' } }}
+                        sx={{
+                          width: 80,
+                          '& .MuiInputBase-input': { textAlign: 'center', fontSize: '0.75rem' },
+                        }}
                       />
                     </Box>
 
@@ -327,10 +365,10 @@ const ClubPresetsPage: React.FC = () => {
                         size="small"
                         onClick={() => {
                           const temp = formData.primary_color;
-                          setFormData({ 
-                            ...formData, 
+                          setFormData({
+                            ...formData,
                             primary_color: formData.secondary_color,
-                            secondary_color: temp
+                            secondary_color: temp,
                           });
                         }}
                         sx={{
@@ -339,8 +377,8 @@ const ClubPresetsPage: React.FC = () => {
                           height: 30,
                           '&:hover': {
                             backgroundColor: theme.palette.action.hover,
-                            color: theme.palette.primary.main
-                          }
+                            color: theme.palette.primary.main,
+                          },
                         }}
                       >
                         <MdSwapHoriz size={18} />
@@ -348,19 +386,41 @@ const ClubPresetsPage: React.FC = () => {
                     </Box>
 
                     {/* Secondary Color */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>Secondary</Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                        Secondary
+                      </Typography>
                       <input
                         type="color"
                         value={formData.secondary_color}
-                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
-                        style={{ width: 40, height: 40, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                        onChange={(e) =>
+                          setFormData({ ...formData, secondary_color: e.target.value })
+                        }
+                        style={{
+                          width: 40,
+                          height: 40,
+                          border: 'none',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                        }}
                       />
                       <TextField
                         value={formData.secondary_color}
-                        onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, secondary_color: e.target.value })
+                        }
                         size="small"
-                        sx={{ width: 80, '& .MuiInputBase-input': { textAlign: 'center', fontSize: '0.75rem' } }}
+                        sx={{
+                          width: 80,
+                          '& .MuiInputBase-input': { textAlign: 'center', fontSize: '0.75rem' },
+                        }}
                       />
                     </Box>
                   </Box>
@@ -368,19 +428,16 @@ const ClubPresetsPage: React.FC = () => {
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Box>
-                  <Typography variant="body2" gutterBottom>Club Logo</Typography>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<MdUpload />}
-                  >
-                    {logoFile ? logoFile.name : editingPreset?.logo_filename ? 'Change Logo' : 'Upload Logo'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={handleLogoUpload}
-                    />
+                  <Typography variant="body2" gutterBottom>
+                    Club Logo
+                  </Typography>
+                  <Button variant="outlined" component="label" startIcon={<MdUpload />}>
+                    {logoFile
+                      ? logoFile.name
+                      : editingPreset?.logo_filename
+                        ? 'Change Logo'
+                        : 'Upload Logo'}
+                    <input type="file" accept="image/*" hidden onChange={handleLogoUpload} />
                   </Button>
                   {editingPreset?.logo_filename && !logoFile && (
                     <Box mt={1}>
@@ -407,9 +464,7 @@ const ClubPresetsPage: React.FC = () => {
             </Grid>
           </CardContent>
           <CardActions>
-            <Button onClick={resetForm}>
-              Cancel
-            </Button>
+            <Button onClick={resetForm}>Cancel</Button>
             <Button
               variant="contained"
               onClick={handleSave}
@@ -434,11 +489,7 @@ const ClubPresetsPage: React.FC = () => {
           <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
             Create your first club preset to get started with consistent branding
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<MdAdd />}
-            onClick={() => setIsCreating(true)}
-          >
+          <Button variant="contained" startIcon={<MdAdd />} onClick={() => setIsCreating(true)}>
             Create Your First Preset
           </Button>
         </Box>
@@ -449,13 +500,15 @@ const ClubPresetsPage: React.FC = () => {
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1}>
-                    <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                    <Typography
+                      variant="subtitle1"
+                      noWrap
+                      sx={{ fontWeight: 600, fontSize: '1rem' }}
+                    >
                       {preset.club_name}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      {preset.is_default && (
-                        <Chip label="Default" size="small" color="primary" />
-                      )}
+                      {preset.is_default && <Chip label="Default" size="small" color="primary" />}
                       <IconButton
                         size="small"
                         onClick={() => handleSetDefault(preset.id)}
@@ -467,7 +520,7 @@ const ClubPresetsPage: React.FC = () => {
                       </IconButton>
                     </Box>
                   </Box>
-                  
+
                   <Box display="flex" alignItems="center" gap={1} mb={1.5}>
                     <Box
                       sx={{
@@ -475,7 +528,7 @@ const ClubPresetsPage: React.FC = () => {
                         height: 20,
                         borderRadius: 1,
                         backgroundColor: preset.primary_color,
-                        border: '1px solid #ddd'
+                        border: '1px solid #ddd',
                       }}
                     />
                     <Box
@@ -484,14 +537,18 @@ const ClubPresetsPage: React.FC = () => {
                         height: 20,
                         borderRadius: 1,
                         backgroundColor: preset.secondary_color,
-                        border: '1px solid #ddd'
+                        border: '1px solid #ddd',
                       }}
                     />
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: '0.7rem' }}
+                    >
                       {preset.primary_color} / {preset.secondary_color}
                     </Typography>
                   </Box>
-                  
+
                   <Box mb={1.5}>
                     {preset.logo_filename ? (
                       <img
@@ -512,12 +569,12 @@ const ClubPresetsPage: React.FC = () => {
                           backgroundColor: theme.palette.action.hover,
                         }}
                       >
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
+                        <Typography
+                          variant="caption"
+                          sx={{
                             color: theme.palette.text.secondary,
                             textAlign: 'center',
-                            fontSize: '0.65rem'
+                            fontSize: '0.65rem',
                           }}
                         >
                           No Icon Saved
@@ -526,13 +583,9 @@ const ClubPresetsPage: React.FC = () => {
                     )}
                   </Box>
                 </CardContent>
-                
+
                 <CardActions>
-                  <Button
-                    size="small"
-                    startIcon={<MdEdit />}
-                    onClick={() => handleEdit(preset)}
-                  >
+                  <Button size="small" startIcon={<MdEdit />} onClick={() => handleEdit(preset)}>
                     Edit
                   </Button>
                   <Button
@@ -555,13 +608,14 @@ const ClubPresetsPage: React.FC = () => {
         <DialogTitle>Delete Club Preset</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{presetToDelete?.club_name}"? This action cannot be undone.
+            Are you sure you want to delete "{presetToDelete?.club_name}"? This action cannot be
+            undone.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-          <Button 
-            color="error" 
+          <Button
+            color="error"
             onClick={() => presetToDelete && handleDelete(presetToDelete)}
             disabled={loading}
           >

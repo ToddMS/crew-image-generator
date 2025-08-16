@@ -66,22 +66,23 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       metadata,
     };
 
-    setEvents(prev => [...prev, analyticsEvent]);
+    setEvents((prev) => [...prev, analyticsEvent]);
   };
 
   const getStats = (): AnalyticsStats => {
     const now = Date.now();
-    const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
 
-    const lastWeekEvents = events.filter(e => e.timestamp > oneWeekAgo);
-    
+    const lastWeekEvents = events.filter((e) => e.timestamp > oneWeekAgo);
+
     const templateCounts: Record<string, number> = {};
     const hourCounts: Record<number, number> = {};
 
-    events.forEach(event => {
+    events.forEach((event) => {
       // Track template usage
       if (event.event === 'image_generated' && event.metadata?.template) {
-        templateCounts[event.metadata.template] = (templateCounts[event.metadata.template] || 0) + 1;
+        templateCounts[event.metadata.template] =
+          (templateCounts[event.metadata.template] || 0) + 1;
       }
 
       // Track usage by hour
@@ -91,10 +92,10 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     return {
       totalEvents: events.length,
-      crewsCreated: events.filter(e => e.event === 'crew_created').length,
-      imagesGenerated: events.filter(e => e.event === 'image_generated').length,
-      bulkGenerations: events.filter(e => e.event === 'bulk_generation').length,
-      galleryDownloads: events.filter(e => e.event === 'gallery_download').length,
+      crewsCreated: events.filter((e) => e.event === 'crew_created').length,
+      imagesGenerated: events.filter((e) => e.event === 'image_generated').length,
+      bulkGenerations: events.filter((e) => e.event === 'bulk_generation').length,
+      galleryDownloads: events.filter((e) => e.event === 'gallery_download').length,
       lastWeekEvents: lastWeekEvents.length,
       popularTemplates: templateCounts,
       peakUsageHours: hourCounts,
@@ -106,7 +107,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const exportData = {
       generatedAt: new Date().toISOString(),
       stats,
-      events: events.map(e => ({
+      events: events.map((e) => ({
         event: e.event,
         timestamp: new Date(e.timestamp).toISOString(),
         metadata: e.metadata,
@@ -116,7 +117,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const getEventsByType = (eventType: string): AnalyticsEvent[] => {
-    return events.filter(event => event.event === eventType);
+    return events.filter((event) => event.event === eventType);
   };
 
   const clearData = () => {
@@ -125,7 +126,9 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <AnalyticsContext.Provider value={{ trackEvent, getStats, getEventsByType, exportData, clearData }}>
+    <AnalyticsContext.Provider
+      value={{ trackEvent, getStats, getEventsByType, exportData, clearData }}
+    >
       {children}
     </AnalyticsContext.Provider>
   );

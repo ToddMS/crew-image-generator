@@ -11,7 +11,14 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdSave, MdCheckCircle, MdNavigateNext, MdNavigateBefore, MdCheck, MdGroup } from 'react-icons/md';
+import {
+  MdSave,
+  MdCheckCircle,
+  MdNavigateNext,
+  MdNavigateBefore,
+  MdCheck,
+  MdGroup,
+} from 'react-icons/md';
 import RowingIcon from '@mui/icons-material/Rowing';
 import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
 import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
@@ -55,12 +62,12 @@ const CreateCrewPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
 
   const [activeStep, setActiveStep] = useState(0);
-  
+
   useEffect(() => {
     sessionStorage.setItem('create_crew_step', activeStep.toString());
     window.dispatchEvent(new CustomEvent('step-changed'));
   }, [activeStep]);
-  
+
   useEffect(() => {
     const handleHeaderBack = () => {
       if (activeStep === 0) {
@@ -69,7 +76,7 @@ const CreateCrewPage: React.FC = () => {
         setActiveStep((prev) => prev - 1);
       }
     };
-    
+
     window.addEventListener('navigate-back-step', handleHeaderBack);
     return () => window.removeEventListener('navigate-back-step', handleHeaderBack);
   }, [activeStep, navigate]);
@@ -79,18 +86,18 @@ const CreateCrewPage: React.FC = () => {
     {
       label: 'Crew Information',
       icon: <RowingIcon />,
-      description: 'Basic details about your crew'
+      description: 'Basic details about your crew',
     },
     {
       label: 'Add Members',
       icon: <MdGroup />,
-      description: 'Enter crew member names'
+      description: 'Enter crew member names',
     },
     {
       label: 'Review & Save',
       icon: <MdCheckCircle />,
-      description: 'Review and save your crew'
-    }
+      description: 'Review and save your crew',
+    },
   ];
 
   const [boatClass, setBoatClass] = useState('');
@@ -129,7 +136,7 @@ const CreateCrewPage: React.FC = () => {
     if (pendingState && user) {
       try {
         const state = JSON.parse(pendingState);
-        
+
         setBoatClass(state.boatClass);
         setClubName(state.clubName);
         setRaceName(state.raceName);
@@ -140,13 +147,13 @@ const CreateCrewPage: React.FC = () => {
         setActiveStep(state.activeStep);
         setCompletedSteps(new Set(state.completedSteps));
         setEditingCrewId(state.editingCrewId);
-        
+
         localStorage.removeItem('rowgram_pending_save_state');
-        
+
         localStorage.setItem('rowgram_was_restored', 'true');
-        
+
         setShowAuthModal(false);
-        
+
         return;
       } catch (error) {
         console.error('Error restoring saved state:', error);
@@ -170,7 +177,7 @@ const CreateCrewPage: React.FC = () => {
       setCoachName(crew.coachName || '');
       setCrewNames(crew.crewNames);
       setCoxName(crew.coxName);
-      
+
       navigate(location.pathname, { replace: true });
     } else {
       clearAllFields();
@@ -181,7 +188,16 @@ const CreateCrewPage: React.FC = () => {
   }, [location.pathname, user, preserveStateAfterLogin]);
 
   useEffect(() => {
-    if (user && (boatClass || clubName || raceName || boatName || coachName || crewNames.some(n => n) || coxName)) {
+    if (
+      user &&
+      (boatClass ||
+        clubName ||
+        raceName ||
+        boatName ||
+        coachName ||
+        crewNames.some((n) => n) ||
+        coxName)
+    ) {
       const draft = {
         boatClass,
         clubName,
@@ -190,19 +206,25 @@ const CreateCrewPage: React.FC = () => {
         coachName,
         crewNames,
         coxName,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem(`rowgram_draft_${user.id}`, JSON.stringify(draft));
     }
   }, [boatClass, clubName, raceName, boatName, coachName, crewNames, coxName, user]);
 
   useEffect(() => {
-    if (user && activeStep === 2 && 
-        boatClass && clubName && raceName && boatName &&
-        crewNames.every(name => name.trim()) &&
-        (!boatClassHasCox(boatClass) || coxName.trim()) && 
-        !saving && !showAuthModal) { 
-      
+    if (
+      user &&
+      activeStep === 2 &&
+      boatClass &&
+      clubName &&
+      raceName &&
+      boatName &&
+      crewNames.every((name) => name.trim()) &&
+      (!boatClassHasCox(boatClass) || coxName.trim()) &&
+      !saving &&
+      !showAuthModal
+    ) {
       const wasRestored = localStorage.getItem('rowgram_was_restored');
       if (wasRestored) {
         localStorage.removeItem('rowgram_was_restored');
@@ -211,7 +233,18 @@ const CreateCrewPage: React.FC = () => {
         }, 100);
       }
     }
-  }, [user, activeStep, boatClass, clubName, raceName, boatName, crewNames, coxName, saving, showAuthModal]);
+  }, [
+    user,
+    activeStep,
+    boatClass,
+    clubName,
+    raceName,
+    boatName,
+    crewNames,
+    coxName,
+    saving,
+    showAuthModal,
+  ]);
 
   const clearDraft = () => {
     if (user) {
@@ -225,10 +258,10 @@ const CreateCrewPage: React.FC = () => {
 
   const handleNext = () => {
     const currentForm = document.querySelector(`[data-step="${activeStep}"] form`);
-  
+
     if (currentForm instanceof HTMLFormElement) {
       currentForm.requestSubmit();
-  
+
       if (currentForm.checkValidity()) {
         proceedToNextStep();
       }
@@ -238,7 +271,6 @@ const CreateCrewPage: React.FC = () => {
       }
     }
   };
-  
 
   const proceedToNextStep = () => {
     const newCompleted = new Set(completedSteps);
@@ -257,31 +289,41 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
-
   const canProceedFromStep = (step: number): boolean => {
     switch (step) {
       case 0:
         return !!(boatClass && clubName && raceName && boatName);
       case 1:
-        return crewNames.every(name => name.trim().length > 0) && 
-               (!boatClassHasCox(boatClass) || coxName.trim().length > 0);
+        return (
+          crewNames.every((name) => name.trim().length > 0) &&
+          (!boatClassHasCox(boatClass) || coxName.trim().length > 0)
+        );
       default:
         return true;
     }
   };
 
-  const handleCrewInfoSubmit = useCallback((newBoatClass: string, newClubName: string, newRaceName: string, newBoatName: string, newCoachName?: string) => {
-    setBoatClass(newBoatClass);
-    setClubName(newClubName);
-    setRaceName(newRaceName);
-    setBoatName(newBoatName);
-    setCoachName(newCoachName || '');
-    setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
-    setCoxName('');
-  }, []);
+  const handleCrewInfoSubmit = useCallback(
+    (
+      newBoatClass: string,
+      newClubName: string,
+      newRaceName: string,
+      newBoatName: string,
+      newCoachName?: string,
+    ) => {
+      setBoatClass(newBoatClass);
+      setClubName(newClubName);
+      setRaceName(newRaceName);
+      setBoatName(newBoatName);
+      setCoachName(newCoachName || '');
+      setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
+      setCoxName('');
+    },
+    [],
+  );
 
   const handleNameChange = (idx: number, value: string) => {
-    setCrewNames(names => names.map((n, i) => (i === idx ? value : n)));
+    setCrewNames((names) => names.map((n, i) => (i === idx ? value : n)));
   };
 
   const handleCoxNameChange = (value: string) => setCoxName(value);
@@ -299,7 +341,7 @@ const CreateCrewPage: React.FC = () => {
         activeStep,
         completedSteps: Array.from(completedSteps),
         editingCrewId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem('rowgram_pending_save_state', JSON.stringify(currentState));
       setShowAuthModal(true);
@@ -310,12 +352,9 @@ const CreateCrewPage: React.FC = () => {
     try {
       const hasCox = boatClassHasCox(boatClass);
       const allNames = hasCox ? [coxName, ...crewNames] : crewNames;
-      
+
       const boatType = boatClassToBoatType(boatClass);
-      const allCrewNames = [
-        ...(boatClassHasCox(boatClass) ? [coxName] : []),
-        ...crewNames
-      ];
+      const allCrewNames = [...(boatClassHasCox(boatClass) ? [coxName] : []), ...crewNames];
 
       const crewData = {
         name: boatName,
@@ -323,7 +362,7 @@ const CreateCrewPage: React.FC = () => {
         raceName: raceName,
         boatType: boatType,
         crewNames: allCrewNames,
-        coachName: coachName.trim() || undefined
+        coachName: coachName.trim() || undefined,
       };
 
       let result;
@@ -332,15 +371,15 @@ const CreateCrewPage: React.FC = () => {
       } else {
         result = await ApiService.createCrew(crewData);
       }
-      
+
       if (result.data) {
         clearDraft();
-        
+
         trackEvent(editingCrewId ? 'crew_updated' : 'crew_created', {
           boatClass,
           crewSize: allNames.length,
           clubName,
-          raceName
+          raceName,
         });
 
         const crewId = String(editingCrewId || result.data?.id);
@@ -348,7 +387,7 @@ const CreateCrewPage: React.FC = () => {
           const recentKey = `recently_saved_crews_${user.id}`;
           const existing = localStorage.getItem(recentKey);
           let recentCrews = [];
-          
+
           if (existing) {
             try {
               recentCrews = JSON.parse(existing);
@@ -356,8 +395,10 @@ const CreateCrewPage: React.FC = () => {
               console.error('Error parsing recent crews:', error);
             }
           }
-          
-          const filtered = recentCrews.map((id: string) => String(id)).filter((id: string) => id !== crewId);
+
+          const filtered = recentCrews
+            .map((id: string) => String(id))
+            .filter((id: string) => id !== crewId);
           const newRecent = [crewId, ...filtered].slice(0, 5);
           localStorage.setItem(recentKey, JSON.stringify(newRecent));
         }
@@ -386,7 +427,7 @@ const CreateCrewPage: React.FC = () => {
                 clubName,
                 raceName,
                 boatName,
-                coachName
+                coachName,
               }}
               showValidation={showValidation}
             />
@@ -397,11 +438,13 @@ const CreateCrewPage: React.FC = () => {
         return (
           <Box data-step="1">
             {!canProceedFromStep(0) ? (
-              <Box sx={{ 
-                textAlign: 'center', 
-                py: 8,
-                color: theme.palette.text.secondary 
-              }}>
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  py: 8,
+                  color: theme.palette.text.secondary,
+                }}
+              >
                 <Typography variant="body1" sx={{ mb: 2 }}>
                   ⬅️ Please complete crew information first
                 </Typography>
@@ -435,55 +478,104 @@ const CreateCrewPage: React.FC = () => {
         return (
           <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}
+              >
                 Crew Details
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Boat Class:</Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{boatClass} - {boatClassToBoatType(boatClass)?.name}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
+                    Boat Class:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                    {boatClass} - {boatClassToBoatType(boatClass)?.name}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Club:</Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{clubName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
+                    Club:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                    {clubName}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Race:</Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{raceName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
+                    Race:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                    {raceName}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Boat Name:</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.825rem' }}>{boatName}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
+                    Boat Name:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.825rem' }}>
+                    {boatName}
+                  </Typography>
                 </Box>
                 {coachName && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Coach:</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{coachName}</Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: '0.825rem' }}
+                    >
+                      Coach:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                      {coachName}
+                    </Typography>
                   </Box>
                 )}
               </Box>
             </Box>
 
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}>
+              <Typography
+                variant="subtitle1"
+                sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}
+              >
                 Crew Members
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
                 {boatClassHasCox(boatClass) && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>Coxswain:</Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{coxName}</Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: '0.825rem' }}
+                    >
+                      Coxswain:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                      {coxName}
+                    </Typography>
                   </Box>
                 )}
                 {crewNames.map((name, index) => {
                   const seatNumber = boatClassToSeats[boatClass] - index;
-                  const seatName = seatNumber === 1 ? 'Bow' : 
-                                 seatNumber === boatClassToSeats[boatClass] ? 'Stroke' : 
-                                 `${seatNumber} Seat`;
+                  const seatName =
+                    seatNumber === 1
+                      ? 'Bow'
+                      : seatNumber === boatClassToSeats[boatClass]
+                        ? 'Stroke'
+                        : `${seatNumber} Seat`;
                   return (
                     <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>{seatName}:</Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>{name}</Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.825rem' }}
+                      >
+                        {seatName}:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+                        {name}
+                      </Typography>
                     </Box>
                   );
                 })}
@@ -498,16 +590,20 @@ const CreateCrewPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      maxWidth: 1000, 
-      mx: 'auto',
-      width: '100%',
-      px: 3,
-      pt: 0,
-      pb: 0
-    }}>
+    <Box
+      sx={{
+        maxWidth: 1000,
+        mx: 'auto',
+        width: '100%',
+        px: 3,
+        pt: 0,
+        pb: 0,
+      }}
+    >
       <Box sx={{ mb: 2.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}
+        >
           <Typography variant="caption" color="text.secondary">
             Step {activeStep + 1} of {steps.length}
           </Typography>
@@ -515,16 +611,16 @@ const CreateCrewPage: React.FC = () => {
             {Math.round(((activeStep + 1) / steps.length) * 100)}% complete
           </Typography>
         </Box>
-        <LinearProgress 
-          variant="determinate" 
+        <LinearProgress
+          variant="determinate"
           value={((activeStep + 1) / steps.length) * 100}
-          sx={{ 
-            height: 4, 
+          sx={{
+            height: 4,
             borderRadius: 2,
             backgroundColor: theme.palette.grey[200],
             '& .MuiLinearProgress-bar': {
-              borderRadius: 2
-            }
+              borderRadius: 2,
+            },
           }}
         />
       </Box>
@@ -542,17 +638,27 @@ const CreateCrewPage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: completedSteps.has(index) ? theme.palette.success.main : 
-                                   activeStep === index ? theme.palette.primary.main : theme.palette.grey[300],
-                    color: completedSteps.has(index) || activeStep === index ? 'white' : theme.palette.text.secondary,
-                    transition: 'all 0.3s ease'
+                    backgroundColor: completedSteps.has(index)
+                      ? theme.palette.success.main
+                      : activeStep === index
+                        ? theme.palette.primary.main
+                        : theme.palette.grey[300],
+                    color:
+                      completedSteps.has(index) || activeStep === index
+                        ? 'white'
+                        : theme.palette.text.secondary,
+                    transition: 'all 0.3s ease',
                   }}
                 >
-                  {completedSteps.has(index) ? <MdCheck size={14} /> : 
-                   index === 0 ? <RowingIcon sx={{ fontSize: 14 }} /> :
-                   React.cloneElement(
-                    step.icon as React.ReactElement<{ size?: number }>, { size: 14 })
-                  }
+                  {completedSteps.has(index) ? (
+                    <MdCheck size={14} />
+                  ) : index === 0 ? (
+                    <RowingIcon sx={{ fontSize: 14 }} />
+                  ) : (
+                    React.cloneElement(step.icon as React.ReactElement<{ size?: number }>, {
+                      size: 14,
+                    })
+                  )}
                 </Box>
               }
             >
@@ -569,33 +675,26 @@ const CreateCrewPage: React.FC = () => {
         ))}
       </Stepper>
 
-      <Box sx={{ mb: 4 }}>
-        {renderStepContent(activeStep)}
-      </Box>
+      <Box sx={{ mb: 4 }}>{renderStepContent(activeStep)}</Box>
 
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        pt: 1.5,
-        mt: 1,
-        pb: 0,
-        borderTop: `1px solid ${theme.palette.divider}`
-      }}>
-        <Button
-          variant="outlined"
-          onClick={handleBack}
-          startIcon={<MdNavigateBefore />}
-        >
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          pt: 1.5,
+          mt: 1,
+          pb: 0,
+          borderTop: `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <Button variant="outlined" onClick={handleBack} startIcon={<MdNavigateBefore />}>
           {activeStep === 0 ? 'Dashboard' : 'Back'}
         </Button>
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           {activeStep === steps.length - 1 ? (
-            <Tooltip 
-              title={!user ? "Please sign in to save your crew" : ""}
-              placement="top"
-            >
+            <Tooltip title={!user ? 'Please sign in to save your crew' : ''} placement="top">
               <span>
                 <Button
                   variant="contained"
@@ -608,7 +707,7 @@ const CreateCrewPage: React.FC = () => {
                     backgroundColor: !user ? theme.palette.grey[400] : undefined,
                     '&:hover': {
                       backgroundColor: !user ? theme.palette.grey[400] : undefined,
-                    }
+                    },
                   }}
                 >
                   {saving ? 'Saving...' : editingCrewId ? 'Update Crew' : 'Save Crew'}
@@ -628,8 +727,8 @@ const CreateCrewPage: React.FC = () => {
         </Box>
       </Box>
 
-      <AuthModal 
-        open={showAuthModal} 
+      <AuthModal
+        open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />

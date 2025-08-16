@@ -36,7 +36,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => {
       </DialogTitle>
 
       <DialogContent>
-        {/* User Information */}
         <Box display="flex" flexDirection="column" alignItems="center" py={2}>
           <Avatar
             sx={{
@@ -44,23 +43,23 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose }) => {
               height: 80,
               mb: 2,
               bgcolor: 'primary.main',
-              fontSize: '2rem'
+              fontSize: '2rem',
             }}
           >
             {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
           </Avatar>
-          
+
           <Typography variant="h5" gutterBottom align="center">
             {user.name || 'User'}
           </Typography>
-          
+
           <Typography variant="body1" color="text.secondary" gutterBottom align="center">
             {user.email}
           </Typography>
-          
-          {user.clubName && (
+
+          {user.club_name && (
             <Typography variant="body2" color="text.secondary" align="center">
-              {user.clubName}
+              {user.club_name}
             </Typography>
           )}
         </Box>

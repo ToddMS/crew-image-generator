@@ -42,7 +42,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
 
   const initializeGoogleSignIn = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    
+
     if (!window.google) {
       return;
     }
@@ -60,28 +60,22 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
     });
 
     if (googleButtonRef.current) {
-      window.google.accounts.id.renderButton(
-        googleButtonRef.current,
-        {
-          theme: 'outline',
-          size: 'large',
-          width: 250,
-          text: 'signin_with',
-        }
-      );
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: 250,
+        text: 'signin_with',
+      });
     } else {
       console.error('googleButtonRef.current is null - retrying in 200ms...');
       setTimeout(() => {
         if (googleButtonRef.current && window.google) {
-          window.google.accounts.id.renderButton(
-            googleButtonRef.current,
-            {
-              theme: 'outline',
-              size: 'large',
-              width: 250,
-              text: 'signin_with',
-            }
-          );
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: 'outline',
+            size: 'large',
+            width: 250,
+            text: 'signin_with',
+          });
         } else {
           console.error('Retry failed: googleButtonRef still null');
         }

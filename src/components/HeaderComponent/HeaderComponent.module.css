@@ -54,12 +54,12 @@ a {
 }
 
 .navButton:hover {
-  color: #5E98C2;
+  color: #5e98c2;
   text-decoration: underline;
 }
 
 .loginButton {
-  background-color: #5E98C2;
+  background-color: #5e98c2;
   color: white;
   padding: 8px 16px;
   border-radius: 4px;

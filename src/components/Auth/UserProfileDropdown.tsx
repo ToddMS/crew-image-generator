@@ -62,15 +62,11 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
       >
-        <Avatar
-          sx={{ width: 32, height: 32 }}
-          src={user.profile_picture}
-          alt={user.name}
-        >
+        <Avatar sx={{ width: 32, height: 32 }} src={user.profile_picture} alt={user.name}>
           {user.name.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
-      
+
       <Menu
         anchorEl={anchorEl}
         id="account-menu"
@@ -120,24 +116,29 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
             </Typography>
           )}
         </Box>
-        
+
         <Divider />
-        
-        <MenuItem onClick={() => { setShowProfileModal(true); handleClose(); }}>
+
+        <MenuItem
+          onClick={() => {
+            setShowProfileModal(true);
+            handleClose();
+          }}
+        >
           <Avatar sx={{ bgcolor: '#5E98C2' }}>
             <SettingsIcon />
           </Avatar>
           Profile & Settings
         </MenuItem>
-        
-        <MenuItem 
+
+        <MenuItem
           onClick={(e) => e.stopPropagation()}
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
             px: 2,
-            py: 1
+            py: 1,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -158,7 +159,7 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
             }}
           />
         </MenuItem>
-        
+
         <MenuItem onClick={handleLogout}>
           <Avatar sx={{ bgcolor: '#f44336' }}>
             <LogoutIcon />
@@ -168,10 +169,7 @@ const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
       </Menu>
 
       {/* Profile Modal */}
-      <ProfileModal 
-        open={showProfileModal} 
-        onClose={() => setShowProfileModal(false)} 
-      />
+      <ProfileModal open={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </>
   );
 };

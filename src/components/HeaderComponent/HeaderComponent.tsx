@@ -3,10 +3,10 @@ import { Box, AppBar, Toolbar, Typography, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import RowGramIcon from '../../assets/RowGramIcon.png';
-import { TbHelp } from "react-icons/tb";
-import { IoHomeOutline, IoPeopleOutline  } from "react-icons/io5";
-import { MdPhotoLibrary, MdInsights } from "react-icons/md";
-import { PiSquaresFourLight } from "react-icons/pi";
+import { TbHelp } from 'react-icons/tb';
+import { IoHomeOutline, IoPeopleOutline } from 'react-icons/io5';
+import { MdPhotoLibrary, MdInsights } from 'react-icons/md';
+import { PiSquaresFourLight } from 'react-icons/pi';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalytics } from '../../context/AnalyticsContext';
 import AuthModal from '../Auth/AuthModal';
@@ -66,48 +66,44 @@ const HeaderComponent: React.FC = () => {
 
   return (
     <>
-      <AppBar 
-        position="static" 
+      <AppBar
+        position="static"
         elevation={1}
-        sx={{ 
+        sx={{
           backgroundColor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#f9f9f9',
           borderBottom: `1px solid ${theme.palette.mode === 'dark' ? '#333333' : '#e0e0e0'}`,
-          color: theme.palette.text.primary
+          color: theme.palette.text.primary,
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between', px: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <img 
-              src={RowGramIcon} 
-              alt="RowGram Logo" 
-              style={{ width: 50, height: 50 }}
-            />
-            <Typography 
-              variant="h5" 
+            <img src={RowGramIcon} alt="RowGram Logo" style={{ width: 50, height: 50 }} />
+            <Typography
+              variant="h5"
               component="h2"
-              sx={{ 
+              sx={{
                 color: theme.palette.text.primary,
                 fontWeight: 500,
-                mt: 0.5
+                mt: 0.5,
               }}
             >
               RowGram
             </Typography>
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <IoHomeOutline size={18} />
-              <Button 
+              <Button
                 onClick={() => scrollToSection('home')}
-                sx={{ 
+                sx={{
                   color: theme.palette.text.primary,
                   textTransform: 'none',
                   fontSize: 18,
                   '&:hover': {
                     color: theme.palette.primary.main,
-                    textDecoration: 'underline'
-                  }
+                    textDecoration: 'underline',
+                  },
                 }}
               >
                 Home
@@ -116,16 +112,16 @@ const HeaderComponent: React.FC = () => {
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <PiSquaresFourLight size={25} />
-              <Button 
+              <Button
                 onClick={() => scrollToSection('crew-form')}
-                sx={{ 
+                sx={{
                   color: theme.palette.text.primary,
                   textTransform: 'none',
                   fontSize: 18,
                   '&:hover': {
                     color: theme.palette.primary.main,
-                    textDecoration: 'underline'
-                  }
+                    textDecoration: 'underline',
+                  },
                 }}
               >
                 Templates
@@ -134,16 +130,16 @@ const HeaderComponent: React.FC = () => {
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <IoPeopleOutline size={21} />
-              <Button 
+              <Button
                 onClick={() => scrollToSection('saved-crews')}
-                sx={{ 
+                sx={{
                   color: theme.palette.text.primary,
                   textTransform: 'none',
                   fontSize: 18,
                   '&:hover': {
                     color: theme.palette.primary.main,
-                    textDecoration: 'underline'
-                  }
+                    textDecoration: 'underline',
+                  },
                 }}
               >
                 My Crews
@@ -153,16 +149,16 @@ const HeaderComponent: React.FC = () => {
             {user && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <MdPhotoLibrary size={19} />
-                <Button 
+                <Button
                   onClick={handleGalleryClick}
-                  sx={{ 
+                  sx={{
                     color: theme.palette.text.primary,
                     textTransform: 'none',
                     fontSize: 18,
                     '&:hover': {
                       color: theme.palette.primary.main,
-                      textDecoration: 'underline'
-                    }
+                      textDecoration: 'underline',
+                    },
                   }}
                 >
                   Gallery
@@ -173,16 +169,16 @@ const HeaderComponent: React.FC = () => {
             {user && isAdmin() && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <MdInsights size={19} />
-                <Button 
+                <Button
                   onClick={handleAnalyticsClick}
-                  sx={{ 
+                  sx={{
                     color: theme.palette.text.primary,
                     textTransform: 'none',
                     fontSize: 18,
                     '&:hover': {
                       color: theme.palette.primary.main,
-                      textDecoration: 'underline'
-                    }
+                      textDecoration: 'underline',
+                    },
                   }}
                 >
                   Analytics
@@ -192,28 +188,28 @@ const HeaderComponent: React.FC = () => {
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <TbHelp size={17} />
-              <Button 
+              <Button
                 onClick={() => scrollToSection('help')}
-                sx={{ 
+                sx={{
                   color: theme.palette.text.primary,
                   textTransform: 'none',
                   fontSize: 18,
                   '&:hover': {
                     color: theme.palette.primary.main,
-                    textDecoration: 'underline'
-                  }
+                    textDecoration: 'underline',
+                  },
                 }}
               >
                 Help
               </Button>
             </Box>
-            
+
             {/* Authentication Section */}
             {user ? (
               <UserProfileDropdown user={user} />
             ) : (
-              <Button 
-                onClick={() => setShowAuthModal(true)} 
+              <Button
+                onClick={() => setShowAuthModal(true)}
                 variant="contained"
                 sx={{
                   backgroundColor: theme.palette.primary.main,
@@ -224,7 +220,7 @@ const HeaderComponent: React.FC = () => {
                   fontWeight: 500,
                   '&:hover': {
                     backgroundColor: theme.palette.primary.dark || '#4a7da3',
-                  }
+                  },
                 }}
               >
                 Login
@@ -233,12 +229,9 @@ const HeaderComponent: React.FC = () => {
           </Box>
         </Toolbar>
       </AppBar>
-      
+
       {/* Auth Modal */}
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </>
   );
 };

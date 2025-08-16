@@ -12,7 +12,7 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -101,17 +101,26 @@ const MyCrewsPage: React.FC = () => {
 
     setLoading(true);
     setError(null);
-    
+
     try {
       const result = await ApiService.getCrews();
       if (result.data) {
-        const transformedCrews = result.data.map(crew => {
+        const transformedCrews = result.data.map((crew) => {
           const getSeatLabel = (idx: number, totalRowers: number, hasCox: boolean) => {
             if (hasCox && idx === 0) return 'Cox';
             const rowerIdx = hasCox ? idx - 1 : idx;
-            
+
             if (totalRowers === 8) {
-              const seats = ['Stroke Seat', '7 Seat', '6 Seat', '5 Seat', '4 Seat', '3 Seat', '2 Seat', 'Bow'];
+              const seats = [
+                'Stroke Seat',
+                '7 Seat',
+                '6 Seat',
+                '5 Seat',
+                '4 Seat',
+                '3 Seat',
+                '2 Seat',
+                'Bow',
+              ];
               return seats[rowerIdx];
             } else if (totalRowers === 4) {
               const seats = ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
@@ -124,10 +133,10 @@ const MyCrewsPage: React.FC = () => {
             }
             return `${rowerIdx + 1} Seat`;
           };
-          
+
           const totalRowers = crew.boatType.seats;
           const hasCox = boatClassHasCox(crew.boatType.value);
-          
+
           return {
             ...crew,
             boatClub: crew.clubName,
@@ -135,18 +144,18 @@ const MyCrewsPage: React.FC = () => {
             boatClass: crew.boatType.value,
             crewMembers: crew.crewNames.map((name, idx) => ({
               seat: getSeatLabel(idx, totalRowers, hasCox),
-              name
-            }))
+              name,
+            })),
           };
         });
         setSavedCrews(transformedCrews);
-        
+
         const recentlyViewed = localStorage.getItem(`recently_saved_crews_${user.id}`);
         if (recentlyViewed) {
           try {
             const recentIds = JSON.parse(recentlyViewed);
 
-            const stringIds = recentIds.map(id => String(id));
+            const stringIds = recentIds.map((id) => String(id));
             setRecentCrews(stringIds.slice(0, 5)); // Keep only last 5
           } catch (error) {
             console.error('Error parsing recent crews:', error);
@@ -174,7 +183,7 @@ const MyCrewsPage: React.FC = () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+          Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
         },
       });
 
@@ -189,37 +198,41 @@ const MyCrewsPage: React.FC = () => {
 
   const updateRecentCrews = (crewId: string) => {
     if (!user) return;
-    
+
     const stringId = String(crewId);
-    setRecentCrews(prev => {
-      const stringPrev = prev.map(id => String(id));
-      const filtered = stringPrev.filter(id => id !== stringId);
+    setRecentCrews((prev) => {
+      const stringPrev = prev.map((id) => String(id));
+      const filtered = stringPrev.filter((id) => id !== stringId);
       const newRecent = [stringId, ...filtered].slice(0, 5);
-      
+
       // Save to localStorage
       localStorage.setItem(`recently_saved_crews_${user.id}`, JSON.stringify(newRecent));
-      
+
       return newRecent;
     });
   };
 
   const getSortedCrews = () => {
     const crewsCopy = [...savedCrews];
-    
+
     switch (sortBy) {
       case 'recent':
         // Default: by creation date (newest first)
-        return crewsCopy.sort((a, b) => new Date(b.created_at || b.createdAt || 0).getTime() - new Date(a.created_at || a.createdAt || 0).getTime());
-      
+        return crewsCopy.sort(
+          (a, b) =>
+            new Date(b.created_at || b.createdAt || 0).getTime() -
+            new Date(a.created_at || a.createdAt || 0).getTime(),
+        );
+
       case 'club':
         return crewsCopy.sort((a, b) => a.boatClub.localeCompare(b.boatClub));
-      
+
       case 'race':
         return crewsCopy.sort((a, b) => a.raceName.localeCompare(b.raceName));
-      
+
       case 'boat_class':
         return crewsCopy.sort((a, b) => a.boatClass.localeCompare(b.boatClass));
-      
+
       default:
         return crewsCopy;
     }
@@ -227,33 +240,33 @@ const MyCrewsPage: React.FC = () => {
 
   const getRecentlyViewedCrews = () => {
     const recent = recentCrews
-      .map(crewId => {
+      .map((crewId) => {
         const stringId = String(crewId);
-        const found = savedCrews.find(crew => String(crew.id) === stringId);
+        const found = savedCrews.find((crew) => String(crew.id) === stringId);
         return found;
       })
-      .filter(crew => crew !== undefined)
+      .filter((crew) => crew !== undefined)
       .slice(0, 5);
-    
+
     return recent;
   };
 
   const getRemainingCrews = () => {
-    const recentIds = new Set(recentCrews.map(id => String(id)));
-    return getSortedCrews().filter(crew => !recentIds.has(String(crew.id)));
+    const recentIds = new Set(recentCrews.map((id) => String(id)));
+    return getSortedCrews().filter((crew) => !recentIds.has(String(crew.id)));
   };
 
   const handleDeleteCrew = async (index: number) => {
     const crew = savedCrews[index];
     try {
       await ApiService.deleteCrew(crew.id);
-      setSavedCrews(prev => prev.filter((_, idx) => idx !== index));
-      
+      setSavedCrews((prev) => prev.filter((_, idx) => idx !== index));
+
       trackEvent('crew_deleted', {
         crewName: crew.boatName,
-        boatClass: crew.boatClass
+        boatClass: crew.boatClass,
       });
-      
+
       // Show success notification
       showSuccess(`Crew "${crew.boatName}" deleted successfully!`);
     } catch (error) {
@@ -275,10 +288,14 @@ const MyCrewsPage: React.FC = () => {
           clubName: crew.boatClub,
           raceName: crew.raceName,
           boatName: crew.boatName,
-          crewNames: crew.crewMembers.filter((member: { seat: string; name: string }) => member.seat !== 'Cox').map((member: { seat: string; name: string }) => member.name),
-          coxName: crew.crewMembers.find((member: { seat: string; name: string }) => member.seat === 'Cox')?.name || ''
-        }
-      }
+          crewNames: crew.crewMembers
+            .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
+            .map((member: { seat: string; name: string }) => member.name),
+          coxName:
+            crew.crewMembers.find((member: { seat: string; name: string }) => member.seat === 'Cox')
+              ?.name || '',
+        },
+      },
     });
   };
 
@@ -290,7 +307,7 @@ const MyCrewsPage: React.FC = () => {
       newSelected.delete(crewId);
     }
     setSelectedCrews(newSelected);
-    
+
     // Auto-show generate panel when crews are selected
     if (newSelected.size > 0 && !showGeneratePanel) {
       setShowGeneratePanel(true);
@@ -308,66 +325,77 @@ const MyCrewsPage: React.FC = () => {
 
     try {
       let successCount = 0;
-      const selectedCrewsArray = savedCrews.filter(crew => selectedCrews.has(crew.id));
-      
+      const selectedCrewsArray = savedCrews.filter((crew) => selectedCrews.has(crew.id));
+
       // Prepare colors based on preset selection
-      const colors = usePresetColors && selectedPresetId 
-        ? (() => {
-            const preset = presets.find(p => p.id === selectedPresetId);
-            return preset ? { primary: preset.primary_color, secondary: preset.secondary_color } : { primary: primaryColor, secondary: secondaryColor };
-          })()
-        : { primary: primaryColor, secondary: secondaryColor };
-      
+      const colors =
+        usePresetColors && selectedPresetId
+          ? (() => {
+              const preset = presets.find((p) => p.id === selectedPresetId);
+              return preset
+                ? { primary: preset.primary_color, secondary: preset.secondary_color }
+                : { primary: primaryColor, secondary: secondaryColor };
+            })()
+          : { primary: primaryColor, secondary: secondaryColor };
+
       for (let i = 0; i < selectedCrewsArray.length; i++) {
         const crew = selectedCrewsArray[i];
-        
+
         try {
           const imageBlob = await ApiService.generateImage(
-            crew.id, 
-            `${crew.boatName}_${crew.raceName}`, 
-            selectedTemplate, 
-            colors, 
-            clubIcon
+            crew.id,
+            `${crew.boatName}_${crew.raceName}`,
+            selectedTemplate,
+            colors,
+            clubIcon,
           );
-          
+
           if (imageBlob) {
-            await ApiService.saveImage(crew.id, `${crew.boatName}_${crew.raceName}`, selectedTemplate, colors, imageBlob);
+            await ApiService.saveImage(
+              crew.id,
+              `${crew.boatName}_${crew.raceName}`,
+              selectedTemplate,
+              colors,
+              imageBlob,
+            );
             successCount++;
-            
+
             trackEvent('image_generated', {
               template: selectedTemplate,
               primaryColor: colors.primary,
               secondaryColor: colors.secondary,
               crewName: crew.boatName,
               raceName: crew.raceName,
-              boatClass: crew.boatClass
+              boatClass: crew.boatClass,
             });
           }
         } catch (error) {
           console.error(`Error generating image for crew ${crew.boatName}:`, error);
         }
-        
+
         // Small delay between generations
         if (i < selectedCrewsArray.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
-      
+
       if (successCount > 0) {
         trackEvent('bulk_generation', {
           template: selectedTemplate,
           crewCount: successCount,
           primaryColor: colors.primary,
-          secondaryColor: colors.secondary
+          secondaryColor: colors.secondary,
         });
-        
+
         // Show success notification
-        showSuccess(`Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`);
-        
+        showSuccess(
+          `Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`,
+        );
+
         // Clear selections and hide panel after successful generation
         setSelectedCrews(new Set());
         setShowGeneratePanel(false);
-        
+
         // Navigate to gallery after successful generation
         navigate('/gallery');
       } else {
@@ -385,21 +413,23 @@ const MyCrewsPage: React.FC = () => {
 
   const handleBulkDelete = async () => {
     const crewsToDelete = Array.from(selectedCrews)
-      .map(crewId => savedCrews.find(crew => crew.id === crewId))
-      .filter(crew => crew !== undefined);
-    
+      .map((crewId) => savedCrews.find((crew) => crew.id === crewId))
+      .filter((crew) => crew !== undefined);
+
     if (crewsToDelete.length === 0) return;
-    
+
     try {
       // Delete all crews
-      await Promise.all(crewsToDelete.map(crew => ApiService.deleteCrew(crew.id)));
-      
+      await Promise.all(crewsToDelete.map((crew) => ApiService.deleteCrew(crew.id)));
+
       // Update local state
-      setSavedCrews(prev => prev.filter(crew => !selectedCrews.has(crew.id)));
-      
+      setSavedCrews((prev) => prev.filter((crew) => !selectedCrews.has(crew.id)));
+
       // Show success notification
-      showSuccess(`Successfully deleted ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}!`);
-      
+      showSuccess(
+        `Successfully deleted ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}!`,
+      );
+
       // Clear selection
       setSelectedCrews(new Set());
     } catch (error) {
@@ -411,7 +441,7 @@ const MyCrewsPage: React.FC = () => {
   const getBoatClassColor = (boatClass: string) => {
     const colors: Record<string, string> = {
       '8+': '#FF6B6B',
-      '4+': '#4ECDC4', 
+      '4+': '#4ECDC4',
       '4-': '#45B7D1',
       '4x': '#96CEB4',
       '2-': '#E67E22',
@@ -430,7 +460,7 @@ const MyCrewsPage: React.FC = () => {
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
           Sign in to view and manage your saved crew lineups
         </Typography>
-        <LoginPrompt 
+        <LoginPrompt
           message="Sign in to view and manage your saved crews"
           actionText="View My Crews"
         />
@@ -489,22 +519,14 @@ const MyCrewsPage: React.FC = () => {
     <Box>
       {/* Success Message */}
       {successMessage && (
-        <Alert 
-          severity="success" 
-          sx={{ mb: 3 }}
-          onClose={() => setSuccessMessage(null)}
-        >
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage(null)}>
           {successMessage}
         </Alert>
       )}
 
       {/* Error Message */}
       {error && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 3 }}
-          onClose={() => setError(null)}
-        >
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -515,22 +537,17 @@ const MyCrewsPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
             <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-              {selectedCrews.size > 0 
+              {selectedCrews.size > 0
                 ? `${selectedCrews.size} of ${savedCrews.length} crews selected`
-                : `${savedCrews.length} crew${savedCrews.length !== 1 ? 's' : ''} in your account`
-              }
+                : `${savedCrews.length} crew${savedCrews.length !== 1 ? 's' : ''} in your account`}
             </Typography>
           </Box>
-          
+
           {/* Sort Dropdown */}
           {savedCrews.length > 0 && (
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <InputLabel>Sort by</InputLabel>
-              <Select
-                value={sortBy}
-                label="Sort by"
-                onChange={(e) => setSortBy(e.target.value)}
-              >
+              <Select value={sortBy} label="Sort by" onChange={(e) => setSortBy(e.target.value)}>
                 <MenuItem value="recent">Recently Created</MenuItem>
                 <MenuItem value="club">Club Name</MenuItem>
                 <MenuItem value="race">Race Name</MenuItem>
@@ -552,13 +569,13 @@ const MyCrewsPage: React.FC = () => {
               onDeleteCrew={(index) => {
                 const recentCrews = getRecentlyViewedCrews();
                 const crew = recentCrews[index];
-                const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+                const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
                 handleDeleteCrew(originalIndex);
               }}
               onEditCrew={(index) => {
                 const recentCrews = getRecentlyViewedCrews();
                 const crew = recentCrews[index];
-                const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+                const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
                 handleEditCrew(originalIndex);
               }}
               bulkMode={true}
@@ -582,13 +599,13 @@ const MyCrewsPage: React.FC = () => {
             onDeleteCrew={(index) => {
               const remainingCrews = getRemainingCrews();
               const crew = remainingCrews[index];
-              const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+              const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
               handleDeleteCrew(originalIndex);
             }}
             onEditCrew={(index) => {
               const remainingCrews = getRemainingCrews();
               const crew = remainingCrews[index];
-              const originalIndex = savedCrews.findIndex(c => c.id === crew.id);
+              const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
               handleEditCrew(originalIndex);
             }}
             bulkMode={true}
@@ -598,7 +615,6 @@ const MyCrewsPage: React.FC = () => {
           />
         </Box>
       </Box>
-
 
       {/* Bottom Sticky Bar for Selection Actions */}
       <Box
@@ -613,51 +629,57 @@ const MyCrewsPage: React.FC = () => {
           backgroundColor: theme.palette.background.paper,
           borderTop: `1px solid ${theme.palette.divider}`,
           boxShadow: theme.shadows[8],
-          p: 2
+          p: 2,
         }}
       >
-        <Box sx={{ 
-          maxWidth: 1200, 
-          mx: 'auto', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          gap: 2
-        }}>
+        <Box
+          sx={{
+            maxWidth: 1200,
+            mx: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
           {/* Selection Info */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{ 
-              backgroundColor: theme.palette.primary.main, 
-              color: 'white', 
-              px: 2, 
-              py: 0.5, 
-              borderRadius: 3,
-              fontWeight: 600,
-              fontSize: '0.9rem'
-            }}>
+            <Box
+              sx={{
+                backgroundColor: theme.palette.primary.main,
+                color: 'white',
+                px: 2,
+                py: 0.5,
+                borderRadius: 3,
+                fontWeight: 600,
+                fontSize: '0.9rem',
+              }}
+            >
               {selectedCrews.size}
             </Box>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {selectedCrews.size === 1 ? 'crew selected' : 'crews selected'}
             </Typography>
-            
+
             {/* Quick Preview of Selected Crews */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
-              {Array.from(selectedCrews).slice(0, 3).map(crewId => {
-                const crew = savedCrews.find(c => c.id === crewId);
-                return crew ? (
-                  <Chip
-                    key={crewId}
-                    label={crew.boatClub}
-                    size="small"
-                    sx={{ 
-                      backgroundColor: theme.palette.action.selected,
-                      fontSize: '0.75rem',
-                      maxWidth: 120
-                    }}
-                  />
-                ) : null;
-              })}
+              {Array.from(selectedCrews)
+                .slice(0, 3)
+                .map((crewId) => {
+                  const crew = savedCrews.find((c) => c.id === crewId);
+                  return crew ? (
+                    <Chip
+                      key={crewId}
+                      label={crew.boatClub}
+                      size="small"
+                      sx={{
+                        backgroundColor: theme.palette.action.selected,
+                        fontSize: '0.75rem',
+                        maxWidth: 120,
+                      }}
+                    />
+                  ) : null;
+                })}
               {selectedCrews.size > 3 && (
                 <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                   +{selectedCrews.size - 3} more
@@ -675,41 +697,41 @@ const MyCrewsPage: React.FC = () => {
             >
               Clear Selection
             </Button>
-            
+
             <Button
               variant="outlined"
               color="error"
               onClick={handleBulkDelete}
-              sx={{ 
+              sx={{
                 minWidth: 120,
                 borderColor: theme.palette.error.main,
                 color: theme.palette.error.main,
                 '&:hover': {
                   borderColor: theme.palette.error.dark,
                   color: theme.palette.error.dark,
-                  backgroundColor: theme.palette.error.main + '08'
-                }
+                  backgroundColor: theme.palette.error.main + '08',
+                },
               }}
             >
               Delete {selectedCrews.size}
             </Button>
-            
+
             <Button
               variant="contained"
               onClick={() => {
                 // Navigate to generate page with selected crew IDs
                 navigate('/generate', {
                   state: {
-                    selectedCrewIds: Array.from(selectedCrews)
-                  }
+                    selectedCrewIds: Array.from(selectedCrews),
+                  },
                 });
               }}
-              sx={{ 
+              sx={{
                 minWidth: 160,
                 bgcolor: theme.palette.primary.main,
                 '&:hover': {
-                  bgcolor: theme.palette.primary.dark
-                }
+                  bgcolor: theme.palette.primary.dark,
+                },
               }}
             >
               Generate Images

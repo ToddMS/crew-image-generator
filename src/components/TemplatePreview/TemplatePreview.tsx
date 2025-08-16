@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  Button,
-  IconButton
-} from '@mui/material';
+import { Box, CircularProgress, Typography, Button, IconButton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 
@@ -76,7 +70,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   totalCount = 0,
   onPrevious,
   onNext,
-  onIndexSelect
+  onIndexSelect,
 }) => {
   const theme = useTheme();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -92,7 +86,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       '4-': 'Coxless Four',
       '2x': 'Double Sculls',
       '2-': 'Coxless Pair',
-      '1x': 'Single Sculls'
+      '1x': 'Single Sculls',
     };
     return boatNames[boatType as keyof typeof boatNames] || 'Eight';
   };
@@ -101,19 +95,19 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   const getCrewNames = (boatType: string) => {
     switch (boatType) {
       case '8+':
-        return ["Cox", "Julian", "Vian", "George", "Grayson", "Todd", "Alex", "Tim", ""];
+        return ['Cox', 'Julian', 'Vian', 'George', 'Grayson', 'Todd', 'Alex', 'Tim', ''];
       case '4+':
-        return ["Cox", "Alice", "Bob", "Charlie", "David"];
+        return ['Cox', 'Alice', 'Bob', 'Charlie', 'David'];
       case '4-':
-        return ["Alice", "Bob", "Charlie", "David"];
+        return ['Alice', 'Bob', 'Charlie', 'David'];
       case '2x':
-        return ["Alice", "Bob"];
+        return ['Alice', 'Bob'];
       case '2-':
-        return ["Alice", "Bob"];
+        return ['Alice', 'Bob'];
       case '1x':
-        return ["Alice"];
+        return ['Alice'];
       default:
-        return ["Cox", "Julian", "Vian", "George", "Grayson", "Todd", "Alex", "Tim", ""];
+        return ['Cox', 'Julian', 'Vian', 'George', 'Grayson', 'Todd', 'Alex', 'Tim', ''];
     }
   };
 
@@ -125,27 +119,27 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       setError(null);
       return;
     }
-    
+
     // Create a hash of the current configuration to avoid unnecessary regeneration
     const configHash = JSON.stringify({
       templateConfig,
       crewData,
       clubIcon: clubIcon ? { type: clubIcon.type, filename: clubIcon.filename } : null,
-      selectedBoatType
+      selectedBoatType,
     });
-    
+
     // Skip generation if nothing has actually changed
     if (configHash === lastGeneratedHash && previewImage) {
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Determine crew data to use
       let previewCrewData: CrewData;
-      
+
       if (crewData) {
         // Use provided crew data (Generate Images mode)
         previewCrewData = crewData;
@@ -153,15 +147,15 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
         // Create dummy crew data (Template Builder mode)
         const boatType = selectedBoatType || '8+';
         previewCrewData = {
-          name: "Template Preview",
-          clubName: "Demo Club",
-          raceName: "Head of the River",
+          name: 'Template Preview',
+          clubName: 'Demo Club',
+          raceName: 'Head of the River',
           boatType: { id: 1, value: boatType, name: getBoatName(boatType) },
           crewNames: getCrewNames(boatType),
-          coachName: "Demo Coach"
+          coachName: 'Demo Coach',
         };
       }
-      
+
       // Convert uploaded file to base64 for preview
       let processedClubIcon = clubIcon;
       if (clubIcon && clubIcon.type === 'upload' && clubIcon.file) {
@@ -174,23 +168,26 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
         processedClubIcon = {
           type: 'upload',
           base64: base64Data,
-          filename: clubIcon.filename
+          filename: clubIcon.filename,
         };
       }
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/crews/generate-custom-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/crews/generate-custom-image`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            crewId: null, // We'll pass the crew data directly
+            crew: previewCrewData, // Pass crew data for preview
+            templateConfig: templateConfig,
+            clubIcon: processedClubIcon, // Pass the processed club icon for preview
+            imageName: `preview_${Date.now()}.png`,
+          }),
         },
-        body: JSON.stringify({
-          crewId: null, // We'll pass the crew data directly
-          crew: previewCrewData, // Pass crew data for preview
-          templateConfig: templateConfig,
-          clubIcon: processedClubIcon, // Pass the processed club icon for preview
-          imageName: `preview_${Date.now()}.png`
-        }),
-      });
+      );
 
       if (!response.ok) throw new Error('Failed to generate preview');
 
@@ -198,7 +195,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       const imageUrl = URL.createObjectURL(blob);
       setPreviewImage(imageUrl);
       setLastGeneratedHash(configHash);
-      
+
       if (onPreviewGenerated) {
         onPreviewGenerated(imageUrl);
       }
@@ -240,7 +237,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
     clubIcon?.filename,
     clubIcon?.base64,
     selectedBoatType,
-    debounceMs
+    debounceMs,
   ]);
 
   // Clean up blob URLs when component unmounts or image changes
@@ -265,23 +262,27 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          position: 'relative'
+          position: 'relative',
         }}
       >
         {loading && (
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            width: '100%',
-            height: '100%',
-            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100]
-          }}>
-            <CircularProgress 
-              size={40} 
-              sx={{ 
-                color: theme.palette.mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[600]
-              }} 
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
+              backgroundColor:
+                theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+            }}
+          >
+            <CircularProgress
+              size={40}
+              sx={{
+                color:
+                  theme.palette.mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[600],
+              }}
             />
           </Box>
         )}
@@ -294,36 +295,38 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover'
+                objectFit: 'cover',
               }}
             />
-            
+
             {/* Cycling Controls Overlay - Show when showCyclingControls is true */}
             {showCyclingControls && totalCount > 1 && (
-              <Box sx={{ 
-                position: 'absolute',
-                bottom: 8,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                borderRadius: 2,
-                px: 1.5,
-                py: 0.5
-              }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: 8,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 0.5,
+                }}
+              >
                 <IconButton
                   size="small"
                   onClick={onPrevious}
-                  sx={{ 
+                  sx={{
                     color: 'white',
-                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
                   }}
                 >
                   <MdChevronLeft size={16} />
                 </IconButton>
-                
+
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
                   {Array.from({ length: totalCount }).map((_, index) => (
                     <Box
@@ -333,25 +336,24 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                         width: 6,
                         height: 6,
                         borderRadius: '50%',
-                        backgroundColor: index === currentIndex 
-                          ? 'white' 
-                          : 'rgba(255, 255, 255, 0.5)',
+                        backgroundColor:
+                          index === currentIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
                         cursor: 'pointer',
                         transition: 'background-color 0.2s ease',
                         '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.8)'
-                        }
+                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        },
                       }}
                     />
                   ))}
                 </Box>
-                
+
                 <IconButton
                   size="small"
                   onClick={onNext}
-                  sx={{ 
+                  sx={{
                     color: 'white',
-                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
                   }}
                 >
                   <MdChevronRight size={16} />
@@ -388,7 +390,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
           </Box>
         )}
       </Box>
-      
+
       {/* Generate Button - Show when preview is ready and showGenerateButton is true */}
       {showGenerateButton && previewImage && !loading && !error && onGenerate && (
         <Button
@@ -404,13 +406,12 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
             fontWeight: 600,
             minWidth: 200,
             width: '100%',
-            maxWidth: width
+            maxWidth: width,
           }}
         >
-          {generating 
-            ? 'Generating...' 
-            : `Generate ${selectedCrewCount} Image${selectedCrewCount !== 1 ? 's' : ''}`
-          }
+          {generating
+            ? 'Generating...'
+            : `Generate ${selectedCrewCount} Image${selectedCrewCount !== 1 ? 's' : ''}`}
         </Button>
       )}
     </Box>

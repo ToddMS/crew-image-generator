@@ -1,20 +1,20 @@
 export interface BoatType {
-    id: number;
-    value: string;
-    seats: number;
-    name: string;
+  id: number;
+  value: string;
+  seats: number;
+  name: string;
 }
 
 export interface Crew {
-    id: string;
-    name: string;
-    crewNames: string[];
-    boatType: BoatType;
-    clubName: string;
-    raceName: string;
+  id: string;
+  name: string;
+  crewNames: string[];
+  boatType: BoatType;
+  clubName: string;
+  raceName: string;
 }
 
-  export interface Template {
-    id: number;
-    image: string;
-  }
+export interface Template {
+  id: number;
+  image: string;
+}

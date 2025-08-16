@@ -51,7 +51,7 @@ interface Crew {
     seats: number;
     name: string;
   };
-} 
+}
 
 interface GalleryPageProps {
   refreshTrigger?: number;
@@ -72,12 +72,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   const loadAllData = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       const crewsResponse = await ApiService.getCrews();
       if (crewsResponse.data && !crewsResponse.error) {
-        
         const imagePromises = crewsResponse.data.map(async (crew: Crew) => {
           const imagesResponse = await ApiService.getSavedImages(crew.id);
           if (imagesResponse.data && !imagesResponse.error) {
@@ -90,12 +89,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           }
           return [];
         });
-        
+
         const allImagesArrays = await Promise.all(imagePromises);
         const flatImages = allImagesArrays.flat();
-        
-        flatImages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        
+
+        flatImages.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+
         setAllImages(flatImages);
       }
     } catch (error) {
@@ -122,21 +123,21 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   const handleDeleteImage = async (imageId: number, event: React.MouseEvent) => {
     event.stopPropagation();
-    
+
     if (!window.confirm('Are you sure you want to delete this image?')) {
       return;
     }
 
     try {
-      const imageToDelete = allImages.find(img => img.id === imageId);
+      const imageToDelete = allImages.find((img) => img.id === imageId);
       const response = await ApiService.deleteSavedImage(imageId);
       if (!response.error) {
-        setAllImages(prev => prev.filter(img => img.id !== imageId));
+        setAllImages((prev) => prev.filter((img) => img.id !== imageId));
         if (selectedImage?.id === imageId) {
           setDialogOpen(false);
           setSelectedImage(null);
         }
-        
+
         showSuccess(`Image "${imageToDelete?.image_name || 'image'}" deleted successfully!`);
       }
     } catch (error) {
@@ -147,29 +148,32 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   const handleBulkDelete = async () => {
     if (selectedImages.size === 0) return;
-    
+
     const selectedCount = selectedImages.size;
-    if (!window.confirm(`Are you sure you want to delete ${selectedCount} selected image${selectedCount > 1 ? 's' : ''}? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedCount} selected image${selectedCount > 1 ? 's' : ''}? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
     try {
-      const deletePromises = Array.from(selectedImages).map(imageId => 
-        ApiService.deleteSavedImage(imageId)
+      const deletePromises = Array.from(selectedImages).map((imageId) =>
+        ApiService.deleteSavedImage(imageId),
       );
-      
+
       await Promise.all(deletePromises);
-      
-      setAllImages(prev => prev.filter(img => !selectedImages.has(img.id)));
-      
+
+      setAllImages((prev) => prev.filter((img) => !selectedImages.has(img.id)));
+
       setSelectedImages(new Set());
-      
+
       trackEvent('gallery_bulk_delete', {
-        imageCount: selectedCount
+        imageCount: selectedCount,
       });
-      
+
       showSuccess(`Successfully deleted ${selectedCount} image${selectedCount > 1 ? 's' : ''}!`);
-      
     } catch (error) {
       console.error('Error in bulk delete:', error);
       showError('Failed to delete some images. Please try again.');
@@ -178,12 +182,12 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   const handleDownloadImage = async (image: SavedImage, event: React.MouseEvent) => {
     event.stopPropagation();
-    
+
     try {
       const imageUrl = getImageUrl(image.image_url);
       const response = await fetch(imageUrl);
       const blob = await response.blob();
-      
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -192,14 +196,14 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       trackEvent('gallery_download', {
         type: 'single',
         imageName: image.image_name,
         crewName: image.crew_name,
-        raceName: image.race_name
+        raceName: image.race_name,
       });
-      
+
       showSuccess(`Downloaded "${image.image_name}" successfully!`);
     } catch (error) {
       console.error('Error downloading image:', error);
@@ -219,63 +223,73 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   const handleBulkDownload = async () => {
     if (selectedImages.size === 0) return;
-    
+
     setIsDownloading(true);
-    
+
     try {
-      const selectedImageData = allImages.filter(img => selectedImages.has(img.id));
-      
+      const selectedImageData = allImages.filter((img) => selectedImages.has(img.id));
+
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
-      
+
       for (let i = 0; i < selectedImageData.length; i++) {
         const image = selectedImageData[i];
         try {
           const imageUrl = getImageUrl(image.image_url);
           const response = await fetch(imageUrl);
-          
+
           if (!response.ok) {
-            console.error(`Failed to fetch image ${image.image_name}:`, response.status, response.statusText);
+            console.error(
+              `Failed to fetch image ${image.image_name}:`,
+              response.status,
+              response.statusText,
+            );
             continue;
           }
-          
+
           const blob = await response.blob();
-          
-          const cleanFileName = `${image.crew_name}_${image.race_name}_${image.image_name}_${image.id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+          const cleanFileName =
+            `${image.crew_name}_${image.race_name}_${image.image_name}_${image.id}`.replace(
+              /[^a-zA-Z0-9_-]/g,
+              '_',
+            );
           zip.file(`${cleanFileName}.png`, blob);
-          
         } catch (error) {
           console.error(`Error adding image ${image.image_name} to zip:`, error);
         }
       }
-      
+
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      
+
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       const timestamp = new Date().toISOString().split('T')[0];
-      const clubNames = [...new Set(selectedImageData.map(img => img.club_name))];
-      const zipFileName = clubNames.length === 1 
-        ? `${clubNames[0]}_images_${timestamp}.zip`
-        : `crew_images_${timestamp}.zip`;
-      
+      const clubNames = [...new Set(selectedImageData.map((img) => img.club_name))];
+      const zipFileName =
+        clubNames.length === 1
+          ? `${clubNames[0]}_images_${timestamp}.zip`
+          : `crew_images_${timestamp}.zip`;
+
       link.download = zipFileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       trackEvent('gallery_download', {
         type: 'bulk_zip',
         imageCount: selectedImageData.length,
         zipFileName: zipFileName,
-        clubs: [...new Set(selectedImageData.map(img => img.club_name))]
+        clubs: [...new Set(selectedImageData.map((img) => img.club_name))],
       });
-      
-      showSuccess(`Successfully downloaded ${selectedImageData.length} image${selectedImageData.length > 1 ? 's' : ''} as ZIP file!`);
-      
+
+      showSuccess(
+        `Successfully downloaded ${selectedImageData.length} image${selectedImageData.length > 1 ? 's' : ''} as ZIP file!`,
+      );
+
       setSelectedImages(new Set());
     } catch (error) {
       console.error('Error in bulk download:', error);
@@ -294,10 +308,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     return `${import.meta.env.VITE_API_URL}${imageUrl}`;
   };
 
-
-  const filteredImages = allImages.filter(image => {
+  const filteredImages = allImages.filter((image) => {
     if (!searchTerm) return true;
-    
+
     const searchLower = searchTerm.toLowerCase();
     return (
       image.image_name.toLowerCase().includes(searchLower) ||
@@ -309,11 +322,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
   if (!user) {
     return (
-      <Box sx={{ 
-        textAlign: 'center', 
-        py: 8,
-        backgroundColor: theme.palette.background.default
-      }}>
+      <Box
+        sx={{
+          textAlign: 'center',
+          py: 8,
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
         <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
           Please sign in to view your gallery
         </Typography>
@@ -338,10 +353,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-            {selectedImages.size > 0 
+            {selectedImages.size > 0
               ? `${selectedImages.size} of ${filteredImages.length} images selected`
-              : `${filteredImages.length} image${filteredImages.length !== 1 ? 's' : ''} in your gallery`
-            }
+              : `${filteredImages.length} image${filteredImages.length !== 1 ? 's' : ''} in your gallery`}
           </Typography>
         </Box>
         {selectedImages.size > 0 && (
@@ -355,12 +369,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
             >
               {isDownloading ? 'Creating ZIP...' : `Download ZIP (${selectedImages.size})`}
             </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleBulkDelete}
-              size="small"
-            >
+            <Button variant="outlined" color="error" onClick={handleBulkDelete} size="small">
               Delete {selectedImages.size}
             </Button>
             <Button
@@ -391,10 +400,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
             ),
             endAdornment: searchTerm && (
               <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={() => setSearchTerm('')}
-                >
+                <IconButton size="small" onClick={() => setSearchTerm('')}>
                   <MdClear size={16} />
                 </IconButton>
               </InputAdornment>
@@ -403,49 +409,51 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
-            }
+            },
           }}
         />
-        
+
         {searchTerm && (
           <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
-            {filteredImages.length === 0 
-              ? `No images found matching "${searchTerm}"` 
-              : `Found ${filteredImages.length} image${filteredImages.length === 1 ? '' : 's'}`
-            }
+            {filteredImages.length === 0
+              ? `No images found matching "${searchTerm}"`
+              : `Found ${filteredImages.length} image${filteredImages.length === 1 ? '' : 's'}`}
           </Typography>
         )}
       </Box>
-
 
       {/* Images Grid */}
       {filteredImages.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <MdImage size={64} color={theme.palette.text.disabled} />
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               color: theme.palette.text.secondary,
-              mt: 2
+              mt: 2,
             }}
           >
-            {allImages.length === 0 
-              ? "No images yet. Generate and save images to see them here." 
-              : "No images match your filters."}
+            {allImages.length === 0
+              ? 'No images yet. Generate and save images to see them here.'
+              : 'No images match your filters.'}
           </Typography>
         </Box>
       ) : (
         <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
           {filteredImages.map((image) => (
-            <Grid size={{ xs: 12/5 }} key={image.id} sx={{ display: 'flex', justifyContent: 'center', maxWidth: '20%', flexBasis: '20%' }}>
+            <Grid
+              size={{ xs: 12 / 5 }}
+              key={image.id}
+              sx={{ display: 'flex', justifyContent: 'center', maxWidth: '20%', flexBasis: '20%' }}
+            >
               <Card
                 onClick={() => handleImageSelection(image.id, !selectedImages.has(image.id))}
                 sx={{
                   position: 'relative',
                   cursor: 'pointer',
                   backgroundColor: theme.palette.background.paper,
-                  border: selectedImages.has(image.id) 
-                    ? `2px solid ${theme.palette.primary.main}` 
+                  border: selectedImages.has(image.id)
+                    ? `2px solid ${theme.palette.primary.main}`
                     : `1px solid ${theme.palette.divider}`,
                   borderRadius: 2,
                   overflow: 'hidden',
@@ -460,27 +468,29 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                       : `${theme.palette.primary.main}04`,
                     '& .action-buttons': {
                       opacity: 1,
-                    }
-                  }
+                    },
+                  },
                 }}
               >
-                <Box sx={{ 
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <Box
+                  sx={{
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <CardMedia
                     component="img"
                     sx={{
                       height: 260,
                       objectFit: 'contain',
-                      display: 'block'
+                      display: 'block',
                     }}
                     image={getImageUrl(image.image_url)}
                     alt={image.image_name}
                   />
-                
+
                   {/* Selection Checkbox */}
                   <Checkbox
                     checked={selectedImages.has(image.id)}
@@ -490,10 +500,10 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     }}
                     onClick={(e) => e.stopPropagation()}
                     size="small"
-                    sx={{ 
-                      position: 'absolute', 
-                      top: 8, 
-                      right: 8, 
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
                       zIndex: 2,
                       padding: '4px',
                       backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -511,7 +521,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                       },
                     }}
                   />
-                  
+
                   {/* Action buttons */}
                   <Box
                     className="action-buttons"
@@ -532,7 +542,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                         color: 'white',
                         '&:hover': {
                           backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                        }
+                        },
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -541,7 +551,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     >
                       <MdImage size={18} />
                     </IconButton>
-                    
+
                     <IconButton
                       size="small"
                       sx={{
@@ -549,13 +559,13 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                         color: 'white',
                         '&:hover': {
                           backgroundColor: 'rgba(76, 175, 80, 0.9)',
-                        }
+                        },
                       }}
                       onClick={(e) => handleDownloadImage(image, e)}
                     >
                       <MdDownload size={18} />
                     </IconButton>
-                    
+
                     <IconButton
                       size="small"
                       sx={{
@@ -563,7 +573,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                         color: 'white',
                         '&:hover': {
                           backgroundColor: 'rgba(244, 67, 54, 0.9)',
-                        }
+                        },
                       }}
                       onClick={(e) => handleDeleteImage(image.id, e)}
                     >
@@ -571,21 +581,23 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     </IconButton>
                   </Box>
                 </Box>
-                
-                <Box sx={{ 
-                  p: 1.5,
-                  maxWidth: 220,
-                  width: '100%'
-                }}>
+
+                <Box
+                  sx={{
+                    p: 1.5,
+                    maxWidth: 220,
+                    width: '100%',
+                  }}
+                >
                   {/* Picture Name - Top */}
-                  <Tooltip 
-                    title={image.image_name.length > 30 ? image.image_name : ''} 
+                  <Tooltip
+                    title={image.image_name.length > 30 ? image.image_name : ''}
                     arrow
                     disableHoverListener={image.image_name.length <= 30}
                   >
-                    <Typography 
-                      variant="subtitle2" 
-                      sx={{ 
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
                         color: theme.palette.text.primary,
                         fontWeight: 600,
                         mb: 0.5,
@@ -594,38 +606,38 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                         whiteSpace: 'nowrap',
                         fontSize: '0.875rem',
                         width: '100%',
-                        cursor: image.image_name.length > 30 ? 'pointer' : 'default'
+                        cursor: image.image_name.length > 30 ? 'pointer' : 'default',
                       }}
                     >
                       {image.image_name}
                     </Typography>
                   </Tooltip>
-                  
+
                   {/* Club and Crew Name - Middle */}
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
+                  <Typography
+                    variant="body2"
+                    sx={{
                       color: theme.palette.primary.main,
                       fontSize: '0.8rem',
                       fontWeight: 500,
                       mb: 0.25,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {image.club_name} - {image.crew_name}
                   </Typography>
-                  
+
                   {/* Race Name - Bottom */}
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
+                  <Typography
+                    variant="body2"
+                    sx={{
                       color: theme.palette.text.secondary,
                       fontSize: '0.8rem',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {image.race_name}
@@ -646,8 +658,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
           sx: {
             backgroundColor: theme.palette.background.paper,
             borderRadius: 2,
-            maxHeight: '80vh'
-          }
+            maxHeight: '80vh',
+          },
         }}
       >
         <Box sx={{ position: 'relative' }}>
@@ -662,18 +674,15 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
               color: 'white',
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              }
+              },
             }}
           >
             <MdClose />
           </IconButton>
-          
+
           <DialogContent sx={{ p: 0 }}>
             {selectedImage && (
-              <Box
-                onClick={handleCloseDialog}
-                sx={{ cursor: 'pointer' }}
-              >
+              <Box onClick={handleCloseDialog} sx={{ cursor: 'pointer' }}>
                 <img
                   src={getImageUrl(selectedImage.image_url)}
                   alt={selectedImage.image_name}
@@ -682,7 +691,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                     height: 'auto',
                     display: 'block',
                     maxHeight: '80vh',
-                    objectFit: 'contain'
+                    objectFit: 'contain',
                   }}
                 />
               </Box>

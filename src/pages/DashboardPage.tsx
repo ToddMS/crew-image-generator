@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Paper,
-  Avatar
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, Paper, Avatar } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
@@ -39,52 +31,54 @@ const DashboardPage: React.FC = () => {
   const steps = [
     {
       label: 'Create Your Crew',
-      description: 'Start by creating a crew lineup with boat type, club name, race name, and crew members.',
+      description:
+        'Start by creating a crew lineup with boat type, club name, race name, and crew members.',
       icon: <MdPersonAdd size={24} />,
       action: () => navigate('/create'),
-      actionText: 'Create Crew'
+      actionText: 'Create Crew',
     },
     {
       label: 'Generate Images',
       description: 'Turn your crew lineup into beautiful, shareable images using our templates.',
       icon: <MdImage size={24} />,
       action: () => navigate('/generate'),
-      actionText: 'Generate Images'
+      actionText: 'Generate Images',
     },
     {
       label: 'View & Download',
-      description: 'Browse your generated images in the gallery and download them individually or in bulk.',
+      description:
+        'Browse your generated images in the gallery and download them individually or in bulk.',
       icon: <MdPhotoLibrary size={24} />,
       action: () => navigate('/gallery'),
-      actionText: 'View Gallery'
-    }
+      actionText: 'View Gallery',
+    },
   ];
 
   const features = [
     {
       title: 'Multiple Boat Types',
-      description: 'Support for 8+, 4+, 4-, 4x, 2-, 2x, and 1x boats'
+      description: 'Support for 8+, 4+, 4-, 4x, 2-, 2x, and 1x boats',
     },
     {
       title: 'Custom Templates',
-      description: 'Choose from multiple image templates for your crew lineups'
+      description: 'Choose from multiple image templates for your crew lineups',
     },
     {
       title: 'Club Branding',
-      description: 'Add your club colors and logo to personalize your images'
+      description: 'Add your club colors and logo to personalize your images',
     },
     {
       title: 'Bulk Generation',
-      description: 'Generate images for multiple crews at once to save time'
+      description: 'Generate images for multiple crews at once to save time',
     },
     {
       title: 'Easy Sharing',
-      description: 'Download individual images or bulk ZIP files for sharing'
+      description: 'Download individual images or bulk ZIP files for sharing',
     },
     {
       title: 'Cloud Storage',
-      description: 'Your crews and images are saved securely to your account'
-    }
+      description: 'Your crews and images are saved securely to your account',
+    },
   ];
 
   return (
@@ -96,16 +90,14 @@ const DashboardPage: React.FC = () => {
           mb: 4,
           textAlign: 'center',
           background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-          border: `1px solid ${theme.palette.divider}`
+          border: `1px solid ${theme.palette.divider}`,
         }}
       >
         {user ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, mb: 3 }}>
-            <Avatar
-              src={user.profile_picture}
-              alt={user.name}
-              sx={{ width: 64, height: 64 }}
-            >
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, mb: 3 }}
+          >
+            <Avatar src={user.profile_picture} alt={user.name} sx={{ width: 64, height: 64 }}>
               {user.name?.charAt(0)}
             </Avatar>
             <Box sx={{ textAlign: 'left' }}>
@@ -127,7 +119,7 @@ const DashboardPage: React.FC = () => {
             </Typography>
           </Box>
         )}
-        
+
         <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 600 }}>
           🚣‍♂️ Your Complete Crew Lineup Solution
         </Typography>
@@ -139,7 +131,7 @@ const DashboardPage: React.FC = () => {
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}>
             How It Works
           </Typography>
-          
+
           <Grid container spacing={4}>
             {steps.map((step, index) => (
               <Grid size={{ xs: 12, md: 4 }} key={index}>
@@ -155,27 +147,27 @@ const DashboardPage: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       mx: 'auto',
-                      mb: 2
+                      mb: 2,
                     }}
                   >
                     {step.icon}
                   </Box>
-                  
+
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                     {index + 1}. {step.label}
                   </Typography>
-                  
+
                   <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
                     {step.description}
                   </Typography>
-                  
+
                   <Button
                     variant="outlined"
                     onClick={step.action}
                     endIcon={<MdArrowForward />}
-                    sx={{ 
+                    sx={{
                       textTransform: 'none',
-                      fontWeight: 600
+                      fontWeight: 600,
                     }}
                   >
                     {step.actionText}
@@ -193,14 +185,14 @@ const DashboardPage: React.FC = () => {
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}>
             Features
           </Typography>
-          
+
           <Grid container spacing={3}>
             {features.map((feature, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                 <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <MdCheckCircle 
-                    size={32} 
-                    color={theme.palette.success.main} 
+                  <MdCheckCircle
+                    size={32}
+                    color={theme.palette.success.main}
                     style={{ marginBottom: 8 }}
                   />
                   <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
@@ -236,7 +228,7 @@ const DashboardPage: React.FC = () => {
                 px: 4,
                 fontSize: '1.1rem',
                 fontWeight: 600,
-                textTransform: 'none'
+                textTransform: 'none',
               }}
             >
               Create Your Crew

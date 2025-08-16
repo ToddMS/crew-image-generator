@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Avatar
+  Avatar,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdDownload } from 'react-icons/md';
@@ -27,7 +27,7 @@ const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useAppTheme();
   const { clearAllData, exportData } = useAnalytics();
-  
+
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -44,7 +44,7 @@ const SettingsPage: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       setSuccess('Data exported successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
@@ -69,10 +69,7 @@ const SettingsPage: React.FC = () => {
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
           Sign in to manage your preferences and settings
         </Typography>
-        <LoginPrompt 
-          message="Sign in to access your settings"
-          actionText="Access Settings"
-        />
+        <LoginPrompt message="Sign in to access your settings" actionText="Access Settings" />
       </Box>
     );
   }
@@ -94,7 +91,7 @@ const SettingsPage: React.FC = () => {
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
           {success}
@@ -107,21 +104,21 @@ const SettingsPage: React.FC = () => {
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
             User Profile
           </Typography>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Avatar
               src={user.profile_picture}
               alt={user.name}
-              sx={{ 
-                width: 80, 
+              sx={{
+                width: 80,
                 height: 80,
                 bgcolor: 'primary.main',
-                fontSize: '2rem'
+                fontSize: '2rem',
               }}
             >
               {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
             </Avatar>
-            
+
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 {user.name || 'User'}
@@ -148,15 +145,9 @@ const SettingsPage: React.FC = () => {
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
             Appearance
           </Typography>
-          
+
           <FormControlLabel
-            control={
-              <Switch
-                checked={isDarkMode}
-                onChange={toggleDarkMode}
-                color="primary"
-              />
-            }
+            control={<Switch checked={isDarkMode} onChange={toggleDarkMode} color="primary" />}
             label={
               <Box>
                 <Typography variant="body1">Dark Mode</Typography>
@@ -169,14 +160,13 @@ const SettingsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-
       {/* Data Management */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
             Data Management
           </Typography>
-          
+
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
@@ -185,17 +175,13 @@ const SettingsPage: React.FC = () => {
                   Download your analytics and usage data
                 </Typography>
               </Box>
-              <Button
-                variant="outlined"
-                startIcon={<MdDownload />}
-                onClick={handleExportData}
-              >
+              <Button variant="outlined" startIcon={<MdDownload />} onClick={handleExportData}>
                 Export
               </Button>
             </Box>
-            
+
             <Divider />
-            
+
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
                 <Typography variant="body1" sx={{ color: theme.palette.error.main }}>
@@ -224,14 +210,14 @@ const SettingsPage: React.FC = () => {
           <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
             About RowGram
           </Typography>
-          
+
           <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
             Version 1.0.0
           </Typography>
-          
+
           <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-            RowGram helps rowing teams create professional crew lineup images. 
-            Build your crews, customize templates, and generate beautiful images for your racing teams.
+            RowGram helps rowing teams create professional crew lineup images. Build your crews,
+            customize templates, and generate beautiful images for your racing teams.
           </Typography>
         </CardContent>
       </Card>

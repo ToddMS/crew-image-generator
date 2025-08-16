@@ -3,10 +3,12 @@
   flex-direction: column;
   max-width: 400px;
   margin: 0 auto 0 auto;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.12), 0 1.5px 6px rgba(0,0,0,0.08);
-  border-radius: 16px; 
- 
-  padding: 32px; 
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.12),
+    0 1.5px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+
+  padding: 32px;
 }
 
 .label {
@@ -16,7 +18,7 @@
 }
 
 .select {
-    font-style: normal;
+  font-style: normal;
 }
 
 .inputField {
@@ -24,8 +26,8 @@
 }
 
 submitButton {
-  background-color: #5E98C2 !important;
-  color: #13375F !important;
+  background-color: #5e98c2 !important;
+  color: #13375f !important;
   padding: 12px;
   border-radius: 8px;
   text-transform: none;
@@ -35,6 +37,6 @@ submitButton {
   background-color: #4177a6 !important;
 }
 
-.MuiSelect-root[aria-expanded="false"][value=""] {
+.MuiSelect-root[aria-expanded='false'][value=''] {
   color: #888 !important;
 }

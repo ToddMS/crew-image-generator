@@ -90,7 +90,9 @@ const AnalyticsDashboard: React.FC = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={3}>        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+      <Grid container spacing={3}>
+        {' '}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ color: theme.palette.primary.main, mb: 1 }}>
@@ -102,7 +104,6 @@ const AnalyticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
@@ -115,7 +116,6 @@ const AnalyticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
@@ -128,7 +128,6 @@ const AnalyticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
@@ -141,7 +140,6 @@ const AnalyticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
@@ -171,7 +169,6 @@ const AnalyticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
         <Grid size={{ xs: 12, md: 3 }}>
           <Card>
             <CardContent>
@@ -183,10 +180,7 @@ const AnalyticsDashboard: React.FC = () => {
                 <List>
                   {getPeakHours().map(({ hour, count }, index) => (
                     <ListItem key={hour} sx={{ px: 0 }}>
-                      <ListItemText
-                        primary={formatHour(hour)}
-                        secondary={`${count} events`}
-                      />
+                      <ListItemText primary={formatHour(hour)} secondary={`${count} events`} />
                       <Chip
                         label={`#${index + 1}`}
                         size="small"
@@ -201,8 +195,7 @@ const AnalyticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-
-        <Grid size={{ xs: 12}}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 2 }}>
@@ -211,7 +204,10 @@ const AnalyticsDashboard: React.FC = () => {
               <Grid container spacing={2}>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}>
+                    <Typography
+                      variant="h4"
+                      sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}
+                    >
                       {stats.crewsCreated}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -221,7 +217,10 @@ const AnalyticsDashboard: React.FC = () => {
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" sx={{ color: theme.palette.info.main, fontWeight: 'bold' }}>
+                    <Typography
+                      variant="h4"
+                      sx={{ color: theme.palette.info.main, fontWeight: 'bold' }}
+                    >
                       {stats.imagesGenerated}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -231,7 +230,10 @@ const AnalyticsDashboard: React.FC = () => {
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" sx={{ color: theme.palette.warning.main, fontWeight: 'bold' }}>
+                    <Typography
+                      variant="h4"
+                      sx={{ color: theme.palette.warning.main, fontWeight: 'bold' }}
+                    >
                       {stats.bulkGenerations}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -241,7 +243,10 @@ const AnalyticsDashboard: React.FC = () => {
                 </Grid>
                 <Grid size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" sx={{ color: theme.palette.error.main, fontWeight: 'bold' }}>
+                    <Typography
+                      variant="h4"
+                      sx={{ color: theme.palette.error.main, fontWeight: 'bold' }}
+                    >
                       {stats.galleryDownloads}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">

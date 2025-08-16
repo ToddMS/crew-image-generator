@@ -14,7 +14,7 @@ import {
   Card,
   CardContent,
   Switch,
-  FormControlLabel
+  FormControlLabel,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
@@ -80,7 +80,7 @@ const TemplateCustomiser: React.FC = () => {
     textLayout: 'header-left',
     logo: 'bottom-right',
     dimensions: { width: 1080, height: 1350 },
-    colors: { primary: '#DAA520', secondary: '#2C3E50' }
+    colors: { primary: '#DAA520', secondary: '#2C3E50' },
   });
 
   useEffect(() => {
@@ -106,7 +106,7 @@ const TemplateCustomiser: React.FC = () => {
 
   useEffect(() => {
     if (presets.length > 0 && !selectedPresetId && usePresetColors) {
-      const favoritePreset = presets.find(p => p.is_default);
+      const favoritePreset = presets.find((p) => p.is_default);
       if (favoritePreset) {
         handlePresetSelection(favoritePreset.id, favoritePreset);
       } else if (presets.length > 0) {
@@ -119,7 +119,7 @@ const TemplateCustomiser: React.FC = () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+          Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
         },
       });
       if (!response.ok) throw new Error('Failed to load presets');
@@ -133,17 +133,17 @@ const TemplateCustomiser: React.FC = () => {
   const handlePresetSelection = (presetId: number, preset: any) => {
     setSelectedPresetId(presetId);
     if (presetId && preset) {
-      setConfig(prev => ({
+      setConfig((prev) => ({
         ...prev,
         colors: {
           primary: preset.primary_color,
-          secondary: preset.secondary_color
-        }
+          secondary: preset.secondary_color,
+        },
       }));
       if (preset.logo_filename) {
         setClubIcon({
           type: 'preset',
-          filename: preset.logo_filename
+          filename: preset.logo_filename,
         });
       } else {
         setClubIcon(null);
@@ -153,15 +153,14 @@ const TemplateCustomiser: React.FC = () => {
     }
   };
 
-
   const handleConfigChange = (field: keyof TemplateConfig, value: any) => {
-    setConfig(prev => ({ ...prev, [field]: value }));
+    setConfig((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleColorChange = (colorType: 'primary' | 'secondary', value: string) => {
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
-      colors: { ...prev.colors, [colorType]: value }
+      colors: { ...prev.colors, [colorType]: value },
     }));
   };
 
@@ -181,7 +180,7 @@ const TemplateCustomiser: React.FC = () => {
       if (clubIcon.type === 'preset' && clubIcon.filename) {
         savedClubIcon = {
           type: 'preset' as const,
-          filename: clubIcon.filename
+          filename: clubIcon.filename,
         };
       } else if (clubIcon.type === 'upload' && clubIcon.file) {
         // Convert file to base64 for storage
@@ -192,16 +191,16 @@ const TemplateCustomiser: React.FC = () => {
           savedClubIcon = {
             type: 'upload' as const,
             base64: base64Data,
-            filename: clubIcon.filename
+            filename: clubIcon.filename,
           };
-          
+
           const newTemplate: SavedTemplate = {
             id: Date.now().toString(),
             name: templateName,
             config: { ...config },
             clubIcon: savedClubIcon,
             previewUrl: currentPreviewUrl || undefined,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
           };
 
           const updated = [...savedTemplates, newTemplate];
@@ -219,14 +218,14 @@ const TemplateCustomiser: React.FC = () => {
       config: { ...config },
       clubIcon: savedClubIcon,
       previewUrl: currentPreviewUrl || undefined,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     const updated = [...savedTemplates, newTemplate];
     setSavedTemplates(updated);
     localStorage.setItem('savedTemplates', JSON.stringify(updated));
     setTemplateName('');
-      };
+  };
 
   const loadTemplate = (template: SavedTemplate) => {
     setConfig(template.config);
@@ -235,13 +234,13 @@ const TemplateCustomiser: React.FC = () => {
       if (template.clubIcon.type === 'preset') {
         setClubIcon({
           type: 'preset',
-          filename: template.clubIcon.filename
+          filename: template.clubIcon.filename,
         });
       } else if (template.clubIcon.type === 'upload' && template.clubIcon.base64) {
         setClubIcon({
           type: 'upload',
           base64: template.clubIcon.base64,
-          filename: template.clubIcon.filename
+          filename: template.clubIcon.filename,
         });
       }
     } else {
@@ -250,7 +249,7 @@ const TemplateCustomiser: React.FC = () => {
   };
 
   const deleteTemplate = (templateId: string) => {
-    const updated = savedTemplates.filter(t => t.id !== templateId);
+    const updated = savedTemplates.filter((t) => t.id !== templateId);
     setSavedTemplates(updated);
     localStorage.setItem('savedTemplates', JSON.stringify(updated));
   };
@@ -291,21 +290,23 @@ const TemplateCustomiser: React.FC = () => {
             Mix and match components to create your perfect template
           </Typography>
         </Box>
-        
+
         <Box />
       </Box>
 
       <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
         <Grid size={{ xs: 12, lg: 7 }}>
-          
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box>
-                <Typography variant="subtitle2" sx={{ 
-                  mb: 1, 
-                  fontWeight: 600, 
-                  fontSize: '0.875rem'
-                }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    mb: 1,
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                  }}
+                >
                   Boat Type
                 </Typography>
                 <FormControl fullWidth size="small">
@@ -322,55 +323,91 @@ const TemplateCustomiser: React.FC = () => {
                         '4-': 'Coxless Four (4-)',
                         '2x': 'Double Sculls (2x)',
                         '2-': 'Coxless Pair (2-)',
-                        '1x': 'Single Sculls (1x)'
+                        '1x': 'Single Sculls (1x)',
                       };
                       return boatNames[selected as keyof typeof boatNames] || selected;
                     }}
                   >
                     <MenuItem value="8+">
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Eight (8+)</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Eight (8+)
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.7rem' }}
+                        >
                           8 rowers + coxswain
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="4+">
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Coxed Four (4+)</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Coxed Four (4+)
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.7rem' }}
+                        >
                           4 rowers + coxswain
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="4-">
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Coxless Four (4-)</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Coxless Four (4-)
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.7rem' }}
+                        >
                           4 rowers, no coxswain
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="2x">
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Double Sculls (2x)</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Double Sculls (2x)
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.7rem' }}
+                        >
                           2 scullers with 2 oars each
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="2-">
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Coxless Pair (2-)</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Coxless Pair (2-)
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.7rem' }}
+                        >
                           2 rowers with 1 oar each
                         </Typography>
                       </Box>
                     </MenuItem>
                     <MenuItem value="1x">
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>Single Sculls (1x)</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Single Sculls (1x)
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.7rem' }}
+                        >
                           1 sculler with 2 oars
                         </Typography>
                       </Box>
@@ -379,66 +416,103 @@ const TemplateCustomiser: React.FC = () => {
                 </FormControl>
               </Box>
             </Grid>
-            
-            {components && Object.entries(components).map(([type, items]) => {
-              if (type === 'boatStyles') return null;
-              
-              return (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={type}>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ 
-                      mb: 1, 
-                      fontWeight: 600, 
-                      fontSize: '0.875rem'
-                    }}>
-                      {type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1')}
-                    </Typography>
-                    <FormControl fullWidth size="small">
-                      <Select
-                        value={config[type === 'logoPositions' ? 'logo' : type.slice(0, -1) as keyof TemplateConfig] || ''}
-                        onChange={(e) => handleConfigChange(type === 'logoPositions' ? 'logo' : type.slice(0, -1) as keyof TemplateConfig, e.target.value)}
-                        size="small"
-                        displayEmpty
-                        renderValue={(selected) => {
-                          if (!selected) return 'Select...';
-                          const selectedItem = items.find((item: TemplateComponent) => item.id === selected);
-                          return selectedItem ? selectedItem.name : selected;
+
+            {components &&
+              Object.entries(components).map(([type, items]) => {
+                if (type === 'boatStyles') return null;
+
+                return (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={type}>
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          mb: 1,
+                          fontWeight: 600,
+                          fontSize: '0.875rem',
                         }}
                       >
-                        {items.map((item: TemplateComponent) => (
-                          <MenuItem key={item.id} value={item.id}>
-                            <Box>
-                              <Typography variant="body2" sx={{ fontWeight: 500 }}>{item.name}</Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                                {item.description}
-                              </Typography>
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Grid>
-              );
-            })}
+                        {type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1')}
+                      </Typography>
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={
+                            config[
+                              type === 'logoPositions'
+                                ? 'logo'
+                                : (type.slice(0, -1) as keyof TemplateConfig)
+                            ] || ''
+                          }
+                          onChange={(e) =>
+                            handleConfigChange(
+                              type === 'logoPositions'
+                                ? 'logo'
+                                : (type.slice(0, -1) as keyof TemplateConfig),
+                              e.target.value,
+                            )
+                          }
+                          size="small"
+                          displayEmpty
+                          renderValue={(selected) => {
+                            if (!selected) return 'Select...';
+                            const selectedItem = items.find(
+                              (item: TemplateComponent) => item.id === selected,
+                            );
+                            return selectedItem ? selectedItem.name : selected;
+                          }}
+                        >
+                          {items.map((item: TemplateComponent) => (
+                            <MenuItem key={item.id} value={item.id}>
+                              <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                  {item.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ fontSize: '0.7rem' }}
+                                >
+                                  {item.description}
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                );
+              })}
           </Grid>
 
-          <Box sx={{ 
-            p: 1.5, 
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            mb: 3,
-            maxWidth: 400
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-              <Typography variant="subtitle2" sx={{ 
-                fontWeight: 600, 
-                fontSize: '0.875rem'
-              }}>
+          <Box
+            sx={{
+              p: 1.5,
+              backgroundColor: theme.palette.background.paper,
+              borderRadius: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              mb: 3,
+              maxWidth: 400,
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 1.5,
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                }}
+              >
                 Colors & Logo
               </Typography>
-              
+
               <FormControlLabel
                 control={
                   <Switch
@@ -451,7 +525,7 @@ const TemplateCustomiser: React.FC = () => {
                         setClubIcon(null);
                       } else {
                         if (presets.length > 0) {
-                          const favoritePreset = presets.find(p => p.is_default);
+                          const favoritePreset = presets.find((p) => p.is_default);
                           if (favoritePreset) {
                             handlePresetSelection(favoritePreset.id, favoritePreset);
                           } else {
@@ -462,12 +536,23 @@ const TemplateCustomiser: React.FC = () => {
                     }}
                   />
                 }
-                label={<Typography variant="body2" sx={{ fontSize: '0.8rem' }}>Use Club Preset</Typography>}
+                label={
+                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
+                    Use Club Preset
+                  </Typography>
+                }
                 sx={{ m: 0 }}
               />
             </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}>
+
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                justifyContent: 'space-between',
+              }}
+            >
               {usePresetColors ? (
                 <Box sx={{ flex: 1 }}>
                   <ClubPresetDropdown
@@ -480,7 +565,14 @@ const TemplateCustomiser: React.FC = () => {
               ) : (
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
                   <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                      }}
+                    >
                       <input
                         type="color"
                         value={config.colors.primary}
@@ -490,17 +582,20 @@ const TemplateCustomiser: React.FC = () => {
                           height: 28,
                           border: 'none',
                           borderRadius: '4px',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
                         }}
                       />
-                      <Typography variant="caption" sx={{ 
-                        fontFamily: 'monospace', 
-                        fontSize: '0.65rem'
-                      }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.65rem',
+                        }}
+                      >
                         {config.colors.primary.toUpperCase()}
                       </Typography>
                     </Box>
-                    
+
                     {/* Swap Colors Button - Rotated */}
                     <Box sx={{ display: 'flex', alignItems: 'center', height: 28 }}>
                       <IconButton
@@ -515,15 +610,22 @@ const TemplateCustomiser: React.FC = () => {
                           transform: 'rotate(90deg)',
                           '&:hover': {
                             backgroundColor: theme.palette.action.hover,
-                            color: theme.palette.primary.main
-                          }
+                            color: theme.palette.primary.main,
+                          },
                         }}
                       >
                         <SwapVert sx={{ fontSize: 14 }} />
                       </IconButton>
                     </Box>
-                    
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.5,
+                      }}
+                    >
                       <input
                         type="color"
                         value={config.colors.secondary}
@@ -533,20 +635,23 @@ const TemplateCustomiser: React.FC = () => {
                           height: 28,
                           border: 'none',
                           borderRadius: '4px',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
                         }}
                       />
-                      <Typography variant="caption" sx={{ 
-                        fontFamily: 'monospace', 
-                        fontSize: '0.65rem'
-                      }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.65rem',
+                        }}
+                      >
                         {config.colors.secondary.toUpperCase()}
                       </Typography>
                     </Box>
                   </Box>
                 </Box>
               )}
-              
+
               <Box sx={{ position: 'relative' }}>
                 <Button
                   variant="outlined"
@@ -558,27 +663,37 @@ const TemplateCustomiser: React.FC = () => {
                     borderRadius: 1,
                     borderStyle: 'dashed',
                     minWidth: 50,
-                    p: 0
+                    p: 0,
                   }}
                   title="Upload Club Icon"
                 >
                   {clubIcon ? (
                     <img
-                      src={clubIcon.file ? URL.createObjectURL(clubIcon.file) : `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`}
+                      src={
+                        clubIcon.file
+                          ? URL.createObjectURL(clubIcon.file)
+                          : `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`
+                      }
                       alt="Club Icon"
                       style={{
                         width: '100%',
                         height: '100%',
                         objectFit: 'contain',
-                        borderRadius: 4
+                        borderRadius: 4,
                       }}
                       onError={(e) => {
-                        console.error('Failed to load logo:', `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`);
+                        console.error(
+                          'Failed to load logo:',
+                          `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`,
+                        );
                         console.error('Club icon object:', clubIcon);
                       }}
                     />
                   ) : (
-                    <Typography variant="caption" sx={{ fontSize: '0.6rem', textAlign: 'center', lineHeight: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ fontSize: '0.6rem', textAlign: 'center', lineHeight: 1 }}
+                    >
                       Upload Club Icon
                     </Typography>
                   )}
@@ -592,7 +707,7 @@ const TemplateCustomiser: React.FC = () => {
                         setClubIcon({
                           type: 'upload',
                           file: file,
-                          filename: file.name
+                          filename: file.name,
                         });
                       }
                     }}
@@ -611,8 +726,8 @@ const TemplateCustomiser: React.FC = () => {
                       width: 20,
                       height: 20,
                       '&:hover': {
-                        backgroundColor: theme.palette.error.dark
-                      }
+                        backgroundColor: theme.palette.error.dark,
+                      },
                     }}
                   >
                     <Delete sx={{ fontSize: 12 }} />
@@ -627,25 +742,27 @@ const TemplateCustomiser: React.FC = () => {
               <Typography variant="h6" sx={{ mb: 2, fontSize: '1rem', fontWeight: 600 }}>
                 Saved Templates ({savedTemplates.length})
               </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 1.5, 
-                overflowX: 'auto', 
-                pb: 1,
-                '&::-webkit-scrollbar': { height: 6 },
-                '&::-webkit-scrollbar-thumb': { 
-                  backgroundColor: theme.palette.divider,
-                  borderRadius: 3 
-                }
-              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1.5,
+                  overflowX: 'auto',
+                  pb: 1,
+                  '&::-webkit-scrollbar': { height: 6 },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: theme.palette.divider,
+                    borderRadius: 3,
+                  },
+                }}
+              >
                 {savedTemplates.map((template) => (
-                  <Card 
-                    key={template.id} 
-                    sx={{ 
-                      minWidth: 200, 
+                  <Card
+                    key={template.id}
+                    sx={{
+                      minWidth: 200,
                       cursor: 'pointer',
                       '&:hover': { transform: 'translateY(-2px)' },
-                      transition: 'transform 0.2s ease'
+                      transition: 'transform 0.2s ease',
                     }}
                     onClick={() => loadTemplate(template)}
                   >
@@ -659,7 +776,7 @@ const TemplateCustomiser: React.FC = () => {
                         position: 'relative',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
                       }}
                     >
                       <Image sx={{ fontSize: 24, color: 'white', opacity: 0.8 }} />
@@ -675,7 +792,7 @@ const TemplateCustomiser: React.FC = () => {
                           right: 4,
                           backgroundColor: 'rgba(0,0,0,0.5)',
                           color: 'white',
-                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
+                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' },
                         }}
                       >
                         <Delete sx={{ fontSize: 14 }} />
@@ -685,7 +802,11 @@ const TemplateCustomiser: React.FC = () => {
                       <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
                         {template.name}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.7rem' }}
+                      >
                         {new Date(template.createdAt).toLocaleDateString()}
                       </Typography>
                     </CardContent>
@@ -697,16 +818,21 @@ const TemplateCustomiser: React.FC = () => {
         </Grid>
 
         <Grid size={{ xs: 12, lg: 5 }}>
-          <Box sx={{ 
-            position: 'sticky', 
-            top: 20,
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 2,
-            p: 2,
-            border: `1px solid ${theme.palette.divider}`,
-            height: 'fit-content'
-          }}>
-            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, mb: 2, textAlign: 'center' }}>
+          <Box
+            sx={{
+              position: 'sticky',
+              top: 20,
+              backgroundColor: theme.palette.background.paper,
+              borderRadius: 2,
+              p: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              height: 'fit-content',
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ fontSize: '1rem', fontWeight: 600, mb: 2, textAlign: 'center' }}
+            >
               Preview
             </Typography>
 
@@ -720,7 +846,7 @@ const TemplateCustomiser: React.FC = () => {
                 onPreviewGenerated={handlePreviewGenerated}
                 debounceMs={500}
               />
-              
+
               <TextField
                 placeholder="Enter template name..."
                 value={templateName}
@@ -728,7 +854,7 @@ const TemplateCustomiser: React.FC = () => {
                 size="small"
                 sx={{ mt: 2, width: '100%' }}
               />
-              
+
               <Button
                 variant="contained"
                 onClick={saveTemplate}

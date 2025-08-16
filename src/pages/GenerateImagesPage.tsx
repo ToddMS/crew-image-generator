@@ -7,7 +7,7 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -64,7 +64,7 @@ const GenerateImagesPage: React.FC = () => {
     if (state?.selectedCrewIds) {
       setSelectedCrewIds(state.selectedCrewIds);
     } else if (state?.selectedCrewIndex !== undefined) {
-      loadCrews().then(crews => {
+      loadCrews().then((crews) => {
         const crewsData = crews?.data || crews;
         if (crewsData && Array.isArray(crewsData) && state.selectedCrewIndex < crewsData.length) {
           setSelectedCrewIds([crewsData[state.selectedCrewIndex].id]);
@@ -109,20 +109,20 @@ const GenerateImagesPage: React.FC = () => {
   const handleCrewSelection = (crew: any) => {
     const crewIdStr = crew.id.toString();
     const newSelectedSet = new Set(selectedCrewIdsSet);
-    
+
     if (newSelectedSet.has(crewIdStr)) {
       newSelectedSet.delete(crewIdStr);
     } else {
       newSelectedSet.add(crewIdStr);
     }
-    
+
     setSelectedCrewIdsSet(newSelectedSet);
     const newSelectedIds = Array.from(newSelectedSet);
     setSelectedCrewIds(newSelectedIds);
-    
+
     if (!selectedCrewIdsSet.has(crewIdStr) && newSelectedSet.has(crewIdStr)) {
-      const currentSelectedCrews = allCrews.filter(c => newSelectedIds.includes(c.id.toString()));
-      const newCrewIndex = currentSelectedCrews.findIndex(c => c.id.toString() === crewIdStr);
+      const currentSelectedCrews = allCrews.filter((c) => newSelectedIds.includes(c.id.toString()));
+      const newCrewIndex = currentSelectedCrews.findIndex((c) => c.id.toString() === crewIdStr);
       if (newCrewIndex !== -1) {
         setPreviewCrewIndex(newCrewIndex);
       }
@@ -131,14 +131,14 @@ const GenerateImagesPage: React.FC = () => {
 
   useEffect(() => {
     loadSavedTemplates();
-    
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'savedTemplates') {
         loadSavedTemplates();
       }
     };
-    
-    window.addEventListener('storage', handleStorageChange);    
+
+    window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
@@ -153,7 +153,7 @@ const GenerateImagesPage: React.FC = () => {
         if (templates.length > 0 && !selectedTemplate) {
           setSelectedTemplate(templates[0]);
         }
-        if (selectedTemplate && !templates.find(t => t.id === selectedTemplate.id)) {
+        if (selectedTemplate && !templates.find((t) => t.id === selectedTemplate.id)) {
           setSelectedTemplate(templates.length > 0 ? templates[0] : null);
         }
       } else {
@@ -182,11 +182,12 @@ const GenerateImagesPage: React.FC = () => {
     try {
       const result = await ApiService.getCrews();
       const crews = result.data || result;
-      
+
       if (crews && Array.isArray(crews)) {
-        const selected = crews.filter(crew => {
+        const selected = crews.filter((crew) => {
           const crewIdStr = crew.id?.toString();
-          const isSelected = selectedCrewIds.includes(crewIdStr) || selectedCrewIds.includes(crew.id);
+          const isSelected =
+            selectedCrewIds.includes(crewIdStr) || selectedCrewIds.includes(crew.id);
           return isSelected;
         });
         setSelectedCrews(selected);
@@ -214,30 +215,33 @@ const GenerateImagesPage: React.FC = () => {
             if (selectedTemplate.clubIcon.type === 'preset') {
               clubIconForApi = {
                 type: 'preset',
-                filename: selectedTemplate.clubIcon.filename
+                filename: selectedTemplate.clubIcon.filename,
               };
             } else if (selectedTemplate.clubIcon.type === 'upload') {
               clubIconForApi = {
                 type: 'upload',
                 base64: selectedTemplate.clubIcon.base64,
-                filename: selectedTemplate.clubIcon.filename
+                filename: selectedTemplate.clubIcon.filename,
               };
             }
           }
 
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/crews/generate-custom-image`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/api/crews/generate-custom-image`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
+              },
+              body: JSON.stringify({
+                crewId: crew.id,
+                templateConfig: selectedTemplate.config,
+                clubIcon: clubIconForApi,
+                imageName: `${crew.name}_${crew.boatType.value}_${Date.now()}.png`,
+              }),
             },
-            body: JSON.stringify({
-              crewId: crew.id,
-              templateConfig: selectedTemplate.config,
-              clubIcon: clubIconForApi,
-              imageName: `${crew.name}_${crew.boatType.value}_${Date.now()}.png`
-            }),
-          });
+          );
 
           if (response.ok) {
             const responseData = await response.json();
@@ -246,7 +250,7 @@ const GenerateImagesPage: React.FC = () => {
               template: selectedTemplate.id,
               crewName: crew.boatName,
               raceName: crew.raceName,
-              boatClass: crew.boatClass
+              boatClass: crew.boatClass,
             });
           }
         } catch (error) {
@@ -255,7 +259,9 @@ const GenerateImagesPage: React.FC = () => {
       }
 
       if (successCount > 0) {
-        showSuccess(`Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`);
+        showSuccess(
+          `Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`,
+        );
         navigate('/gallery');
       } else {
         showError('Failed to generate any images. Please try again.');
@@ -276,14 +282,10 @@ const GenerateImagesPage: React.FC = () => {
         <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
           Sign in to generate crew images with custom templates
         </Typography>
-        <LoginPrompt 
-          message="Sign in to generate crew images"
-          actionText="Generate Images"
-        />
+        <LoginPrompt message="Sign in to generate crew images" actionText="Generate Images" />
       </Box>
     );
   }
-
 
   return (
     <Box sx={{ maxWidth: 1400, mx: 'auto', p: 3 }}>
@@ -293,25 +295,31 @@ const GenerateImagesPage: React.FC = () => {
         </Alert>
       )}
 
-
       {/* Main Generation Interface */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3 }}>
         {/* Left Column - Template Selection */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          
           {/* Crew Selection */}
           <Card>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                 Select Crews
               </Typography>
-              
+
               {crewsLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                   <CircularProgress />
                 </Box>
               ) : allCrews.length > 0 ? (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 1, maxHeight: 300, overflowY: 'auto' }}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                    gap: 1,
+                    maxHeight: 300,
+                    overflowY: 'auto',
+                  }}
+                >
                   {allCrews.map((crew) => {
                     const isSelected = selectedCrewIdsSet.has(crew.id.toString());
                     return (
@@ -319,11 +327,11 @@ const GenerateImagesPage: React.FC = () => {
                         key={crew.id}
                         sx={{
                           cursor: 'pointer',
-                          border: isSelected 
-                            ? `2px solid ${theme.palette.primary.main}` 
+                          border: isSelected
+                            ? `2px solid ${theme.palette.primary.main}`
                             : `1px solid ${theme.palette.divider}`,
-                          backgroundColor: isSelected 
-                            ? theme.palette.primary.light + '15' 
+                          backgroundColor: isSelected
+                            ? theme.palette.primary.light + '15'
                             : theme.palette.background.paper,
                           borderRadius: 1,
                           p: 1,
@@ -338,44 +346,53 @@ const GenerateImagesPage: React.FC = () => {
                           '&:hover': {
                             transform: 'translateY(-1px)',
                             boxShadow: theme.shadows[2],
-                            borderColor: theme.palette.primary.light
-                          }
+                            borderColor: theme.palette.primary.light,
+                          },
                         }}
                         onClick={() => handleCrewSelection(crew)}
                       >
-                        <Typography variant="caption" sx={{ 
-                          fontWeight: 600, 
-                          mb: 0.5, 
-                          fontSize: '0.7rem',
-                          lineHeight: 1.1,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical'
-                        }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 600,
+                            mb: 0.5,
+                            fontSize: '0.7rem',
+                            lineHeight: 1.1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                          }}
+                        >
                           {crew.name}
                         </Typography>
-                        <Typography variant="caption" sx={{ 
-                          color: theme.palette.text.secondary, 
-                          fontSize: '0.65rem',
-                          mb: 0.5,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          width: '100%'
-                        }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: theme.palette.text.secondary,
+                            fontSize: '0.65rem',
+                            mb: 0.5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            width: '100%',
+                          }}
+                        >
                           {crew.raceName}
                         </Typography>
-                        <Typography variant="caption" sx={{ 
-                          color: theme.palette.text.secondary, 
-                          fontSize: '0.65rem',
-                          mb: 0.5,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          width: '100%'
-                        }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: theme.palette.text.secondary,
+                            fontSize: '0.65rem',
+                            mb: 0.5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            width: '100%',
+                          }}
+                        >
                           {crew.clubName || crew.boatClub}
                         </Typography>
                         <Chip
@@ -384,12 +401,14 @@ const GenerateImagesPage: React.FC = () => {
                           sx={{
                             height: 16,
                             fontSize: '0.6rem',
-                            backgroundColor: isSelected ? theme.palette.primary.main : theme.palette.grey[800],
+                            backgroundColor: isSelected
+                              ? theme.palette.primary.main
+                              : theme.palette.grey[800],
                             color: 'white',
                             border: 'none',
                             '& .MuiChip-label': {
-                              px: 0.5
-                            }
+                              px: 0.5,
+                            },
                           }}
                         />
                         {isSelected && (
@@ -404,10 +423,14 @@ const GenerateImagesPage: React.FC = () => {
                               backgroundColor: theme.palette.primary.main,
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center'
+                              justifyContent: 'center',
                             }}
                           >
-                            <Typography sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 'bold' }}>✓</Typography>
+                            <Typography
+                              sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 'bold' }}
+                            >
+                              ✓
+                            </Typography>
                           </Box>
                         )}
                       </Box>
@@ -415,7 +438,14 @@ const GenerateImagesPage: React.FC = () => {
                   })}
                 </Box>
               ) : (
-                <Box sx={{ p: 4, textAlign: 'center', backgroundColor: theme.palette.action.hover, borderRadius: 2 }}>
+                <Box
+                  sx={{
+                    p: 4,
+                    textAlign: 'center',
+                    backgroundColor: theme.palette.action.hover,
+                    borderRadius: 2,
+                  }}
+                >
                   <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
                     No Crews Found
                   </Typography>
@@ -439,23 +469,30 @@ const GenerateImagesPage: React.FC = () => {
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                 Choose Template ({savedTemplates.length})
               </Typography>
-              
+
               {savedTemplates.length > 0 ? (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                    gap: 1.5,
+                  }}
+                >
                   {savedTemplates.map((template) => (
                     <Card
                       key={template.id}
                       variant="outlined"
                       sx={{
                         cursor: 'pointer',
-                        border: selectedTemplate?.id === template.id 
-                          ? `2px solid ${theme.palette.primary.main}` 
-                          : `1px solid ${theme.palette.divider}`,
+                        border:
+                          selectedTemplate?.id === template.id
+                            ? `2px solid ${theme.palette.primary.main}`
+                            : `1px solid ${theme.palette.divider}`,
                         transition: 'all 0.2s ease',
                         '&:hover': {
                           transform: 'translateY(-1px)',
-                          boxShadow: theme.shadows[2]
-                        }
+                          boxShadow: theme.shadows[2],
+                        },
                       }}
                       onClick={() => {
                         setSelectedTemplate(template);
@@ -474,16 +511,22 @@ const GenerateImagesPage: React.FC = () => {
                             mb: 1.5,
                             backgroundImage: `linear-gradient(135deg, ${template.config.colors.primary} 0%, ${template.config.colors.secondary} 100%)`,
                             border: `1px solid ${theme.palette.divider}`,
-                            position: 'relative'
+                            position: 'relative',
                           }}
                         >
                           <MdImage size={24} color="white" style={{ opacity: 0.8 }} />
                         </Box>
-                        
-                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.8rem' }}>
+
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.8rem' }}
+                        >
                           {template.name}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}
+                        >
                           Created {new Date(template.createdAt).toLocaleDateString()}
                         </Typography>
                       </CardContent>
@@ -491,8 +534,19 @@ const GenerateImagesPage: React.FC = () => {
                   ))}
                 </Box>
               ) : (
-                <Box sx={{ p: 4, textAlign: 'center', backgroundColor: theme.palette.action.hover, borderRadius: 2 }}>
-                  <MdImage size={48} color={theme.palette.text.secondary} style={{ marginBottom: 16 }} />
+                <Box
+                  sx={{
+                    p: 4,
+                    textAlign: 'center',
+                    backgroundColor: theme.palette.action.hover,
+                    borderRadius: 2,
+                  }}
+                >
+                  <MdImage
+                    size={48}
+                    color={theme.palette.text.secondary}
+                    style={{ marginBottom: 16 }}
+                  />
                   <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
                     No Templates Found
                   </Typography>
@@ -508,16 +562,21 @@ const GenerateImagesPage: React.FC = () => {
                   </Button>
                 </Box>
               )}
-              
             </CardContent>
           </Card>
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          
           <Card sx={{ position: 'sticky', top: 20 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 2,
+                }}
+              >
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                   Preview
                 </Typography>
@@ -527,24 +586,38 @@ const GenerateImagesPage: React.FC = () => {
                   </Typography>
                 )}
               </Box>
-              
-              {selectedTemplate && selectedCrewIds.length > 0 && selectedCrews.length > 0 && selectedCrews[previewCrewIndex] ? (
+
+              {selectedTemplate &&
+              selectedCrewIds.length > 0 &&
+              selectedCrews.length > 0 &&
+              selectedCrews[previewCrewIndex] ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <TemplatePreview
                     templateConfig={selectedTemplate.config}
                     crewData={{
                       name: selectedCrews[previewCrewIndex].name,
-                      clubName: selectedCrews[previewCrewIndex].clubName || selectedCrews[previewCrewIndex].boatClub,
+                      clubName:
+                        selectedCrews[previewCrewIndex].clubName ||
+                        selectedCrews[previewCrewIndex].boatClub,
                       raceName: selectedCrews[previewCrewIndex].raceName,
                       boatType: selectedCrews[previewCrewIndex].boatType,
-                      crewNames: selectedCrews[previewCrewIndex].crewNames || selectedCrews[previewCrewIndex].crewMembers?.map((member: any) => member.name) || [],
-                      coachName: selectedCrews[previewCrewIndex].coachName
+                      crewNames:
+                        selectedCrews[previewCrewIndex].crewNames ||
+                        selectedCrews[previewCrewIndex].crewMembers?.map(
+                          (member: any) => member.name,
+                        ) ||
+                        [],
+                      coachName: selectedCrews[previewCrewIndex].coachName,
                     }}
-                    clubIcon={selectedTemplate.clubIcon ? {
-                      type: selectedTemplate.clubIcon.type,
-                      filename: selectedTemplate.clubIcon.filename,
-                      base64: selectedTemplate.clubIcon.base64
-                    } : undefined}
+                    clubIcon={
+                      selectedTemplate.clubIcon
+                        ? {
+                            type: selectedTemplate.clubIcon.type,
+                            filename: selectedTemplate.clubIcon.filename,
+                            base64: selectedTemplate.clubIcon.base64,
+                          }
+                        : undefined
+                    }
                     width={420}
                     height={525}
                     debounceMs={300}
@@ -555,23 +628,35 @@ const GenerateImagesPage: React.FC = () => {
                     showCyclingControls={selectedCrews.length > 1}
                     currentIndex={previewCrewIndex}
                     totalCount={selectedCrews.length}
-                    onPrevious={() => setPreviewCrewIndex((prev) => (prev - 1 + selectedCrews.length) % selectedCrews.length)}
+                    onPrevious={() =>
+                      setPreviewCrewIndex(
+                        (prev) => (prev - 1 + selectedCrews.length) % selectedCrews.length,
+                      )
+                    }
                     onNext={() => setPreviewCrewIndex((prev) => (prev + 1) % selectedCrews.length)}
                     onIndexSelect={setPreviewCrewIndex}
                   />
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                  <Box sx={{ 
-                    p: 3, 
-                    backgroundColor: theme.palette.background.paper,
-                    borderRadius: 2,
-                    border: `1px solid ${theme.palette.divider}`,
-                    width: '100%',
-                    maxWidth: 400,
-                    textAlign: 'center'
-                  }}>
-                    <MdImage size={48} color={theme.palette.text.secondary} style={{ marginBottom: 16 }} />
+                <Box
+                  sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}
+                >
+                  <Box
+                    sx={{
+                      p: 3,
+                      backgroundColor: theme.palette.background.paper,
+                      borderRadius: 2,
+                      border: `1px solid ${theme.palette.divider}`,
+                      width: '100%',
+                      maxWidth: 400,
+                      textAlign: 'center',
+                    }}
+                  >
+                    <MdImage
+                      size={48}
+                      color={theme.palette.text.secondary}
+                      style={{ marginBottom: 16 }}
+                    />
                     <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
                       Select Template & Crews
                     </Typography>
@@ -585,8 +670,6 @@ const GenerateImagesPage: React.FC = () => {
           </Card>
         </Box>
       </Box>
-
-
     </Box>
   );
 };

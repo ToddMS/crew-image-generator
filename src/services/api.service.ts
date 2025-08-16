@@ -4,28 +4,25 @@ import { Crew } from '../types/crew.types';
 const API_CONFIG = {
   baseUrl: 'http://localhost:8080/api',
   endpoints: {
-    crews: '/crews'
-  }
+    crews: '/crews',
+  },
 };
 
 export class ApiService {
   static getAuthHeaders(): Record<string, string> {
     const sessionId = localStorage.getItem('sessionId');
-    return sessionId ? { 'Authorization': `Bearer ${sessionId}` } : {};
+    return sessionId ? { Authorization: `Bearer ${sessionId}` } : {};
   }
 
-  static async request<T>(
-    endpoint: string,
-    options?: RequestInit
-  ): Promise<ApiResponse<T>> {
+  static async request<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${API_CONFIG.baseUrl}${endpoint}`, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
           ...this.getAuthHeaders(),
-          ...options?.headers
-        }
+          ...options?.headers,
+        },
       });
 
       const data = await response.json();
@@ -33,16 +30,16 @@ export class ApiService {
       if (!response.ok) {
         return {
           error: data.message || 'An error occurred',
-          message: data.error
+          message: data.error,
         };
       }
 
       return {
-        data: data as T
+        data: data as T,
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'An error occurred'
+        error: error instanceof Error ? error.message : 'An error occurred',
       };
     }
   }
@@ -54,48 +51,56 @@ export class ApiService {
   static async createCrew(crew: Omit<Crew, 'id'>): Promise<ApiResponse<Crew>> {
     return this.request<Crew>(API_CONFIG.endpoints.crews, {
       method: 'POST',
-      body: JSON.stringify(crew)
+      body: JSON.stringify(crew),
     });
   }
 
   static async updateCrew(id: string, crew: Crew): Promise<ApiResponse<Crew>> {
     return this.request<Crew>(`${API_CONFIG.endpoints.crews}/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(crew)
+      body: JSON.stringify(crew),
     });
   }
 
   static async deleteCrew(id: string): Promise<ApiResponse<void>> {
     return this.request<void>(`${API_CONFIG.endpoints.crews}/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
   }
 
-  static async generateImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }, clubIcon?: any): Promise<Blob | null> {
+  static async generateImage(
+    crewId: string,
+    imageName: string,
+    templateId: string,
+    colors?: { primary: string; secondary: string },
+    clubIcon?: any,
+  ): Promise<Blob | null> {
     try {
-      
       const hasFileUpload = clubIcon?.type === 'upload' && clubIcon?.file;
-      
+
       if (hasFileUpload) {
         const formData = new FormData();
         formData.append('crewId', crewId);
         formData.append('imageName', imageName);
         formData.append('templateId', templateId);
-        
+
         if (colors) {
           formData.append('colors', JSON.stringify(colors));
         }
-        
+
         formData.append('clubIconType', 'upload');
         formData.append('clubIconFile', clubIcon.file);
 
-        const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
-          method: 'POST',
-          headers: {
-            ...this.getAuthHeaders()
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`,
+          {
+            method: 'POST',
+            headers: {
+              ...this.getAuthHeaders(),
+            },
+            body: formData,
           },
-          body: formData
-        });
+        );
 
         if (!response.ok) {
           throw new Error('Failed to generate image');
@@ -103,26 +108,28 @@ export class ApiService {
 
         return await response.blob();
       } else {
-
         const payload: any = {
           crewId,
           imageName,
           templateId: parseInt(templateId),
-          colors
+          colors,
         };
 
         if (clubIcon) {
           payload.clubIcon = clubIcon;
         }
 
-        const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...this.getAuthHeaders()
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...this.getAuthHeaders(),
+            },
+            body: JSON.stringify(payload),
           },
-          body: JSON.stringify(payload)
-        });
+        );
 
         if (!response.ok) {
           throw new Error('Failed to generate image');
@@ -136,44 +143,53 @@ export class ApiService {
     }
   }
 
-  static async saveImage(crewId: string, imageName: string, templateId: string, colors?: { primary: string; secondary: string }, imageBlob?: Blob): Promise<ApiResponse<any>> {
+  static async saveImage(
+    crewId: string,
+    imageName: string,
+    templateId: string,
+    colors?: { primary: string; secondary: string },
+    imageBlob?: Blob,
+  ): Promise<ApiResponse<any>> {
     try {
       const formData = new FormData();
       formData.append('crewId', crewId);
       formData.append('imageName', imageName);
       formData.append('templateId', templateId);
-      
+
       if (colors) {
         formData.append('colors', JSON.stringify(colors));
       }
-      
+
       if (imageBlob) {
         formData.append('image', imageBlob, `${imageName}.png`);
       }
 
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/save-image`, {
-        method: 'POST',
-        headers: {
-          ...this.getAuthHeaders()
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/save-image`,
+        {
+          method: 'POST',
+          headers: {
+            ...this.getAuthHeaders(),
+          },
+          body: formData,
         },
-        body: formData
-      });
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
         return {
           error: data.message || 'Failed to save image',
-          message: data.error
+          message: data.error,
         };
       }
 
       return {
-        data: data
+        data: data,
       };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : 'An error occurred while saving image'
+        error: error instanceof Error ? error.message : 'An error occurred while saving image',
       };
     }
   }
@@ -184,7 +200,7 @@ export class ApiService {
 
   static async deleteSavedImage(imageId: number): Promise<ApiResponse<void>> {
     return this.request<void>(`${API_CONFIG.endpoints.crews}/saved-images/${imageId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
   }
 }

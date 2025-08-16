@@ -29,50 +29,67 @@ export const useNotification = () => {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const showNotification = useCallback((message: string, type: AlertColor = 'info', duration: number = 4000) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const notification: Notification = { id, message, type, duration };
-    
-    setNotifications(prev => [...prev, notification]);
+  const showNotification = useCallback(
+    (message: string, type: AlertColor = 'info', duration: number = 4000) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      const notification: Notification = { id, message, type, duration };
 
-    // Auto-remove notification after duration
-    if (duration > 0) {
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
-      }, duration);
-    }
-  }, []);
+      setNotifications((prev) => [...prev, notification]);
 
-  const showSuccess = useCallback((message: string, duration?: number) => {
-    showNotification(message, 'success', duration);
-  }, [showNotification]);
+      // Auto-remove notification after duration
+      if (duration > 0) {
+        setTimeout(() => {
+          setNotifications((prev) => prev.filter((n) => n.id !== id));
+        }, duration);
+      }
+    },
+    [],
+  );
 
-  const showError = useCallback((message: string, duration?: number) => {
-    showNotification(message, 'error', duration);
-  }, [showNotification]);
+  const showSuccess = useCallback(
+    (message: string, duration?: number) => {
+      showNotification(message, 'success', duration);
+    },
+    [showNotification],
+  );
 
-  const showWarning = useCallback((message: string, duration?: number) => {
-    showNotification(message, 'warning', duration);
-  }, [showNotification]);
+  const showError = useCallback(
+    (message: string, duration?: number) => {
+      showNotification(message, 'error', duration);
+    },
+    [showNotification],
+  );
 
-  const showInfo = useCallback((message: string, duration?: number) => {
-    showNotification(message, 'info', duration);
-  }, [showNotification]);
+  const showWarning = useCallback(
+    (message: string, duration?: number) => {
+      showNotification(message, 'warning', duration);
+    },
+    [showNotification],
+  );
+
+  const showInfo = useCallback(
+    (message: string, duration?: number) => {
+      showNotification(message, 'info', duration);
+    },
+    [showNotification],
+  );
 
   const handleClose = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   return (
-    <NotificationContext.Provider value={{
-      showNotification,
-      showSuccess,
-      showError,
-      showWarning,
-      showInfo
-    }}>
+    <NotificationContext.Provider
+      value={{
+        showNotification,
+        showSuccess,
+        showError,
+        showWarning,
+        showInfo,
+      }}
+    >
       {children}
-      
+
       {/* Floating notification container */}
       <div
         style={{
@@ -84,7 +101,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          maxWidth: '400px'
+          maxWidth: '400px',
         }}
       >
         {notifications.map((notification) => (
@@ -100,8 +117,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
               maxWidth: 400,
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
               '& .MuiAlert-action': {
-                alignItems: 'center'
-              }
+                alignItems: 'center',
+              },
             }}
           >
             {notification.message}

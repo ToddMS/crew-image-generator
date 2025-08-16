@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  IconButton,
-  Breadcrumbs,
-  Link,
-  Button
-} from '@mui/material';
+import { Box, Typography, IconButton, Breadcrumbs, Link, Button } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MdMenu, MdChevronRight, MdArrowBack } from 'react-icons/md';
@@ -24,36 +17,36 @@ const getPageInfo = (pathname: string) => {
   const routes: Record<string, { title: string; subtitle?: string }> = {
     '/': {
       title: 'Dashboard',
-      subtitle: 'Welcome to RowGram'
+      subtitle: 'Welcome to RowGram',
     },
     '/create': {
       title: 'Create New Crew',
-      subtitle: 'Follow the steps below to create your crew lineup'
+      subtitle: 'Follow the steps below to create your crew lineup',
     },
     '/crews': {
       title: 'My Crews',
-      subtitle: 'Manage your saved crew lineups'
+      subtitle: 'Manage your saved crew lineups',
     },
     '/generate': {
       title: 'Choose Template & Customize',
-      subtitle: 'Choose a template and customize settings for your selected crews'
+      subtitle: 'Choose a template and customize settings for your selected crews',
     },
     '/gallery': {
       title: 'Gallery',
-      subtitle: 'Browse your generated images'
+      subtitle: 'Browse your generated images',
     },
     '/analytics': {
       title: 'Analytics',
-      subtitle: 'Usage insights and statistics'
+      subtitle: 'Usage insights and statistics',
     },
     '/settings': {
       title: 'Settings',
-      subtitle: 'Manage your preferences'
+      subtitle: 'Manage your preferences',
     },
     '/template-builder': {
       title: 'Template Builder',
-      subtitle: 'Mix and match different components to create your perfect template'
-    }
+      subtitle: 'Mix and match different components to create your perfect template',
+    },
   };
 
   return routes[pathname] || { title: 'RowGram', subtitle: '' };
@@ -69,7 +62,7 @@ const getBreadcrumbs = (pathname: string) => {
     const pageInfo = getPageInfo(currentPath);
     breadcrumbs.push({
       label: pageInfo.title,
-      path: currentPath
+      path: currentPath,
     });
   });
 
@@ -82,7 +75,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   actions,
   onMenuClick,
   showMenuButton = false,
-  showBreadcrumbs = true
+  showBreadcrumbs = true,
 }) => {
   const theme = useTheme();
   const location = useLocation();
@@ -98,7 +91,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       };
 
       updateStep(); // Initial load
-      
+
       // Listen for custom events
       window.addEventListener('step-changed', updateStep);
       return () => window.removeEventListener('step-changed', updateStep);
@@ -120,7 +113,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
         backgroundColor: theme.palette.background.paper,
         borderBottom: `1px solid ${theme.palette.divider}`,
         px: { xs: 2, sm: 3 },
-        py: 2
+        py: 2,
       }}
     >
       {/* Header Content */}
@@ -129,7 +122,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 2
+          gap: 2,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
@@ -139,14 +132,14 @@ const PageHeader: React.FC<PageHeaderProps> = ({
               sx={{
                 color: theme.palette.text.secondary,
                 '&:hover': {
-                  backgroundColor: theme.palette.action.hover
-                }
+                  backgroundColor: theme.palette.action.hover,
+                },
               }}
             >
               <MdMenu size={24} />
             </IconButton>
           )}
-          
+
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
               variant="h4"
@@ -156,12 +149,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                 fontSize: { xs: '1.5rem', sm: '2rem' },
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
               }}
             >
               {displayTitle}
             </Typography>
-            
+
             {displaySubtitle && (
               <Typography
                 variant="body1"
@@ -171,7 +164,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
                   fontSize: '1rem',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {displaySubtitle}
@@ -186,7 +179,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            flexShrink: 0
+            flexShrink: 0,
           }}
         >
           {actions}

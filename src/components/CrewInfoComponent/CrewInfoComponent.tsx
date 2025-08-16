@@ -14,9 +14,14 @@ import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../../context/AuthContext';
 import ClubPresetDropdown from '../ClubPresetDropdown/ClubPresetDropdown';
 
-
 interface CrewInfoComponentProps {
-  onSubmit: (boatClass: string, clubName: string, raceName: string, boatName: string, coachName?: string) => void;
+  onSubmit: (
+    boatClass: string,
+    clubName: string,
+    raceName: string,
+    boatName: string,
+    coachName?: string,
+  ) => void;
   initialValues?: {
     boatClass: string;
     clubName: string;
@@ -27,10 +32,7 @@ interface CrewInfoComponentProps {
   showValidation?: boolean;
 }
 
-const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
-  onSubmit,
-  initialValues,
-}) => {
+const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({ onSubmit, initialValues }) => {
   const { user } = useAuth();
   const theme = useTheme();
   const [boatClass, setBoatClass] = useState('');
@@ -38,10 +40,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   const [raceName, setRaceName] = useState('');
   const [boatName, setBoatName] = useState('');
   const [coachName, setCoachName] = useState('');
-  
+
   const [usePreset, setUsePreset] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
-  
 
   useEffect(() => {
     if (initialValues) {
@@ -89,7 +90,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
   const handlePresetModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const usePresetMode = event.target.checked;
     setUsePreset(usePresetMode);
-    
+
     if (!usePresetMode) {
       setSelectedPresetId(null);
       handleFieldChange('clubName', '');
@@ -101,20 +102,38 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
     handleFieldChange('clubName', preset.club_name);
   };
 
-
   const boatClassOptions = [
-    { value: '8+', label: '8+ (Eight with Coxswain)', seats: 8, description: 'Eight rowers with coxswain' },
-    { value: '4+', label: '4+ (Four with Coxswain)', seats: 4, description: 'Four rowers with coxswain' },
-    { value: '4-', label: '4- (Four without Coxswain)', seats: 4, description: 'Four rowers without coxswain' },
+    {
+      value: '8+',
+      label: '8+ (Eight with Coxswain)',
+      seats: 8,
+      description: 'Eight rowers with coxswain',
+    },
+    {
+      value: '4+',
+      label: '4+ (Four with Coxswain)',
+      seats: 4,
+      description: 'Four rowers with coxswain',
+    },
+    {
+      value: '4-',
+      label: '4- (Four without Coxswain)',
+      seats: 4,
+      description: 'Four rowers without coxswain',
+    },
     { value: '4x', label: '4x (Quad Sculls)', seats: 4, description: 'Four scullers' },
-    { value: '2-', label: '2- (Coxless Pair)', seats: 2, description: 'Two rowers without coxswain' },
+    {
+      value: '2-',
+      label: '2- (Coxless Pair)',
+      seats: 2,
+      description: 'Two rowers without coxswain',
+    },
     { value: '2x', label: '2x (Double Sculls)', seats: 2, description: 'Two scullers' },
     { value: '1x', label: '1x (Single Sculls)', seats: 1, description: 'Single sculler' },
   ];
 
-
   return (
-    <Box 
+    <Box
       component="form"
       sx={{
         display: 'flex',
@@ -125,21 +144,20 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
         borderRadius: 2,
         p: 4,
         backgroundColor: theme.palette.background.paper,
-        color: theme.palette.text.primary
+        color: theme.palette.text.primary,
       }}
       onSubmit={(e) => {
         e.preventDefault();
       }}
     >
-
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
               color: theme.palette.text.primary,
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
           >
             Club Name
@@ -170,12 +188,9 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             />
           )}
         </Box>
-        
+
         {usePreset ? (
-          <ClubPresetDropdown
-            value={selectedPresetId}
-            onChange={handlePresetSelection}
-          />
+          <ClubPresetDropdown value={selectedPresetId} onChange={handlePresetSelection} />
         ) : (
           <TextField
             name="clubName"
@@ -185,7 +200,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
             size="small"
             variant="outlined"
             value={clubName}
-            onChange={e => handleFieldChange('clubName', e.target.value)}
+            onChange={(e) => handleFieldChange('clubName', e.target.value)}
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
@@ -195,7 +210,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
                   borderColor: theme.palette.primary.main,
                   borderWidth: 2,
                 },
-              }
+              },
             }}
           />
         )}
@@ -203,12 +218,12 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
 
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
               color: theme.palette.text.primary,
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
           >
             Race Name
@@ -222,7 +237,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           size="small"
           variant="outlined"
           value={raceName}
-          onChange={e => handleFieldChange('raceName', e.target.value)}
+          onChange={(e) => handleFieldChange('raceName', e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': {
@@ -232,19 +247,19 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
                 borderColor: theme.palette.primary.main,
                 borderWidth: 2,
               },
-            }
+            },
           }}
         />
       </Box>
 
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
               color: theme.palette.text.primary,
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
           >
             Boat Name
@@ -258,7 +273,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           size="small"
           variant="outlined"
           value={boatName}
-          onChange={e => handleFieldChange('boatName', e.target.value)}
+          onChange={(e) => handleFieldChange('boatName', e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': {
@@ -268,22 +283,28 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
                 borderColor: theme.palette.primary.main,
                 borderWidth: 2,
               },
-            }
+            },
           }}
         />
       </Box>
 
       <Box sx={{ mb: 2 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
               color: theme.palette.text.primary,
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
           >
-            Coach Name <Typography component="span" sx={{ color: theme.palette.text.secondary, fontSize: '0.8rem' }}>(optional)</Typography>
+            Coach Name{' '}
+            <Typography
+              component="span"
+              sx={{ color: theme.palette.text.secondary, fontSize: '0.8rem' }}
+            >
+              (optional)
+            </Typography>
           </Typography>
         </Box>
         <TextField
@@ -293,7 +314,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           size="small"
           variant="outlined"
           value={coachName}
-          onChange={e => handleFieldChange('coachName', e.target.value)}
+          onChange={(e) => handleFieldChange('coachName', e.target.value)}
           sx={{
             '& .MuiOutlinedInput-root': {
               '&:hover fieldset': {
@@ -303,18 +324,18 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
                 borderColor: theme.palette.primary.main,
                 borderWidth: 2,
               },
-            }
+            },
           }}
         />
       </Box>
       <Box sx={{ mb: 1.5 }}>
         <Box display="flex" alignItems="center" gap={1.5} mb={1}>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontWeight: 600, 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
               color: theme.palette.text.primary,
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
           >
             Boat Class
@@ -330,7 +351,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
               if (!selected) {
                 return <span style={{ color: '#999' }}>Select boat class</span>;
               }
-              const option = boatClassOptions.find(opt => opt.value === selected);
+              const option = boatClassOptions.find((opt) => opt.value === selected);
               return option ? option.label : selected;
             }}
             sx={{
@@ -342,7 +363,7 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
                   borderColor: theme.palette.primary.main,
                   borderWidth: 2,
                 },
-              }
+              },
             }}
           >
             {boatClassOptions.map((option) => (
@@ -355,7 +376,6 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({
           </Select>
         </FormControl>
       </Box>
-      
     </Box>
   );
 };

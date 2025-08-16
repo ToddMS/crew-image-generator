@@ -20,7 +20,7 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/create" element={<CreateCrewPage />} />
             <Route path="/crews" element={<MyCrewsPage />} />
-            <Route path="/generate" element={<GenerateImagesPage/>} />
+            <Route path="/generate" element={<GenerateImagesPage />} />
             <Route path="/club-presets" element={<ClubPresetsPage />} />
             <Route path="/gallery" element={<GalleryPage />} />
             <Route path="/template-builder" element={<TemplateCustomizerPage />} />

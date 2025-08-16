@@ -8,7 +8,6 @@ import {
   Alert,
   Button,
   TextField,
-  Divider,
   Tabs,
   Tab,
 } from '@mui/material';
@@ -35,7 +34,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
   const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     setError(null);
     setEmail('');
@@ -45,15 +44,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
   };
 
   const handleGoogleLogin = () => {
-    // Initialize Google Sign-In immediately when tab opens
     if (!window.google) {
-      // Load Google Identity Services script
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        setTimeout(() => initializeGoogleSignIn(), 100); // Small delay to ensure DOM is ready
+        setTimeout(() => initializeGoogleSignIn(), 100);
       };
       document.head.appendChild(script);
     } else {
@@ -63,7 +60,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
 
   const initializeGoogleSignIn = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    
+
     if (!window.google || !clientId) {
       setError('Google Sign-In is not available. Please try email login.');
       return;
@@ -73,26 +70,24 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
       client_id: clientId,
       callback: handleGoogleCredentialResponse,
       auto_select: false,
-      use_fedcm_for_prompt: false, // Disable FedCM which is causing issues
+      use_fedcm_for_prompt: false,
     });
 
-    // Clear any existing button content and render new button
     const buttonDiv = document.getElementById('google-signin-button');
     if (buttonDiv) {
-      buttonDiv.innerHTML = ''; // Clear existing content
+      buttonDiv.innerHTML = '';
       window.google.accounts.id.renderButton(buttonDiv, {
         theme: 'outline',
         size: 'large',
         width: '100%',
         text: 'continue_with',
-        shape: 'rectangular'
+        shape: 'rectangular',
       });
     }
   };
 
-  // Auto-initialize when Google tab is selected
   React.useEffect(() => {
-    if (tabValue === 0 && open) { // Only when Google tab is active and modal is open
+    if (tabValue === 0 && open) {
       handleGoogleLogin();
     }
   }, [tabValue, open]);
@@ -114,7 +109,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password || (isSignUp && !name)) {
       setError('Please fill in all required fields.');
       return;
@@ -123,13 +118,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (isSignUp) {
         await emailSignUp(email, password, name);
       } else {
         await emailSignIn(email, password);
       }
-      
+
       onSuccess?.();
       onClose();
     } catch (error: any) {
@@ -172,27 +167,35 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
       }}
     >
       {/* Header */}
-      <Box sx={{ 
-        p: 3, 
-        pb: 1,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        position: 'relative'
-      }}>
-        <Typography variant="h4" sx={{ 
-          fontWeight: 700, 
-          color: theme.palette.text.primary, 
-          textAlign: 'center',
-          mb: 1 
-        }}>
+      <Box
+        sx={{
+          p: 3,
+          pb: 1,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          position: 'relative',
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            color: theme.palette.text.primary,
+            textAlign: 'center',
+            mb: 1,
+          }}
+        >
           Welcome to RowGram
         </Typography>
-        <Typography variant="body2" sx={{ 
-          color: theme.palette.text.secondary, 
-          textAlign: 'center' 
-        }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: theme.palette.text.secondary,
+            textAlign: 'center',
+          }}
+        >
           Sign in to save crews and customize settings
         </Typography>
-        
+
         <IconButton
           onClick={handleClose}
           sx={{
@@ -208,22 +211,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
 
       <DialogContent sx={{ p: 3 }}>
         {/* Auth Method Tabs */}
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          sx={{ mb: 3 }}
-          variant="fullWidth"
-        >
-          <Tab 
-            icon={<GoogleIcon />} 
-            label="Google" 
-            sx={{ textTransform: 'none' }}
-          />
-          <Tab 
-            icon={<EmailIcon />} 
-            label="Email" 
-            sx={{ textTransform: 'none' }}
-          />
+        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }} variant="fullWidth">
+          <Tab icon={<GoogleIcon />} label="Google" sx={{ textTransform: 'none' }} />
+          <Tab icon={<EmailIcon />} label="Email" sx={{ textTransform: 'none' }} />
         </Tabs>
 
         {error && (
@@ -232,38 +222,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           </Alert>
         )}
 
-        {/* Google Sign-In Tab */}
         {tabValue === 0 && (
           <Box>
-            {/* Google Sign-In Button Container */}
-            <div 
-              id="google-signin-button" 
-              style={{ 
+            <div
+              id="google-signin-button"
+              style={{
                 marginBottom: '16px',
                 display: 'flex',
                 justifyContent: 'center',
-                minHeight: '48px' // Prevent layout shift
+                minHeight: '48px',
               }}
             ></div>
-            
-            <Typography variant="body2" sx={{ 
-              mt: 2, 
-              color: theme.palette.text.secondary, 
-              textAlign: 'center',
-              fontSize: '13px'
-            }}>
+
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 2,
+                color: theme.palette.text.secondary,
+                textAlign: 'center',
+                fontSize: '13px',
+              }}
+            >
               Quick and secure authentication with your Google account
             </Typography>
           </Box>
         )}
 
-        {/* Email Sign-In Tab */}
         {tabValue === 1 && (
           <Box component="form" onSubmit={handleEmailAuth}>
             <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
               {isSignUp ? 'Create Account' : 'Sign In'}
             </Typography>
-            
+
             {isSignUp && (
               <TextField
                 fullWidth
@@ -274,7 +264,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
                 sx={{ mb: 2 }}
               />
             )}
-            
+
             <TextField
               fullWidth
               label="Email"
@@ -284,7 +274,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               required
               sx={{ mb: 2 }}
             />
-            
+
             <TextField
               fullWidth
               label="Password"
@@ -294,7 +284,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               required
               sx={{ mb: 3 }}
             />
-            
+
             <Button
               fullWidth
               type="submit"
@@ -314,50 +304,54 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
             >
               {isSignUp ? 'Create Account' : 'Sign In'}
             </Button>
-            
+
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Button
                 variant="text"
                 onClick={toggleSignUpMode}
-                sx={{ 
+                sx={{
                   textTransform: 'none',
-                  color: theme.palette.primary.main
+                  color: theme.palette.primary.main,
                 }}
               >
-                {isSignUp 
-                  ? 'Already have an account? Sign in' 
-                  : "Don't have an account? Sign up"
-                }
+                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
               </Button>
             </Box>
           </Box>
         )}
 
-        {/* Benefits */}
-        <Box sx={{ 
-          mt: 4, 
-          p: 2, 
-          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(94, 152, 194, 0.1)' : '#f8f9ff', 
-          borderRadius: 2,
-          border: `1px solid ${theme.palette.divider}`
-        }}>
-          <Typography variant="subtitle2" sx={{ 
-            mb: 1, 
-            color: theme.palette.primary.main, 
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1
-          }}>
+        <Box
+          sx={{
+            mt: 4,
+            p: 2,
+            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(94, 152, 194, 0.1)' : '#f8f9ff',
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <Typography
+            variant="subtitle2"
+            sx={{
+              mb: 1,
+              color: theme.palette.primary.main,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
             🚣‍♂️ What you get with an account:
           </Typography>
-          
-          <Box component="ul" sx={{ 
-            m: 0, 
-            pl: 2, 
-            color: theme.palette.text.secondary,
-            '& li': { mb: 0.5, fontSize: '14px' }
-          }}>
+
+          <Box
+            component="ul"
+            sx={{
+              m: 0,
+              pl: 2,
+              color: theme.palette.text.secondary,
+              '& li': { mb: 0.5, fontSize: '14px' },
+            }}
+          >
             <li>Save and manage your crew lineups</li>
             <li>Customize your club colors and logo</li>
             <li>Generate personalized crew images</li>

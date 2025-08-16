@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
         headers: {
-          'Authorization': `Bearer ${session}`,
+          Authorization: `Bearer ${session}`,
         },
       });
 
@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${sessionId}`,
+            Authorization: `Bearer ${sessionId}`,
           },
         });
       }
@@ -195,7 +195,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const updateClubSettings = (settings: Partial<ClubSettings>) => {
-    setClubSettings(prev => prev ? { ...prev, ...settings } : null);
+    setClubSettings((prev) => (prev ? { ...prev, ...settings } : null));
   };
 
   const isAdmin = () => {
