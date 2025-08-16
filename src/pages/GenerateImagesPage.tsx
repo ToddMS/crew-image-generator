@@ -37,7 +37,7 @@ interface SavedTemplate {
   createdAt: string;
 }
 
-const GenerateImagesPageSimplified: React.FC = () => {
+const GenerateImagesPage: React.FC = () => {
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -109,9 +109,8 @@ const GenerateImagesPageSimplified: React.FC = () => {
   const handleCrewSelection = (crew: any) => {
     const crewIdStr = crew.id.toString();
     const newSelectedSet = new Set(selectedCrewIdsSet);
-    const wasSelected = newSelectedSet.has(crewIdStr);
     
-    if (wasSelected) {
+    if (newSelectedSet.has(crewIdStr)) {
       // Deselect crew
       newSelectedSet.delete(crewIdStr);
     } else {
@@ -124,18 +123,12 @@ const GenerateImagesPageSimplified: React.FC = () => {
     setSelectedCrewIds(newSelectedIds);
     
     // If we just selected a crew (not deselected), update preview to show the newly selected crew
-    if (!wasSelected && newSelectedSet.has(crewIdStr)) {
-      // Find the index of the newly selected crew in the filtered crews
-      const filteredCrews = allCrews.filter(c => newSelectedIds.includes(c.id.toString()));
-      const newCrewIndex = filteredCrews.findIndex(c => c.id.toString() === crewIdStr);
+    if (!selectedCrewIdsSet.has(crewIdStr) && newSelectedSet.has(crewIdStr)) {
+      // Find the index of the newly selected crew in the current selected crews
+      const currentSelectedCrews = allCrews.filter(c => newSelectedIds.includes(c.id.toString()));
+      const newCrewIndex = currentSelectedCrews.findIndex(c => c.id.toString() === crewIdStr);
       if (newCrewIndex !== -1) {
         setPreviewCrewIndex(newCrewIndex);
-      }
-    } else if (wasSelected) {
-      // If we deselected and the preview index is now out of bounds, reset to 0
-      const remainingCrewsCount = newSelectedIds.length;
-      if (previewCrewIndex >= remainingCrewsCount && remainingCrewsCount > 0) {
-        setPreviewCrewIndex(0);
       }
     }
   };
@@ -169,10 +162,9 @@ const GenerateImagesPageSimplified: React.FC = () => {
       if (savedTemplatesData) {
         const templates = JSON.parse(savedTemplatesData) as SavedTemplate[];
         setSavedTemplates(templates);
-        // Only auto-select first template on initial load (if none selected and no ref flag set)
-        if (templates.length > 0 && !selectedTemplate && !hasAutoSelectedRef.current) {
+        // Always auto-select first template when templates load (if none selected)
+        if (templates.length > 0 && !selectedTemplate) {
           setSelectedTemplate(templates[0]);
-          hasAutoSelectedRef.current = true;
         }
         // If the currently selected template no longer exists, clear selection
         if (selectedTemplate && !templates.find(t => t.id === selectedTemplate.id)) {
@@ -546,7 +538,7 @@ const GenerateImagesPageSimplified: React.FC = () => {
                 )}
               </Box>
               
-              {selectedTemplate && selectedCrews.length > 0 && selectedCrews[previewCrewIndex] ? (
+              {selectedTemplate && selectedCrews.length > 0 ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <TemplatePreview
                     templateConfig={selectedTemplate.config}
@@ -679,4 +671,4 @@ const GenerateImagesPageSimplified: React.FC = () => {
   );
 };
 
-export default GenerateImagesPageSimplified;
+export default GenerateImagesPage;
