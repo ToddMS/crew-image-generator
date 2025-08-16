@@ -635,35 +635,38 @@ const TemplateCustomizerPageCompact: React.FC = () => {
                     }}
                     onClick={() => loadTemplate(template)}
                   >
-                    {template.previewUrl && (
-                      <Box
+                    <Box
+                      sx={{
+                        height: 100,
+                        backgroundColor: template.config.colors.primary,
+                        backgroundImage: `linear-gradient(135deg, ${template.config.colors.primary} 0%, ${template.config.colors.secondary} 100%)`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Image sx={{ fontSize: 24, color: 'white', opacity: 0.8 }} />
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteTemplate(template.id);
+                        }}
                         sx={{
-                          height: 100,
-                          backgroundImage: `url(${template.previewUrl})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          position: 'relative'
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          backgroundColor: 'rgba(0,0,0,0.5)',
+                          color: 'white',
+                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
                         }}
                       >
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTemplate(template.id);
-                          }}
-                          sx={{
-                            position: 'absolute',
-                            top: 4,
-                            right: 4,
-                            backgroundColor: 'rgba(0,0,0,0.5)',
-                            color: 'white',
-                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' }
-                          }}
-                        >
-                          <Delete sx={{ fontSize: 14 }} />
-                        </IconButton>
-                      </Box>
-                    )}
+                        <Delete sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Box>
                     <CardContent sx={{ p: 1.5 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
                         {template.name}

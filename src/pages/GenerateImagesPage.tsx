@@ -8,7 +8,8 @@ import {
   CardContent,
   Chip,
   IconButton,
-  Tooltip
+  Tooltip,
+  CircularProgress
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -46,36 +47,30 @@ const GenerateImagesPageSimplified: React.FC = () => {
 
   const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([]);
   const [selectedCrews, setSelectedCrews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
-  const [lastSelectedCrewIndex, setLastSelectedCrewIndex] = useState(0);
   const [previewCrewIndex, setPreviewCrewIndex] = useState(0);
+  const [allCrews, setAllCrews] = useState<any[]>([]);
+  const [crewsLoading, setCrewsLoading] = useState(false);
+  const [selectedCrewIdsSet, setSelectedCrewIdsSet] = useState<Set<string>>(new Set());
   const hasAutoSelectedRef = useRef(false);
 
-  // Check if we came from crews page with selected crews
   useEffect(() => {
     const state = location.state as any;
-    console.log('Navigation state received:', state);
     if (state?.selectedCrewIds) {
-      console.log('Setting selected crew IDs from navigation:', state.selectedCrewIds);
       setSelectedCrewIds(state.selectedCrewIds);
     } else if (state?.selectedCrewIndex !== undefined) {
-      console.log('Using selected crew index:', state.selectedCrewIndex);
       loadCrews().then(crews => {
         const crewsData = crews?.data || crews;
-        if (crewsData && crewsData[state.selectedCrewIndex]) {
+        if (crewsData && Array.isArray(crewsData) && state.selectedCrewIndex < crewsData.length) {
           setSelectedCrewIds([crewsData[state.selectedCrewIndex].id]);
         }
       });
-    } else {
-      console.log('No navigation state with crew selection found');
     }
   }, [location.state]);
 
-  // Load crew details when we have selected IDs
   useEffect(() => {
     if (selectedCrewIds.length > 0) {
       loadSelectedCrews();
@@ -88,6 +83,62 @@ const GenerateImagesPageSimplified: React.FC = () => {
       setPreviewCrewIndex(Math.min(previewCrewIndex, selectedCrews.length - 1));
     }
   }, [selectedCrews]);
+
+  // Load all crews for selection when no crews are selected
+  useEffect(() => {
+    if (selectedCrews.length === 0) {
+      loadAllCrews();
+    }
+  }, [selectedCrews.length]);
+
+  const loadAllCrews = async () => {
+    setCrewsLoading(true);
+    try {
+      const result = await ApiService.getCrews();
+      const crews = result.data || result;
+      if (crews && Array.isArray(crews)) {
+        setAllCrews(crews);
+      }
+    } catch (error) {
+      console.error('Error loading all crews:', error);
+    } finally {
+      setCrewsLoading(false);
+    }
+  };
+
+  const handleCrewSelection = (crew: any) => {
+    const crewIdStr = crew.id.toString();
+    const newSelectedSet = new Set(selectedCrewIdsSet);
+    const wasSelected = newSelectedSet.has(crewIdStr);
+    
+    if (wasSelected) {
+      // Deselect crew
+      newSelectedSet.delete(crewIdStr);
+    } else {
+      // Select crew
+      newSelectedSet.add(crewIdStr);
+    }
+    
+    setSelectedCrewIdsSet(newSelectedSet);
+    const newSelectedIds = Array.from(newSelectedSet);
+    setSelectedCrewIds(newSelectedIds);
+    
+    // If we just selected a crew (not deselected), update preview to show the newly selected crew
+    if (!wasSelected && newSelectedSet.has(crewIdStr)) {
+      // Find the index of the newly selected crew in the filtered crews
+      const filteredCrews = allCrews.filter(c => newSelectedIds.includes(c.id.toString()));
+      const newCrewIndex = filteredCrews.findIndex(c => c.id.toString() === crewIdStr);
+      if (newCrewIndex !== -1) {
+        setPreviewCrewIndex(newCrewIndex);
+      }
+    } else if (wasSelected) {
+      // If we deselected and the preview index is now out of bounds, reset to 0
+      const remainingCrewsCount = newSelectedIds.length;
+      if (previewCrewIndex >= remainingCrewsCount && remainingCrewsCount > 0) {
+        setPreviewCrewIndex(0);
+      }
+    }
+  };
 
   // Load saved templates
   useEffect(() => {
@@ -118,8 +169,8 @@ const GenerateImagesPageSimplified: React.FC = () => {
       if (savedTemplatesData) {
         const templates = JSON.parse(savedTemplatesData) as SavedTemplate[];
         setSavedTemplates(templates);
-        // Only auto-select first template on initial load
-        if (templates.length > 0 && !hasAutoSelectedRef.current) {
+        // Only auto-select first template on initial load (if none selected and no ref flag set)
+        if (templates.length > 0 && !selectedTemplate && !hasAutoSelectedRef.current) {
           setSelectedTemplate(templates[0]);
           hasAutoSelectedRef.current = true;
         }
@@ -151,12 +202,9 @@ const GenerateImagesPageSimplified: React.FC = () => {
   };
 
   const loadSelectedCrews = async () => {
-    setLoading(true);
     try {
       const result = await ApiService.getCrews();
       const crews = result.data || result; // Handle both direct array and {data: array} responses
-      console.log('All crews loaded:', crews?.length);
-      console.log('Selected crew IDs to find:', selectedCrewIds);
       
       if (crews && Array.isArray(crews)) {
         const selected = crews.filter(crew => {
@@ -174,8 +222,6 @@ const GenerateImagesPageSimplified: React.FC = () => {
     } catch (error) {
       console.error('Error loading crews:', error);
       setError('Failed to load crew details');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -231,10 +277,10 @@ const GenerateImagesPageSimplified: React.FC = () => {
   };
 
   const removeSelectedCrew = (crewId: string) => {
-    const newSelectedIds = selectedCrewIds.filter(id => id !== crewId);
-    const newSelectedCrews = selectedCrews.filter(crew => crew.id.toString() !== crewId);
-    setSelectedCrewIds(newSelectedIds);
-    setSelectedCrews(newSelectedCrews);
+    const newSelectedSet = new Set(selectedCrewIdsSet);
+    newSelectedSet.delete(crewId);
+    setSelectedCrewIdsSet(newSelectedSet);
+    setSelectedCrewIds(Array.from(newSelectedSet));
   };
 
   if (!user) {
@@ -254,25 +300,6 @@ const GenerateImagesPageSimplified: React.FC = () => {
     );
   }
 
-  if (selectedCrews.length === 0) {
-    return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          No crews selected
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Please select crews from the My Crews page to generate images
-        </Typography>
-        <Button 
-          variant="contained" 
-          onClick={() => navigate('/crews')}
-          sx={{ px: 4, py: 1.5 }}
-        >
-          Go to My Crews
-        </Button>
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ maxWidth: 1400, mx: 'auto', p: 3 }}>
@@ -282,79 +309,147 @@ const GenerateImagesPageSimplified: React.FC = () => {
         </Alert>
       )}
 
-      {/* Selected Crews */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            Selected Crews ({selectedCrews.length})
-          </Typography>
-          
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {selectedCrews.map((crew) => (
-              <Box
-                key={crew.id}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  p: 1,
-                  border: 1,
-                  borderColor: theme.palette.divider,
-                  borderRadius: 1,
-                  backgroundColor: theme.palette.background.paper,
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover
-                  }
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.25 }}>
-                    {crew.name}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                    {crew.raceName} • {crew.boatType.value}
-                  </Typography>
-                </Box>
-                
-                <Chip
-                  label={crew.boatType.value}
-                  size="small"
-                  sx={{
-                    height: 20,
-                    fontSize: '0.65rem',
-                    backgroundColor: theme.palette.primary.main,
-                    color: 'white',
-                    '& .MuiChip-label': {
-                      px: 1
-                    }
-                  }}
-                />
-                
-                <IconButton
-                  size="small"
-                  onClick={() => removeSelectedCrew(crew.id.toString())}
-                  sx={{
-                    ml: 1,
-                    color: theme.palette.text.secondary,
-                    '&:hover': {
-                      backgroundColor: theme.palette.error.light + '20',
-                      color: theme.palette.error.main
-                    }
-                  }}
-                >
-                  <MdClose size={16} />
-                </IconButton>
-              </Box>
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
 
       {/* Main Generation Interface */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3 }}>
         {/* Left Column - Template Selection */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           
+          {/* Crew Selection */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Select Crews
+              </Typography>
+              
+              {crewsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : allCrews.length > 0 ? (
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 1, maxHeight: 300, overflowY: 'auto' }}>
+                  {allCrews.map((crew) => {
+                    const isSelected = selectedCrewIdsSet.has(crew.id.toString());
+                    return (
+                      <Box
+                        key={crew.id}
+                        sx={{
+                          cursor: 'pointer',
+                          border: isSelected 
+                            ? `2px solid ${theme.palette.primary.main}` 
+                            : `1px solid ${theme.palette.divider}`,
+                          backgroundColor: isSelected 
+                            ? theme.palette.primary.light + '15' 
+                            : theme.palette.background.paper,
+                          borderRadius: 1,
+                          p: 1,
+                          aspectRatio: '1',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          transition: 'all 0.2s ease',
+                          position: 'relative',
+                          '&:hover': {
+                            transform: 'translateY(-1px)',
+                            boxShadow: theme.shadows[2],
+                            borderColor: theme.palette.primary.light
+                          }
+                        }}
+                        onClick={() => handleCrewSelection(crew)}
+                      >
+                        <Typography variant="caption" sx={{ 
+                          fontWeight: 600, 
+                          mb: 0.5, 
+                          fontSize: '0.7rem',
+                          lineHeight: 1.1,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical'
+                        }}>
+                          {crew.name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ 
+                          color: theme.palette.text.secondary, 
+                          fontSize: '0.65rem',
+                          mb: 0.5,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          width: '100%'
+                        }}>
+                          {crew.raceName}
+                        </Typography>
+                        <Typography variant="caption" sx={{ 
+                          color: theme.palette.text.secondary, 
+                          fontSize: '0.65rem',
+                          mb: 0.5,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          width: '100%'
+                        }}>
+                          {crew.clubName || crew.boatClub}
+                        </Typography>
+                        <Chip
+                          label={crew.boatType.value}
+                          size="small"
+                          sx={{
+                            height: 16,
+                            fontSize: '0.6rem',
+                            backgroundColor: isSelected ? theme.palette.primary.main : theme.palette.grey[800],
+                            color: 'white',
+                            border: 'none',
+                            '& .MuiChip-label': {
+                              px: 0.5
+                            }
+                          }}
+                        />
+                        {isSelected && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              width: 12,
+                              height: 12,
+                              borderRadius: '50%',
+                              backgroundColor: theme.palette.primary.main,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <Typography sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 'bold' }}>✓</Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              ) : (
+                <Box sx={{ p: 4, textAlign: 'center', backgroundColor: theme.palette.action.hover, borderRadius: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
+                    No Crews Found
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
+                    Create your first crew to get started with image generation.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={() => navigate('/create')}
+                    sx={{ px: 3, py: 1 }}
+                  >
+                    Create Crew
+                  </Button>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Template Selection */}
           <Card>
             <CardContent>
@@ -451,7 +546,7 @@ const GenerateImagesPageSimplified: React.FC = () => {
                 )}
               </Box>
               
-              {selectedTemplate && selectedCrews.length > 0 ? (
+              {selectedTemplate && selectedCrews.length > 0 && selectedCrews[previewCrewIndex] ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <TemplatePreview
                     templateConfig={selectedTemplate.config}
@@ -513,21 +608,23 @@ const GenerateImagesPageSimplified: React.FC = () => {
                   )}
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                  <Box
-                    sx={{
-                      width: 350,
-                      height: 438,
-                      backgroundColor: theme.palette.grey[100],
-                      borderRadius: 2,
-                      border: `2px solid ${theme.palette.divider}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, textAlign: 'center' }}>
-                      {!selectedTemplate ? 'Select a template to see preview' : 'No crew selected'}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                  {/* No Template Message */}
+                  <Box sx={{ 
+                    p: 3, 
+                    backgroundColor: theme.palette.background.paper,
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
+                    width: '100%',
+                    maxWidth: 400,
+                    textAlign: 'center'
+                  }}>
+                    <MdImage size={48} color={theme.palette.text.secondary} style={{ marginBottom: 16 }} />
+                    <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
+                      Select Template & Crews
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                      Choose crews from above and a template to see the preview.
                     </Typography>
                   </Box>
                 </Box>
@@ -540,7 +637,7 @@ const GenerateImagesPageSimplified: React.FC = () => {
       {/* Floating Generate Button */}
       {savedTemplates.length > 0 && (
         <Tooltip 
-          title={selectedCrews.length === 0 ? "Please select at least one crew" : ""}
+          title={selectedCrewIds.length === 0 ? "Please select at least one crew" : ""}
           arrow
         >
           <span>
@@ -548,7 +645,7 @@ const GenerateImagesPageSimplified: React.FC = () => {
               variant="contained"
               size="large"
               onClick={handleGenerateImages}
-              disabled={generating || selectedCrews.length === 0 || !selectedTemplate}
+              disabled={generating || selectedCrewIds.length === 0 || !selectedTemplate}
               sx={{
                 position: 'fixed',
                 bottom: 24,
@@ -569,8 +666,8 @@ const GenerateImagesPageSimplified: React.FC = () => {
             >
               {generating 
                 ? 'Generating...' 
-                : selectedCrews.length > 0 
-                  ? `Generate ${selectedCrews.length} Image${selectedCrews.length !== 1 ? 's' : ''}`
+                : selectedCrewIds.length > 0 
+                  ? `Generate ${selectedCrewIds.length} Image${selectedCrewIds.length !== 1 ? 's' : ''}`
                   : 'Generate Images'
               }
             </Button>

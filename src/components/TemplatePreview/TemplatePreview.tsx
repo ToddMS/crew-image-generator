@@ -235,11 +235,20 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       }}
     >
       {loading && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <CircularProgress size={40} />
-          <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-            Generating preview...
-          </Typography>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100]
+        }}>
+          <CircularProgress 
+            size={40} 
+            sx={{ 
+              color: theme.palette.mode === 'dark' ? theme.palette.grey[400] : theme.palette.grey[600]
+            }} 
+          />
         </Box>
       )}
 
