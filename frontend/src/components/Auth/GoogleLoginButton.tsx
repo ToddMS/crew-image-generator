@@ -9,6 +9,7 @@ declare global {
         id: {
           initialize: (config: unknown) => void;
           renderButton: (element: HTMLElement, config: unknown) => void;
+          prompt: () => void;
         };
       };
     };
@@ -25,27 +26,15 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = React.useState(false);
 
-  useEffect(() => {
-    // Load Google Identity Services script
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      if (window.google) {
-        // Small delay to ensure React ref is ready
-        setTimeout(() => {
-          initializeGoogleSignIn();
-          setIsGoogleLoaded(true);
-        }, 100);
-      }
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, [initializeGoogleSignIn]);
+  const handleCredentialResponse = useCallback(async (response: { credential: string }) => {
+    try {
+      await login(response.credential);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Login failed:', error);
+      onError?.(error);
+    }
+  }, [login, onSuccess, onError]);
 
   const initializeGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -90,21 +79,33 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
     }
   }, [handleCredentialResponse]);
 
-  const handleCredentialResponse = useCallback(async (response: { credential: string }) => {
-    try {
-      await login(response.credential);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Login failed:', error);
-      onError?.(error);
-    }
-  }, [login, onSuccess, onError]);
-
   const handleManualSignIn = () => {
     if (window.google) {
       window.google.accounts.id.prompt();
     }
   };
+
+  useEffect(() => {
+    // Load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google) {
+        // Small delay to ensure React ref is ready
+        setTimeout(() => {
+          initializeGoogleSignIn();
+          setIsGoogleLoaded(true);
+        }, 100);
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, [initializeGoogleSignIn]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>

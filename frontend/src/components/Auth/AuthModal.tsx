@@ -43,20 +43,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     setIsSignUp(false);
   };
 
-  const handleGoogleLogin = useCallback(() => {
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        setTimeout(() => initializeGoogleSignIn(), 100);
-      };
-      document.head.appendChild(script);
-    } else {
-      setTimeout(() => initializeGoogleSignIn(), 100);
-    }
-  }, [initializeGoogleSignIn]);
+  const handleGoogleCredentialResponse = useCallback(
+    async (response: { credential: string }) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await login(response.credential);
+        onSuccess?.();
+        onClose();
+      } catch (error) {
+        console.error('Google login failed:', error);
+        setError('Google sign-in failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [login, onSuccess, onClose],
+  );
 
   const initializeGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -86,29 +89,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     }
   }, [handleGoogleCredentialResponse]);
 
+  const handleGoogleLogin = useCallback(() => {
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        setTimeout(() => initializeGoogleSignIn(), 100);
+      };
+      document.head.appendChild(script);
+    } else {
+      setTimeout(() => initializeGoogleSignIn(), 100);
+    }
+  }, [initializeGoogleSignIn]);
+
   React.useEffect(() => {
     if (tabValue === 0 && open) {
       handleGoogleLogin();
     }
   }, [tabValue, open, handleGoogleLogin]);
-
-  const handleGoogleCredentialResponse = useCallback(
-    async (response: { credential: string }) => {
-      try {
-        setLoading(true);
-        setError(null);
-        await login(response.credential);
-        onSuccess?.();
-        onClose();
-      } catch (error) {
-        console.error('Google login failed:', error);
-        setError('Google sign-in failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [login, onSuccess, onClose],
-  );
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
