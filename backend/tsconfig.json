@@ -20,7 +20,8 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/services/template-generator"
   ],
   "ts-node": {
     "esm": true

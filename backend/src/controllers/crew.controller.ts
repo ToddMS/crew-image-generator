@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import CrewService from "../services/crew.service.js";
 import { fileURLToPath } from "url";
 import { generateCrewImage, ClubIconData } from "../services/image.service.js";
-import { TemplateGeneratorService, TemplateConfig } from "../services/template-generator/index.js";
+// import { TemplateGeneratorService, TemplateConfig } from "../services/template-generator/index.js";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
@@ -88,24 +88,11 @@ export const generateCustomCrewImageHandler = async (req: Request, res: Response
             };
         }
 
-        const templateGenerator = new TemplateGeneratorService();
-        const imageBuffer = await templateGenerator.generateTemplate(crew, templateConfig as TemplateConfig, clubIconData);
-
-        const timestamp = Date.now();
-        const filename = imageName || `${crew.name}_${crew.boatType.value}_${timestamp}.png`;
-        const outputDir = path.join(path.dirname(__filename), '../../generated-images');
-        const outputPath = path.join(outputDir, filename);
-
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-        }
-
-        await fs.promises.writeFile(outputPath, imageBuffer);
-
-        res.setHeader("Content-Type", "image/png");
-        res.setHeader("Content-Disposition", "inline");
-        res.send(imageBuffer);
-        return;
+        // const templateGenerator = new TemplateGeneratorService();
+        // const imageBuffer = await templateGenerator.generateTemplate(crew, templateConfig as TemplateConfig, clubIconData);
+        
+        // Temporary: Return a placeholder response while template generator is being fixed
+        return res.status(501).json({ error: "Template generator temporarily disabled during deployment" });
     } catch (error) {
         console.error("Error generating custom crew image:", error);
         res.status(500).json({ error: "Server error" });

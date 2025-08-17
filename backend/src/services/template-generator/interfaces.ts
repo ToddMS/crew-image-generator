@@ -1,19 +1,19 @@
 import { CanvasRenderingContext2D } from 'canvas';
-import { Crew } from '../types/crew.types.js';
+import { Crew } from '../../types/crew.types.js';
 
 export interface TemplateComponent {
   draw(ctx: CanvasRenderingContext2D, data: any, config: any): void;
 }
 
-export interface BackgroundComponent extends TemplateComponent {
+export interface BackgroundComponent {
   draw(ctx: CanvasRenderingContext2D, dimensions: CanvasDimensions, colors: ColorScheme): void;
 }
 
-export interface NameDisplayComponent extends TemplateComponent {
+export interface NameDisplayComponent {
   draw(ctx: CanvasRenderingContext2D, crew: Crew, positioning: NamePositioning, colors: ColorScheme): void;
 }
 
-export interface BoatStyleComponent extends TemplateComponent {
+export interface BoatStyleComponent {
   draw(ctx: CanvasRenderingContext2D, crew: Crew, positioning: BoatPositioning, colors: ColorScheme): void;
 }
 

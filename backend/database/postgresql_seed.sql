@@ -6,7 +6,9 @@ INSERT INTO BoatTypes (value, seats, name) VALUES
 ('8+', 8, 'Eight with Coxswain'),
 ('4+', 4, 'Four with Coxswain'),
 ('4-', 4, 'Four without Coxswain'),
+('4x', 4, 'Quadruple Sculls'),
 ('2x', 2, 'Double Sculls'),
+('2-', 2, 'Pair without Coxswain'),
 ('1x', 1, 'Single Sculls')
 ON CONFLICT (value) DO NOTHING;
 
