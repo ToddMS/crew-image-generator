@@ -51,13 +51,11 @@ export const googleAuth = async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Failed to create or retrieve user" });
     }
 
-    // Create session
     const sessionId = uuidv4();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     
     await UserService.createSession(sessionId, user.id, expiresAt);
 
-    // Get club settings
     const clubSettings = await UserService.getClubSettings(user.id);
 
     res.json({
