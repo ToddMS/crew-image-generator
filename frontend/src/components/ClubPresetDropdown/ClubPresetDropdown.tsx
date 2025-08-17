@@ -21,7 +21,7 @@ interface ClubPresetDropdownProps {
   label?: string;
   placeholder?: string;
   className?: string;
-  sx?: any;
+  sx?: Record<string, unknown>;
   showSearch?: boolean;
   showCreateOption?: boolean;
 }

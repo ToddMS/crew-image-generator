@@ -23,14 +23,11 @@ import {
   MdArrowBack,
 } from 'react-icons/md';
 
-const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
+const Transition = React.forwardRef<unknown, TransitionProps & { children: React.ReactElement }>(
+  function Transition(props, ref) {
+    return <Slide direction="up" ref={ref} {...props} />;
   },
-  ref: React.Ref<unknown>,
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+);
 
 interface OnboardingFlowProps {
   open: boolean;

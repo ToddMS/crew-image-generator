@@ -16,7 +16,7 @@ interface CrewNamesComponentProps {
   boatName: string;
   saving?: boolean;
   canSave?: boolean;
-  user?: any;
+  user?: { id: string; name: string; [key: string]: unknown };
   isEditing?: boolean;
   showValidation?: boolean;
   hideButton?: boolean;

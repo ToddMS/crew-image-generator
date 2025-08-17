@@ -73,7 +73,7 @@ export class ApiService {
     imageName: string,
     templateId: string,
     colors?: { primary: string; secondary: string },
-    clubIcon?: any,
+    clubIcon?: { type: string; file?: File; [key: string]: unknown },
   ): Promise<Blob | null> {
     try {
       const hasFileUpload = clubIcon?.type === 'upload' && clubIcon?.file;
@@ -108,7 +108,7 @@ export class ApiService {
 
         return await response.blob();
       } else {
-        const payload: any = {
+        const payload: Record<string, unknown> = {
           crewId,
           imageName,
           templateId: parseInt(templateId),
@@ -149,7 +149,7 @@ export class ApiService {
     templateId: string,
     colors?: { primary: string; secondary: string },
     imageBlob?: Blob,
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<{ id: number; imagePath: string; imageName: string }>> {
     try {
       const formData = new FormData();
       formData.append('crewId', crewId);
@@ -194,8 +194,8 @@ export class ApiService {
     }
   }
 
-  static async getSavedImages(crewId: string): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(`${API_CONFIG.endpoints.crews}/${crewId}/saved-images`);
+  static async getSavedImages(crewId: string): Promise<ApiResponse<Array<{ id: number; imagePath: string; imageName: string }>>> {
+    return this.request<Array<{ id: number; imagePath: string; imageName: string }>>(`${API_CONFIG.endpoints.crews}/${crewId}/saved-images`);
   }
 
   static async deleteSavedImage(imageId: number): Promise<ApiResponse<void>> {

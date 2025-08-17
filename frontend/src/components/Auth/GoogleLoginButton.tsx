@@ -4,13 +4,20 @@ import { useAuth } from '../../context/AuthContext';
 
 declare global {
   interface Window {
-    google: any;
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: unknown) => void;
+          renderButton: (element: HTMLElement, config: unknown) => void;
+        };
+      };
+    };
   }
 }
 
 interface GoogleLoginButtonProps {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
 }
 
 const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onError }) => {
@@ -38,7 +45,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
     return () => {
       document.head.removeChild(script);
     };
-  }, []);
+  }, [initializeGoogleSignIn]);
 
   const initializeGoogleSignIn = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -83,7 +90,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
     }
   };
 
-  const handleCredentialResponse = async (response: any) => {
+  const handleCredentialResponse = async (response: { credential: string }) => {
     try {
       await login(response.credential);
       onSuccess?.();

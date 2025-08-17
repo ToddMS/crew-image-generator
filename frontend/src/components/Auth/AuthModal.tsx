@@ -90,9 +90,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     if (tabValue === 0 && open) {
       handleGoogleLogin();
     }
-  }, [tabValue, open]);
+  }, [tabValue, open, handleGoogleLogin]);
 
-  const handleGoogleCredentialResponse = async (response: any) => {
+  const handleGoogleCredentialResponse = async (response: { credential: string }) => {
     try {
       setLoading(true);
       setError(null);
@@ -127,9 +127,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
 
       onSuccess?.();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Email auth failed:', error);
-      setError(error.message || 'Authentication failed. Please try again.');
+      setError(error instanceof Error ? error.message : 'Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }

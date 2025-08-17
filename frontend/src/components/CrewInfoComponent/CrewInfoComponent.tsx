@@ -97,7 +97,10 @@ const CrewInfoComponent: React.FC<CrewInfoComponentProps> = ({ onSubmit, initial
     }
   };
 
-  const handlePresetSelection = (presetId: number, preset: any) => {
+  const handlePresetSelection = (
+    presetId: number,
+    preset: { club_name: string; [key: string]: unknown },
+  ) => {
     setSelectedPresetId(presetId);
     handleFieldChange('clubName', preset.club_name);
   };

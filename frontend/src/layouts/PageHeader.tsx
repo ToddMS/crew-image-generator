@@ -51,7 +51,6 @@ const getPageInfo = (pathname: string) => {
   return routes[pathname] || { title: 'RowGram', subtitle: '' };
 };
 
-
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,

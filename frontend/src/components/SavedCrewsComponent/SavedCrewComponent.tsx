@@ -72,7 +72,6 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
     );
   });
 
-
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
       {/* Search Bar */}

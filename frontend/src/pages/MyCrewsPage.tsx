@@ -39,7 +39,6 @@ const MyCrewsPage: React.FC = () => {
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
   const [showGeneratePanel, setShowGeneratePanel] = useState<boolean>(false);
 
-
   useEffect(() => {
     loadCrews();
   }, [user]);
