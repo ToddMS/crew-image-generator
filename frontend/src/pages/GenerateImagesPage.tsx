@@ -18,6 +18,7 @@ import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 import TemplatePreview from '../components/TemplatePreview/TemplatePreview';
+import { Crew } from '../types/crew.types';
 
 interface SavedTemplate {
   id: string;
@@ -49,7 +50,7 @@ const GenerateImagesPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
 
   const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([]);
-  const [selectedCrews, setSelectedCrews] = useState<Array<{ id: string; [key: string]: unknown }>>(
+  const [selectedCrews, setSelectedCrews] = useState<Crew[]>(
     [],
   );
   const [error, setError] = useState<string | null>(null);
@@ -57,18 +58,18 @@ const GenerateImagesPage: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [previewCrewIndex, setPreviewCrewIndex] = useState(0);
-  const [allCrews, setAllCrews] = useState<Array<{ id: string; [key: string]: unknown }>>([]);
+  const [allCrews, setAllCrews] = useState<Crew[]>([]);
   const [crewsLoading, setCrewsLoading] = useState(false);
   const [selectedCrewIdsSet, setSelectedCrewIdsSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const state = location.state as { selectedCrewIds?: string[] } | null;
+    const state = location.state as { selectedCrewIds?: string[]; selectedCrewIndex?: number } | null;
     if (state?.selectedCrewIds) {
       setSelectedCrewIds(state.selectedCrewIds);
     } else if (state?.selectedCrewIndex !== undefined) {
       loadCrews().then((crews) => {
         const crewsData = crews?.data || crews;
-        if (crewsData && Array.isArray(crewsData) && state.selectedCrewIndex < crewsData.length) {
+        if (crewsData && Array.isArray(crewsData) && state.selectedCrewIndex !== undefined && state.selectedCrewIndex < crewsData.length) {
           setSelectedCrewIds([crewsData[state.selectedCrewIndex].id]);
         }
       });
@@ -108,7 +109,7 @@ const GenerateImagesPage: React.FC = () => {
     }
   };
 
-  const handleCrewSelection = (crew: { id: string; [key: string]: unknown }) => {
+  const handleCrewSelection = (crew: Crew) => {
     const crewIdStr = crew.id.toString();
     const newSelectedSet = new Set(selectedCrewIdsSet);
 
@@ -240,7 +241,7 @@ const GenerateImagesPage: React.FC = () => {
                 crewId: crew.id,
                 templateConfig: selectedTemplate.config,
                 clubIcon: clubIconForApi,
-                imageName: `${crew.name}_${crew.boatType.value}_${Date.now()}.png`,
+                imageName: `${crew.name}_${crew.boatType?.value || 'unknown'}_${Date.now()}.png`,
               }),
             },
           );
@@ -599,7 +600,8 @@ const GenerateImagesPage: React.FC = () => {
                       name: selectedCrews[previewCrewIndex].name,
                       clubName:
                         selectedCrews[previewCrewIndex].clubName ||
-                        selectedCrews[previewCrewIndex].boatClub,
+                        selectedCrews[previewCrewIndex].boatClub ||
+                        '',
                       raceName: selectedCrews[previewCrewIndex].raceName,
                       boatType: selectedCrews[previewCrewIndex].boatType,
                       crewNames:

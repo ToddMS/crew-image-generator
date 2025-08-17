@@ -21,23 +21,12 @@ import { ApiService } from '../services/api.service';
 import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
+import { SavedImageResponse } from '../types/image.types';
 
-interface SavedImage {
-  id: number;
-  crew_id: number;
-  user_id: number;
-  image_name: string;
-  template_id: string;
-  primary_color?: string;
-  secondary_color?: string;
-  image_filename: string;
-  image_url: string;
-  file_size?: number;
-  mime_type?: string;
-  created_at: string;
-  crew_name?: string;
-  race_name?: string;
-  club_name?: string;
+interface GalleryImage extends SavedImageResponse {
+  crew_name: string;
+  race_name: string;
+  club_name: string;
 }
 
 interface Crew {
@@ -62,9 +51,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
   const theme = useTheme();
-  const [allImages, setAllImages] = useState<SavedImage[]>([]);
+  const [allImages, setAllImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
@@ -80,7 +69,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         const imagePromises = crewsResponse.data.map(async (crew: Crew) => {
           const imagesResponse = await ApiService.getSavedImages(crew.id);
           if (imagesResponse.data && !imagesResponse.error) {
-            return imagesResponse.data.map((img: SavedImage) => ({
+            return imagesResponse.data.map((img) => ({
               ...img,
               crew_name: crew.name,
               race_name: crew.raceName,
@@ -94,7 +83,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
         const flatImages = allImagesArrays.flat();
 
         flatImages.sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
         );
 
         setAllImages(flatImages);
@@ -116,7 +105,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   }, [refreshTrigger]);
 
-  const handleImageClick = (image: SavedImage) => {
+  const handleImageClick = (image: GalleryImage) => {
     setSelectedImage(image);
     setDialogOpen(true);
   };
@@ -180,11 +169,11 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
     }
   };
 
-  const handleDownloadImage = async (image: SavedImage, event: React.MouseEvent) => {
+  const handleDownloadImage = async (image: GalleryImage, event: React.MouseEvent) => {
     event.stopPropagation();
 
     try {
-      const imageUrl = getImageUrl(image.image_url);
+      const imageUrl = getImageUrl(image.image_url || image.imagePath || '');
       const response = await fetch(imageUrl);
       const blob = await response.blob();
 
@@ -235,7 +224,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
       for (let i = 0; i < selectedImageData.length; i++) {
         const image = selectedImageData[i];
         try {
-          const imageUrl = getImageUrl(image.image_url);
+          const imageUrl = getImageUrl(image.image_url || image.imagePath || '');
           const response = await fetch(imageUrl);
 
           if (!response.ok) {
@@ -313,7 +302,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
 
     const searchLower = searchTerm.toLowerCase();
     return (
-      image.image_name.toLowerCase().includes(searchLower) ||
+      (image.image_name || image.imageName || '').toLowerCase().includes(searchLower) ||
       image.crew_name?.toLowerCase().includes(searchLower) ||
       image.race_name?.toLowerCase().includes(searchLower) ||
       image.club_name?.toLowerCase().includes(searchLower)
@@ -487,8 +476,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                       objectFit: 'contain',
                       display: 'block',
                     }}
-                    image={getImageUrl(image.image_url)}
-                    alt={image.image_name}
+                    image={getImageUrl(image.image_url || image.imagePath || '')}
+                    alt={image.image_name || image.imageName || ''}
                   />
 
                   {/* Selection Checkbox */}
@@ -591,9 +580,9 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                 >
                   {/* Picture Name - Top */}
                   <Tooltip
-                    title={image.image_name.length > 30 ? image.image_name : ''}
+                    title={(image.image_name || image.imageName || '').length > 30 ? (image.image_name || image.imageName || '') : ''}
                     arrow
-                    disableHoverListener={image.image_name.length <= 30}
+                    disableHoverListener={(image.image_name || image.imageName || '').length <= 30}
                   >
                     <Typography
                       variant="subtitle2"
@@ -606,7 +595,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
                         whiteSpace: 'nowrap',
                         fontSize: '0.875rem',
                         width: '100%',
-                        cursor: image.image_name.length > 30 ? 'pointer' : 'default',
+                        cursor: (image.image_name || image.imageName || '').length > 30 ? 'pointer' : 'default',
                       }}
                     >
                       {image.image_name}
@@ -684,8 +673,8 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
             {selectedImage && (
               <Box onClick={handleCloseDialog} sx={{ cursor: 'pointer' }}>
                 <img
-                  src={getImageUrl(selectedImage.image_url)}
-                  alt={selectedImage.image_name}
+                  src={getImageUrl(selectedImage.image_url || selectedImage.imagePath || '')}
+                  alt={selectedImage.image_name || selectedImage.imageName || ''}
                   style={{
                     width: '100%',
                     height: 'auto',

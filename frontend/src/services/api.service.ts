@@ -1,5 +1,6 @@
 import { ApiResponse } from '../types/api.types';
 import { Crew } from '../types/crew.types';
+import { SavedImageResponse } from '../types/image.types';
 
 const API_CONFIG = {
   baseUrl: 'http://localhost:8080/api',
@@ -89,7 +90,9 @@ export class ApiService {
         }
 
         formData.append('clubIconType', 'upload');
-        formData.append('clubIconFile', clubIcon.file);
+        if (clubIcon.file instanceof File) {
+          formData.append('clubIconFile', clubIcon.file);
+        }
 
         const response = await fetch(
           `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`,
@@ -196,8 +199,8 @@ export class ApiService {
 
   static async getSavedImages(
     crewId: string,
-  ): Promise<ApiResponse<Array<{ id: number; imagePath: string; imageName: string }>>> {
-    return this.request<Array<{ id: number; imagePath: string; imageName: string }>>(
+  ): Promise<ApiResponse<SavedImageResponse[]>> {
+    return this.request<SavedImageResponse[]>(
       `${API_CONFIG.endpoints.crews}/${crewId}/saved-images`,
     );
   }

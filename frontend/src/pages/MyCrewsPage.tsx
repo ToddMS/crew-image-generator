@@ -19,8 +19,16 @@ import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
+import { Crew } from '../types/crew.types';
 
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
+
+interface SavedCrew extends Crew {
+  boatClub: string;
+  boatName: string;
+  boatClass: string;
+  crewMembers: Array<{ seat: string; name: string }>;
+}
 
 const MyCrewsPage: React.FC = () => {
   const theme = useTheme();
@@ -30,9 +38,7 @@ const MyCrewsPage: React.FC = () => {
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
 
-  const [savedCrews, setSavedCrews] = useState<
-    Array<{ id: string; crew_name: string; race_name: string; [key: string]: unknown }>
-  >([]);
+  const [savedCrews, setSavedCrews] = useState<SavedCrew[]>([]);
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<string>('recent');
   const [loading, setLoading] = useState(false);
@@ -43,7 +49,8 @@ const MyCrewsPage: React.FC = () => {
 
   useEffect(() => {
     loadCrews();
-  }, [user, loadCrews]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     const state = location.state as { successMessage?: string } | null;
@@ -157,8 +164,8 @@ const MyCrewsPage: React.FC = () => {
       case 'recent':
         return crewsCopy.sort(
           (a, b) =>
-            new Date(b.created_at || b.createdAt || 0).getTime() -
-            new Date(a.created_at || a.createdAt || 0).getTime(),
+            new Date(String(b.created_at || b.createdAt || 0)).getTime() -
+            new Date(String(a.created_at || a.createdAt || 0)).getTime(),
         );
 
       case 'club':

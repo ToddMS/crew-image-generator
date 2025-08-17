@@ -174,11 +174,11 @@ const CreateCrewPage: React.FC = () => {
       setEditingCrewId(crew.id);
       setBoatClass(crew.boatClass);
       setClubName(crew.clubName);
-      setRaceName(crew.raceName);
-      setBoatName(crew.boatName);
-      setCoachName(crew.coachName || '');
-      setCrewNames(crew.crewNames);
-      setCoxName(crew.coxName);
+      setRaceName(String(crew.raceName || ''));
+      setBoatName(String(crew.boatName || ''));
+      setCoachName(String(crew.coachName || ''));
+      setCrewNames(Array.isArray(crew.crewNames) ? crew.crewNames.map(String) : []);
+      setCoxName(String(crew.coxName || ''));
 
       navigate(location.pathname, { replace: true });
     } else {
@@ -467,7 +467,7 @@ const CreateCrewPage: React.FC = () => {
                 boatName={boatName}
                 saving={false}
                 canSave={false}
-                user={user}
+                user={user ? { id: user.id.toString(), name: user.name } : undefined}
                 isEditing={!!editingCrewId}
                 hideButton={true} // Hide the save button from this component
                 showValidation={showStep1Validation}

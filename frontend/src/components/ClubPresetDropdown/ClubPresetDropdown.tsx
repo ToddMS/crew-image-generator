@@ -5,15 +5,7 @@ import { Box, FormControl, MenuItem, Select, TextField, Typography } from '@mui/
 import { useTheme } from '@mui/material/styles';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useAuth } from '../../context/AuthContext';
-
-interface ClubPreset {
-  id: number;
-  club_name: string;
-  primary_color: string;
-  secondary_color: string;
-  logo_filename?: string;
-  is_default: boolean;
-}
+import { ClubPreset } from '../../types/club.types';
 
 interface ClubPresetDropdownProps {
   value: number | null;

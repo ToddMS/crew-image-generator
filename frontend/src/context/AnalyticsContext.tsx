@@ -80,8 +80,8 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     events.forEach((event) => {
       // Track template usage
       if (event.event === 'image_generated' && event.metadata?.template) {
-        templateCounts[event.metadata.template] =
-          (templateCounts[event.metadata.template] || 0) + 1;
+        const template = String(event.metadata.template);
+        templateCounts[template] = (templateCounts[template] || 0) + 1;
       }
 
       // Track usage by hour

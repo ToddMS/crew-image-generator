@@ -13,21 +13,7 @@ import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
 import { MdDelete, MdClose, MdImage } from 'react-icons/md';
 import { ApiService } from '../../services/api.service';
-
-interface SavedImage {
-  id: number;
-  crew_id: number;
-  user_id: number;
-  image_name: string;
-  template_id: string;
-  primary_color?: string;
-  secondary_color?: string;
-  image_filename: string;
-  image_url: string;
-  file_size?: number;
-  mime_type?: string;
-  created_at: string;
-}
+import { SavedImageResponse } from '../../types/image.types';
 
 interface GalleryProps {
   crewId: string;
@@ -36,9 +22,9 @@ interface GalleryProps {
 
 const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
   const theme = useTheme();
-  const [savedImages, setSavedImages] = useState<SavedImage[]>([]);
+  const [savedImages, setSavedImages] = useState<SavedImageResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
+  const [selectedImage, setSelectedImage] = useState<SavedImageResponse | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const loadSavedImages = async () => {
@@ -61,7 +47,7 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
     loadSavedImages();
   }, [crewId, refreshTrigger]);
 
-  const handleImageClick = (image: SavedImage) => {
+  const handleImageClick = (image: SavedImageResponse) => {
     setSelectedImage(image);
     setDialogOpen(true);
   };
@@ -188,8 +174,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                   objectFit: 'cover',
                   backgroundColor: theme.palette.grey[100],
                 }}
-                image={getImageUrl(image.image_url)}
-                alt={image.image_name}
+                image={getImageUrl(image.imagePath)}
+                alt={image.imageName}
               />
 
               <IconButton
@@ -277,8 +263,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
             {selectedImage && (
               <Box>
                 <img
-                  src={getImageUrl(selectedImage.image_url)}
-                  alt={selectedImage.image_name}
+                  src={getImageUrl(selectedImage.image_url || selectedImage.imagePath)}
+                  alt={selectedImage.image_name || selectedImage.imageName}
                   style={{
                     width: '100%',
                     height: 'auto',
@@ -287,11 +273,11 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                 />
                 <Box sx={{ p: 2 }}>
                   <Typography variant="h6" sx={{ color: theme.palette.text.primary }}>
-                    {selectedImage.image_name}
+                    {selectedImage.image_name || selectedImage.imageName}
                   </Typography>
                   <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
-                    Template {selectedImage.template_id} • Created{' '}
-                    {new Date(selectedImage.created_at).toLocaleDateString()}
+                    {selectedImage.template_id && `Template ${selectedImage.template_id} • `}
+                    {selectedImage.created_at && `Created ${new Date(selectedImage.created_at).toLocaleDateString()}`}
                   </Typography>
                   {selectedImage.primary_color && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>

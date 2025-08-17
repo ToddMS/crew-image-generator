@@ -31,15 +31,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import LoginPrompt from '../components/Auth/LoginPrompt';
-
-interface ClubPreset {
-  id: number;
-  club_name: string;
-  primary_color: string;
-  secondary_color: string;
-  logo_filename?: string;
-  is_default: boolean;
-}
+import { ClubPreset } from '../types/club.types';
 
 interface FormData {
   club_name: string;

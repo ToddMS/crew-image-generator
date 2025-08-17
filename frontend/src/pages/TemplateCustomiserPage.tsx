@@ -28,6 +28,13 @@ interface TemplateComponent {
   description: string;
 }
 
+interface ClubIcon {
+  type: 'upload' | 'preset';
+  file?: File;
+  filename?: string;
+  base64?: string;
+}
+
 interface TemplateComponents {
   backgrounds: TemplateComponent[];
   nameDisplays: TemplateComponent[];
@@ -185,9 +192,9 @@ const TemplateCustomiser: React.FC = () => {
       if (clubIcon.type === 'preset' && clubIcon.filename) {
         savedClubIcon = {
           type: 'preset' as const,
-          filename: clubIcon.filename,
+          filename: typeof clubIcon.filename === 'string' ? clubIcon.filename : undefined,
         };
-      } else if (clubIcon.type === 'upload' && clubIcon.file) {
+      } else if (clubIcon.type === 'upload' && clubIcon.file && clubIcon.file instanceof File) {
         // Convert file to base64 for storage
         const reader = new FileReader();
         reader.readAsDataURL(clubIcon.file);
@@ -196,7 +203,7 @@ const TemplateCustomiser: React.FC = () => {
           savedClubIcon = {
             type: 'upload' as const,
             base64: base64Data,
-            filename: clubIcon.filename,
+            filename: typeof clubIcon.filename === 'string' ? clubIcon.filename : undefined,
           };
 
           const newTemplate: SavedTemplate = {
@@ -675,7 +682,7 @@ const TemplateCustomiser: React.FC = () => {
                   {clubIcon ? (
                     <img
                       src={
-                        clubIcon.file
+                        clubIcon.file && clubIcon.file instanceof File
                           ? URL.createObjectURL(clubIcon.file)
                           : `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`
                       }
@@ -845,7 +852,7 @@ const TemplateCustomiser: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <TemplatePreview
                 templateConfig={config}
-                clubIcon={clubIcon}
+                clubIcon={clubIcon && (clubIcon.type === 'upload' || clubIcon.type === 'preset') ? clubIcon as ClubIcon : undefined}
                 selectedBoatType={selectedBoatType}
                 width={300}
                 height={375}
