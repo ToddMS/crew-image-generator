@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Frontend and Backend
 
 on:
   push:
@@ -16,11 +16,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Frontend deployment to GitHub Pages
+  deploy-frontend:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,21 +32,57 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
           
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build
-        run: npm run build
-        
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+          
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+          
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './frontend/dist'
           
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
+  # Backend validation (Render will auto-deploy)
+  validate-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+          
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+          
+      - name: Type check and build backend
+        run: |
+          cd backend
+          npm run build
+          
+      - name: Backend deployment info
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "✅ Backend validation passed"
+          echo "🚀 Render will auto-deploy backend from /backend directory"

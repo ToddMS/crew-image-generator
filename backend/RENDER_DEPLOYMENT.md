@@ -21,9 +21,9 @@
 
 ## Web Service Setup
 1. In Render dashboard, create a new Web Service:
-   - Connect your GitHub repository
-   - Branch: `main` (or your deployment branch)
-   - Root Directory: `backend`
+   - Connect your GitHub repository: `crew-image-generator`
+   - Branch: `main`
+   - Root Directory: `backend` (IMPORTANT: Set this to backend subdirectory)
    - Runtime: `Node`
    - Build Command: `npm install && npm run build`
    - Start Command: `npm start`
