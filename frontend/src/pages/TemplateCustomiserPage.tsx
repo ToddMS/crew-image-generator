@@ -69,7 +69,9 @@ const TemplateCustomiser: React.FC = () => {
   const [usePresetColors, setUsePresetColors] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
   const [clubIcon, setClubIcon] = useState<{ type: string; [key: string]: unknown } | null>(null);
-  const [presets, setPresets] = useState<Array<{ id: number; primary_color: string; secondary_color: string; [key: string]: unknown }>>([]);
+  const [presets, setPresets] = useState<
+    Array<{ id: number; primary_color: string; secondary_color: string; [key: string]: unknown }>
+  >([]);
   const [selectedBoatType, setSelectedBoatType] = useState<string>('8+');
   const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(null);
 
@@ -130,7 +132,10 @@ const TemplateCustomiser: React.FC = () => {
     }
   };
 
-  const handlePresetSelection = (presetId: number, preset: { primary_color: string; secondary_color: string; [key: string]: unknown }) => {
+  const handlePresetSelection = (
+    presetId: number,
+    preset: { primary_color: string; secondary_color: string; [key: string]: unknown },
+  ) => {
     setSelectedPresetId(presetId);
     if (presetId && preset) {
       setConfig((prev) => ({

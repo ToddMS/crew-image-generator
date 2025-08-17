@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdAdd, MdSearch, MdStar } from 'react-icons/md';
 import { Box, FormControl, MenuItem, Select, TextField, Typography } from '@mui/material';
@@ -68,7 +68,7 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
     }
   };
 
-  const loadRecentPresets = () => {
+  const loadRecentPresets = useCallback(() => {
     if (user) {
       const recentKey = `recent_presets_${user.id}`;
       const recent = localStorage.getItem(recentKey);
@@ -80,7 +80,7 @@ const ClubPresetDropdown: React.FC<ClubPresetDropdownProps> = ({
         }
       }
     }
-  };
+  }, [user]);
 
   const saveRecentPreset = (presetId: number) => {
     if (user) {

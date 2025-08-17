@@ -166,7 +166,9 @@ const CreateCrewPage: React.FC = () => {
       return;
     }
 
-    const state = location.state as { editingCrew?: { id: string; boatClass: string; clubName: string; [key: string]: unknown } } | null;
+    const state = location.state as {
+      editingCrew?: { id: string; boatClass: string; clubName: string; [key: string]: unknown };
+    } | null;
     if (state?.editingCrew) {
       const crew = state.editingCrew;
       setEditingCrewId(crew.id);

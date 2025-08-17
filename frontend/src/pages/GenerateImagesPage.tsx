@@ -49,7 +49,9 @@ const GenerateImagesPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
 
   const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([]);
-  const [selectedCrews, setSelectedCrews] = useState<Array<{ id: string; [key: string]: unknown }>>([]);
+  const [selectedCrews, setSelectedCrews] = useState<Array<{ id: string; [key: string]: unknown }>>(
+    [],
+  );
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);

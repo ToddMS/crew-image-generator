@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { Button, Box } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 
@@ -47,7 +47,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
     };
   }, [initializeGoogleSignIn]);
 
-  const initializeGoogleSignIn = () => {
+  const initializeGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!window.google) {
@@ -88,9 +88,9 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
         }
       }, 200);
     }
-  };
+  }, [handleCredentialResponse]);
 
-  const handleCredentialResponse = async (response: { credential: string }) => {
+  const handleCredentialResponse = useCallback(async (response: { credential: string }) => {
     try {
       await login(response.credential);
       onSuccess?.();
@@ -98,7 +98,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
       console.error('Login failed:', error);
       onError?.(error);
     }
-  };
+  }, [login, onSuccess, onError]);
 
   const handleManualSignIn = () => {
     if (window.google) {

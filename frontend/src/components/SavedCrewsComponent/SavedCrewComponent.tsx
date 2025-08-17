@@ -327,7 +327,9 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           {/* First 4 (Stroke side) */}
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                             {crew.crewMembers
-                              .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
+                              .filter(
+                                (member: { seat: string; name: string }) => member.seat !== 'Cox',
+                              )
                               .slice(0, 4)
                               .map((member: { seat: string; name: string }, idx: number) => (
                                 <Box
@@ -375,7 +377,9 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           {/* Second 4 (Bow side) */}
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                             {crew.crewMembers
-                              .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
+                              .filter(
+                                (member: { seat: string; name: string }) => member.seat !== 'Cox',
+                              )
                               .slice(4, 8)
                               .map((member: { seat: string; name: string }, idx: number) => (
                                 <Box
@@ -469,7 +473,9 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                         {/* Rowers in one row of 4 */}
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                           {crew.crewMembers
-                            .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
+                            .filter(
+                              (member: { seat: string; name: string }) => member.seat !== 'Cox',
+                            )
                             .map((member: { seat: string; name: string }, idx: number) => (
                               <Box
                                 key={idx}
@@ -525,51 +531,53 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           alignItems: 'center',
                         }}
                       >
-                        {crew.crewMembers.map((member: { seat: string; name: string }, idx: number) => (
-                          <Box
-                            key={idx}
-                            sx={{
-                              backgroundColor: theme.palette.action.selected,
-                              px: 2,
-                              py: 0.75,
-                              borderRadius: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1,
-                              flex: '1 1 auto',
-                              minWidth: 'fit-content',
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
+                        {crew.crewMembers.map(
+                          (member: { seat: string; name: string }, idx: number) => (
+                            <Box
+                              key={idx}
                               sx={{
-                                fontSize: '0.7rem',
-                                color: theme.palette.text.secondary,
-                                fontWeight: 600,
+                                backgroundColor: theme.palette.action.selected,
+                                px: 2,
+                                py: 0.75,
+                                borderRadius: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                flex: '1 1 auto',
+                                minWidth: 'fit-content',
                               }}
                             >
-                              {member.seat === 'Cox'
-                                ? 'Cox'
-                                : member.seat === 'Stroke Seat'
-                                  ? 'S'
-                                  : member.seat === 'Bow'
-                                    ? 'B'
-                                    : member.seat.match(/(\d+)/)?.[1] || member.seat}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontSize: '0.8rem',
-                                fontWeight: 500,
-                                color: theme.palette.text.primary,
-                                textAlign: 'center',
-                                flex: 1,
-                              }}
-                            >
-                              {member.name}
-                            </Typography>
-                          </Box>
-                        ))}
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: '0.7rem',
+                                  color: theme.palette.text.secondary,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {member.seat === 'Cox'
+                                  ? 'Cox'
+                                  : member.seat === 'Stroke Seat'
+                                    ? 'S'
+                                    : member.seat === 'Bow'
+                                      ? 'B'
+                                      : member.seat.match(/(\d+)/)?.[1] || member.seat}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontSize: '0.8rem',
+                                  fontWeight: 500,
+                                  color: theme.palette.text.primary,
+                                  textAlign: 'center',
+                                  flex: 1,
+                                }}
+                              >
+                                {member.name}
+                              </Typography>
+                            </Box>
+                          ),
+                        )}
                       </Box>
                     )}
                   </Box>

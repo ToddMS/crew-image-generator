@@ -92,20 +92,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     }
   }, [tabValue, open, handleGoogleLogin]);
 
-  const handleGoogleCredentialResponse = useCallback(async (response: { credential: string }) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await login(response.credential);
-      onSuccess?.();
-      onClose();
-    } catch (error) {
-      console.error('Google login failed:', error);
-      setError('Google sign-in failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [login, onSuccess, onClose]);
+  const handleGoogleCredentialResponse = useCallback(
+    async (response: { credential: string }) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await login(response.credential);
+        onSuccess?.();
+        onClose();
+      } catch (error) {
+        console.error('Google login failed:', error);
+        setError('Google sign-in failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [login, onSuccess, onClose],
+  );
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
