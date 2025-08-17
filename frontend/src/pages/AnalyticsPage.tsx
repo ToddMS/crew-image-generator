@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 const AnalyticsPage: React.FC = () => {
   const theme = useTheme();
   const { isAdmin } = useAuth();
-
   if (!isAdmin()) {
     return (
       <Box sx={{ textAlign: 'center', py: 8 }}>

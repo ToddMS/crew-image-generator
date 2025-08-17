@@ -20,7 +20,7 @@
     "clean:frontend": "cd frontend && rm -rf node_modules",
     "clean:backend": "cd backend && rm -rf node_modules",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d frontend/dist"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.39.1",

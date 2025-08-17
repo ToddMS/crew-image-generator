@@ -15,7 +15,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 function App() {
   return (
     <ErrorBoundary>
-      <Router basename="/crew-image-generator">
+      <Router>
         <NotificationProvider>
           <MainLayout showHeader={false}>
             <Routes>
