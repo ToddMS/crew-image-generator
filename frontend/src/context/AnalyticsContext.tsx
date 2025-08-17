@@ -5,7 +5,7 @@ interface AnalyticsEvent {
   event: string;
   timestamp: number;
   userId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface AnalyticsStats {
@@ -20,7 +20,7 @@ interface AnalyticsStats {
 }
 
 interface AnalyticsContextType {
-  trackEvent: (event: string, metadata?: Record<string, any>) => void;
+  trackEvent: (event: string, metadata?: Record<string, unknown>) => void;
   getStats: () => AnalyticsStats;
   getEventsByType: (eventType: string) => AnalyticsEvent[];
   exportData: () => string;
@@ -57,7 +57,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem('rowgram_analytics', JSON.stringify(events));
   }, [events]);
 
-  const trackEvent = (event: string, metadata?: Record<string, any>) => {
+  const trackEvent = (event: string, metadata?: Record<string, unknown>) => {
     const analyticsEvent: AnalyticsEvent = {
       event,
       timestamp: Date.now(),

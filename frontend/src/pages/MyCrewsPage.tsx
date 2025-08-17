@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -30,7 +30,7 @@ const MyCrewsPage: React.FC = () => {
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
 
-  const [savedCrews, setSavedCrews] = useState<any[]>([]);
+  const [savedCrews, setSavedCrews] = useState<Array<{ id: string; crew_name: string; race_name: string; [key: string]: unknown }>>([]);
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<string>('recent');
   const [loading, setLoading] = useState(false);
@@ -41,10 +41,10 @@ const MyCrewsPage: React.FC = () => {
 
   useEffect(() => {
     loadCrews();
-  }, [user]);
+  }, [user, loadCrews]);
 
   useEffect(() => {
-    const state = location.state as any;
+    const state = location.state as { successMessage?: string } | null;
     if (state?.successMessage) {
       setSuccessMessage(state.successMessage);
       navigate(location.pathname, { replace: true });
@@ -52,7 +52,7 @@ const MyCrewsPage: React.FC = () => {
     }
   }, [location.state, navigate, location.pathname]);
 
-  const loadCrews = async () => {
+  const loadCrews = useCallback(async () => {
     if (!user) {
       setSavedCrews([]);
       return;
@@ -131,7 +131,7 @@ const MyCrewsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const updateRecentCrews = (crewId: string) => {
     if (!user) return;

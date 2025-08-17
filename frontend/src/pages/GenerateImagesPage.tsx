@@ -106,7 +106,7 @@ const GenerateImagesPage: React.FC = () => {
     }
   };
 
-  const handleCrewSelection = (crew: any) => {
+  const handleCrewSelection = (crew: { id: string; [key: string]: unknown }) => {
     const crewIdStr = crew.id.toString();
     const newSelectedSet = new Set(selectedCrewIdsSet);
 
@@ -265,7 +265,7 @@ const GenerateImagesPage: React.FC = () => {
       } else {
         showError('Failed to generate any images. Please try again.');
       }
-    } catch (error) {
+    } catch {
       showError('Failed to generate images');
     } finally {
       setGenerating(false);
@@ -603,7 +603,7 @@ const GenerateImagesPage: React.FC = () => {
                       crewNames:
                         selectedCrews[previewCrewIndex].crewNames ||
                         selectedCrews[previewCrewIndex].crewMembers?.map(
-                          (member: any) => member.name,
+                          (member: { name: string }) => member.name,
                         ) ||
                         [],
                       coachName: selectedCrews[previewCrewIndex].coachName,

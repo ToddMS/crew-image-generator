@@ -47,7 +47,7 @@ const SettingsPage: React.FC = () => {
 
       setSuccess('Data exported successfully');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (error) {
+    } catch {
       setError('Failed to export data');
       setTimeout(() => setError(null), 3000);
     }
