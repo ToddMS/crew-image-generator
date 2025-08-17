@@ -183,7 +183,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                   checked={selectedCrews.has(crew.id)}
                   onChange={(e) => {
                     e.stopPropagation();
-                    onCrewSelection && onCrewSelection(crew.id, e.target.checked);
+                    onCrewSelection?.(crew.id, e.target.checked);
                   }}
                   onClick={(e) => e.stopPropagation()}
                   size="small"
@@ -282,8 +282,8 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         {/* Cox - Center */}
                         {crew.crewMembers
-                          .filter((member: any) => member.seat === 'Cox')
-                          .map((member: any, idx: number) => (
+                          .filter((member: { seat: string; name: string }) => member.seat === 'Cox')
+                          .map((member: { seat: string; name: string }, idx: number) => (
                             <Box key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
                               <Box
                                 sx={{
@@ -327,9 +327,9 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           {/* First 4 (Stroke side) */}
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                             {crew.crewMembers
-                              .filter((member: any) => member.seat !== 'Cox')
+                              .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
                               .slice(0, 4)
-                              .map((member: any, idx: number) => (
+                              .map((member: { seat: string; name: string }, idx: number) => (
                                 <Box
                                   key={idx}
                                   sx={{
@@ -375,9 +375,9 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           {/* Second 4 (Bow side) */}
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                             {crew.crewMembers
-                              .filter((member: any) => member.seat !== 'Cox')
+                              .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
                               .slice(4, 8)
-                              .map((member: any, idx: number) => (
+                              .map((member: { seat: string; name: string }, idx: number) => (
                                 <Box
                                   key={idx}
                                   sx={{
@@ -426,8 +426,8 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         {/* Cox - Center */}
                         {crew.crewMembers
-                          .filter((member: any) => member.seat === 'Cox')
-                          .map((member: any, idx: number) => (
+                          .filter((member: { seat: string; name: string }) => member.seat === 'Cox')
+                          .map((member: { seat: string; name: string }, idx: number) => (
                             <Box key={idx} sx={{ display: 'flex', justifyContent: 'center' }}>
                               <Box
                                 sx={{
@@ -469,8 +469,8 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                         {/* Rowers in one row of 4 */}
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                           {crew.crewMembers
-                            .filter((member: any) => member.seat !== 'Cox')
-                            .map((member: any, idx: number) => (
+                            .filter((member: { seat: string; name: string }) => member.seat !== 'Cox')
+                            .map((member: { seat: string; name: string }, idx: number) => (
                               <Box
                                 key={idx}
                                 sx={{
@@ -525,7 +525,7 @@ const SavedCrewsComponent: React.FC<SavedCrewsComponentProps> = ({
                           alignItems: 'center',
                         }}
                       >
-                        {crew.crewMembers.map((member: any, idx: number) => (
+                        {crew.crewMembers.map((member: { seat: string; name: string }, idx: number) => (
                           <Box
                             key={idx}
                             sx={{

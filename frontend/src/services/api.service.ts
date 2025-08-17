@@ -194,8 +194,12 @@ export class ApiService {
     }
   }
 
-  static async getSavedImages(crewId: string): Promise<ApiResponse<Array<{ id: number; imagePath: string; imageName: string }>>> {
-    return this.request<Array<{ id: number; imagePath: string; imageName: string }>>(`${API_CONFIG.endpoints.crews}/${crewId}/saved-images`);
+  static async getSavedImages(
+    crewId: string,
+  ): Promise<ApiResponse<Array<{ id: number; imagePath: string; imageName: string }>>> {
+    return this.request<Array<{ id: number; imagePath: string; imageName: string }>>(
+      `${API_CONFIG.endpoints.crews}/${crewId}/saved-images`,
+    );
   }
 
   static async deleteSavedImage(imageId: number): Promise<ApiResponse<void>> {

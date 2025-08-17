@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -43,7 +43,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     setIsSignUp(false);
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = useCallback(() => {
     if (!window.google) {
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
@@ -56,9 +56,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     } else {
       setTimeout(() => initializeGoogleSignIn(), 100);
     }
-  };
+  }, [initializeGoogleSignIn]);
 
-  const initializeGoogleSignIn = () => {
+  const initializeGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!window.google || !clientId) {
@@ -84,7 +84,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         shape: 'rectangular',
       });
     }
-  };
+  }, [handleGoogleCredentialResponse]);
 
   React.useEffect(() => {
     if (tabValue === 0 && open) {

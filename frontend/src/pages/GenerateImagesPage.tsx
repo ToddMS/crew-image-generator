@@ -49,18 +49,18 @@ const GenerateImagesPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
 
   const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([]);
-  const [selectedCrews, setSelectedCrews] = useState<any[]>([]);
+  const [selectedCrews, setSelectedCrews] = useState<Array<{ id: string; [key: string]: unknown }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);
   const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
   const [previewCrewIndex, setPreviewCrewIndex] = useState(0);
-  const [allCrews, setAllCrews] = useState<any[]>([]);
+  const [allCrews, setAllCrews] = useState<Array<{ id: string; [key: string]: unknown }>>([]);
   const [crewsLoading, setCrewsLoading] = useState(false);
   const [selectedCrewIdsSet, setSelectedCrewIdsSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const state = location.state as any;
+    const state = location.state as { selectedCrewIds?: string[] } | null;
     if (state?.selectedCrewIds) {
       setSelectedCrewIds(state.selectedCrewIds);
     } else if (state?.selectedCrewIndex !== undefined) {

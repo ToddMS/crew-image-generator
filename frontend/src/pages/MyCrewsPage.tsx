@@ -30,7 +30,9 @@ const MyCrewsPage: React.FC = () => {
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
 
-  const [savedCrews, setSavedCrews] = useState<Array<{ id: string; crew_name: string; race_name: string; [key: string]: unknown }>>([]);
+  const [savedCrews, setSavedCrews] = useState<
+    Array<{ id: string; crew_name: string; race_name: string; [key: string]: unknown }>
+  >([]);
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<string>('recent');
   const [loading, setLoading] = useState(false);

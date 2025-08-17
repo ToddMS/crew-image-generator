@@ -41,7 +41,7 @@ const boatClassToSeats: Record<string, number> = {
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
 
 const boatClassToBoatType = (boatClass: string) => {
-  const mapping: Record<string, any> = {
+  const mapping: Record<string, { id: number; value: string; seats: number; name: string }> = {
     '8+': { id: 1, value: '8+', seats: 8, name: 'Eight with Coxswain' },
     '4+': { id: 2, value: '4+', seats: 4, name: 'Four with Coxswain' },
     '4-': { id: 3, value: '4-', seats: 4, name: 'Four without Coxswain' },
@@ -166,7 +166,7 @@ const CreateCrewPage: React.FC = () => {
       return;
     }
 
-    const state = location.state as any;
+    const state = location.state as { editingCrew?: { id: string; boatClass: string; clubName: string; [key: string]: unknown } } | null;
     if (state?.editingCrew) {
       const crew = state.editingCrew;
       setEditingCrewId(crew.id);
