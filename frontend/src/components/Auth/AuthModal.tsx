@@ -92,7 +92,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     }
   }, [tabValue, open, handleGoogleLogin]);
 
-  const handleGoogleCredentialResponse = async (response: { credential: string }) => {
+  const handleGoogleCredentialResponse = useCallback(async (response: { credential: string }) => {
     try {
       setLoading(true);
       setError(null);
@@ -105,7 +105,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [login, onSuccess, onClose]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
