@@ -3,7 +3,7 @@
 DATABASE_URL=(will be auto-populated from your PostgreSQL service)
 NODE_ENV=production
 PORT=8080
-FRONTEND_URL=https://toddms.github.io/crew-image-generator
+FRONTEND_URL=https://www.rowgram.co.uk
 
 # Google OAuth (from your deployment docs)
 GOOGLE_CLIENT_ID=426083525831-kc55rvgeo24eokfcuij09tm3b81djc26.apps.googleusercontent.com

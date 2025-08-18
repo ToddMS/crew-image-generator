@@ -17,7 +17,9 @@ app.use(cors({
         'http://localhost:5173', 
         'http://localhost:3000', 
         'https://accounts.google.com',
-        'https://toddms.github.io'
+        'https://toddms.github.io',
+        'https://www.rowgram.co.uk',
+        'https://rowgram.co.uk'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
