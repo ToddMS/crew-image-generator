@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS SavedImages (
     crew_id INTEGER NOT NULL REFERENCES Crews(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
     image_name VARCHAR(255) NOT NULL,
-    template_id VARCHAR(10) NOT NULL,
+    template_id VARCHAR(50) NOT NULL,
     primary_color VARCHAR(7),
     secondary_color VARCHAR(7),
     image_filename VARCHAR(255) NOT NULL,

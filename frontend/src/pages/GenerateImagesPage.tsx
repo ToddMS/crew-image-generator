@@ -247,13 +247,30 @@ const GenerateImagesPage: React.FC = () => {
           );
 
           if (response.ok) {
-            successCount++;
-            trackEvent('image_generated', {
-              template: selectedTemplate.id,
-              crewName: crew.boatName,
-              raceName: crew.raceName,
-              boatClass: crew.boatClass,
-            });
+            // Get the image blob from response
+            const imageBlob = await response.blob();
+            const imageName = `${crew.name}_${crew.boatType?.value || 'unknown'}_${Date.now()}`;
+            
+            // Save the image to database and file system
+            const saveResult = await ApiService.saveImage(
+              crew.id.toString(),
+              imageName,
+              selectedTemplate.id,
+              selectedTemplate.config.colors,
+              imageBlob
+            );
+            
+            if (!saveResult.error) {
+              successCount++;
+              trackEvent('image_generated', {
+                template: selectedTemplate.id,
+                crewName: crew.boatName,
+                raceName: crew.raceName,
+                boatClass: crew.boatClass,
+              });
+            } else {
+              console.error(`Failed to save image for crew ${crew.id}:`, saveResult.error);
+            }
           }
         } catch (error) {
           console.error(`Failed to generate image for crew ${crew.id}:`, error);
