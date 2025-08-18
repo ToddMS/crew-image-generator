@@ -91,12 +91,10 @@ export const generateCustomCrewImageHandler = async (req: Request, res: Response
         const templateGenerator = new TemplateGeneratorService();
         const imageBuffer = await templateGenerator.generateTemplate(crew, templateConfig as TemplateConfig, clubIconData);
         
-        const imageUrl = "data:image/png;base64," + imageBuffer.toString('base64');
-        
-        return res.json({ 
-            success: true, 
-            imageUrl
-        });
+        // Return the image as a blob
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Length', imageBuffer.length);
+        return res.send(imageBuffer);
     } catch (error) {
         console.error("Error generating custom crew image:", error);
         res.status(500).json({ error: "Server error" });
