@@ -49,7 +49,11 @@ app.use('/api/club-presets', clubPresetsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        message: 'Backend is running correctly'
+    });
 });
 
 app.listen(PORT, () => {
