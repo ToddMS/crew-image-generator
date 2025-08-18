@@ -40,6 +40,7 @@ jobs:
       - name: Build frontend
         env:
           VITE_API_URL: https://crew-image-generator-backend.onrender.com
+          VITE_GOOGLE_CLIENT_ID: 426083525831-kc55rvgeo24eokfcuij09tm3b81djc26.apps.googleusercontent.com
         run: |
           cd frontend
           npm run build
