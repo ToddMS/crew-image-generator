@@ -1,0 +1,15 @@
+# Copy these environment variables to your Render service:
+
+DATABASE_URL=(will be auto-populated from your PostgreSQL service)
+NODE_ENV=production
+PORT=8080
+FRONTEND_URL=https://toddms.github.io/crew-image-generator
+
+# Google OAuth (from your deployment docs)
+GOOGLE_CLIENT_ID=426083525831-kc55rvgeo24eokfcuij09tm3b81djc26.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=PGOCSPX-BJZc4en2tSnJrNMjdYZYgx9IZvSl
+
+# Session & Upload Config
+SESSION_SECRET=your_super_secret_session_key_here_production_random123
+MAX_FILE_SIZE=5242880
+UPLOAD_DIR=src/assets/club-logos
