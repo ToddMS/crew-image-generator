@@ -95,7 +95,7 @@ const TemplateCustomiser: React.FC = () => {
   useEffect(() => {
     const fetchComponents = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/crews/template-components');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/crews/template-components`);
         if (!response.ok) throw new Error('Failed to fetch components');
         const data = await response.json();
         setComponents(data);

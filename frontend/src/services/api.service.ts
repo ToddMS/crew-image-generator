@@ -3,7 +3,7 @@ import { Crew } from '../types/crew.types';
 import { SavedImageResponse } from '../types/image.types';
 
 const API_CONFIG = {
-  baseUrl: 'http://localhost:8080/api',
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
   endpoints: {
     crews: '/crews',
   },
