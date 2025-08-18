@@ -8,14 +8,11 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleAuth = async (req: Request, res: Response) => {
   try {
-    console.log('Google auth request received');
     const { credential } = req.body;
     if (!credential) {
-      console.log('No credential provided');
       return res.status(400).json({ error: "Google credential is required" });
     }
 
-    console.log('Verifying Google token...');
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -23,11 +20,8 @@ export const googleAuth = async (req: Request, res: Response) => {
 
     const payload = ticket.getPayload();
     if (!payload) {
-      console.log('Invalid Google token payload');
       return res.status(400).json({ error: "Invalid Google token" });
     }
-
-    console.log('Google token verified successfully for user:', payload.email);
 
     const { sub: googleId, email, name, picture } = payload;
 
