@@ -74,6 +74,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
       callback: handleGoogleCredentialResponse,
       auto_select: false,
       use_fedcm_for_prompt: false,
+      ux_mode: 'popup',
+      cancel_on_tap_outside: true
     });
 
     const buttonDiv = document.getElementById('google-signin-button');
