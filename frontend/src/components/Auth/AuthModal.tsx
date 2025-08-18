@@ -82,7 +82,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
       window.google.accounts.id.renderButton(buttonDiv, {
         theme: 'outline',
         size: 'large',
-        width: '100%',
+        width: 300,
         text: 'continue_with',
         shape: 'rectangular',
       });
