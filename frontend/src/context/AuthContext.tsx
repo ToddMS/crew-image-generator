@@ -91,6 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credential: string) => {
     try {
       setLoading(true);
+      console.log('Attempting login with credential');
+      console.log('API URL:', import.meta.env.VITE_API_URL);
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google`, {
         method: 'POST',
         headers: {
@@ -99,14 +102,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ credential }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Login successful, received data:', data);
         setUser(data.user);
         setClubSettings(data.clubSettings);
         setSessionId(data.sessionId);
         localStorage.setItem('sessionId', data.sessionId);
       } else {
-        throw new Error('Login failed');
+        const errorData = await response.text();
+        console.error('Login failed with status:', response.status);
+        console.error('Error response:', errorData);
+        throw new Error(`Login failed: ${response.status} - ${errorData}`);
       }
     } catch (error) {
       console.error('Login error:', error);
