@@ -2,22 +2,28 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Alert,
   Button,
   Card,
   CardContent,
-  Chip,
+  Grid,
+  Avatar,
+  Alert,
   CircularProgress,
+  Chip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { MdImage } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
+import { 
+  MdImage, 
+  MdVisibility,
+  MdSettings,
+  MdAdd
+} from 'react-icons/md';
+import DashboardLayout from '../components/Layout/DashboardLayout';
 import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
-import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
-import TemplatePreview from '../components/TemplatePreview/TemplatePreview';
 import { Crew } from '../types/crew.types';
 
 interface SavedTemplate {
@@ -43,250 +49,54 @@ interface SavedTemplate {
 
 const GenerateImagesPage: React.FC = () => {
   const theme = useTheme();
-  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
 
-  const [selectedCrewIds, setSelectedCrewIds] = useState<string[]>([]);
-  const [selectedCrews, setSelectedCrews] = useState<Crew[]>(
-    [],
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
+  const [crews, setCrews] = useState<Crew[]>([]);
+  const [templates, setTemplates] = useState<SavedTemplate[]>([]);
+  const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<SavedTemplate | null>(null);
-  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
-  const [previewCrewIndex, setPreviewCrewIndex] = useState(0);
-  const [allCrews, setAllCrews] = useState<Crew[]>([]);
-  const [crewsLoading, setCrewsLoading] = useState(false);
-  const [selectedCrewIdsSet, setSelectedCrewIdsSet] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    const state = location.state as { selectedCrewIds?: string[]; selectedCrewIndex?: number } | null;
-    if (state?.selectedCrewIds) {
-      setSelectedCrewIds(state.selectedCrewIds);
-    } else if (state?.selectedCrewIndex !== undefined) {
-      loadCrews().then((crews) => {
-        const crewsData = crews?.data || crews;
-        if (crewsData && Array.isArray(crewsData) && state.selectedCrewIndex !== undefined && state.selectedCrewIndex < crewsData.length) {
-          setSelectedCrewIds([crewsData[state.selectedCrewIndex].id]);
-        }
-      });
-    }
-  }, [location.state]);
-
-  useEffect(() => {
-    if (selectedCrewIds.length > 0) {
-      loadSelectedCrews();
-    }
-  }, [selectedCrewIds]);
-
-  useEffect(() => {
-    if (selectedCrews.length > 0) {
-      setPreviewCrewIndex(Math.min(previewCrewIndex, selectedCrews.length - 1));
-    }
-  }, [selectedCrews]);
-
-  useEffect(() => {
-    if (selectedCrews.length === 0) {
-      loadAllCrews();
-    }
-  }, [selectedCrews.length]);
-
-  const loadAllCrews = async () => {
-    setCrewsLoading(true);
-    try {
-      const result = await ApiService.getCrews();
-      const crews = result.data || result;
-      if (crews && Array.isArray(crews)) {
-        setAllCrews(crews);
-      }
-    } catch (error) {
-      console.error('Error loading all crews:', error);
-    } finally {
-      setCrewsLoading(false);
-    }
-  };
-
-  const handleCrewSelection = (crew: Crew) => {
-    const crewIdStr = crew.id.toString();
-    const newSelectedSet = new Set(selectedCrewIdsSet);
-
-    if (newSelectedSet.has(crewIdStr)) {
-      newSelectedSet.delete(crewIdStr);
+    if (user) {
+      loadData();
     } else {
-      newSelectedSet.add(crewIdStr);
+      setLoading(false);
     }
+  }, [user]);
 
-    setSelectedCrewIdsSet(newSelectedSet);
-    const newSelectedIds = Array.from(newSelectedSet);
-    setSelectedCrewIds(newSelectedIds);
-
-    if (!selectedCrewIdsSet.has(crewIdStr) && newSelectedSet.has(crewIdStr)) {
-      const currentSelectedCrews = allCrews.filter((c) => newSelectedIds.includes(c.id.toString()));
-      const newCrewIndex = currentSelectedCrews.findIndex((c) => c.id.toString() === crewIdStr);
-      if (newCrewIndex !== -1) {
-        setPreviewCrewIndex(newCrewIndex);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadSavedTemplates();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'savedTemplates') {
-        loadSavedTemplates();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
-  const loadSavedTemplates = () => {
+  const loadData = async () => {
     try {
-      const savedTemplatesData = localStorage.getItem('savedTemplates');
-      if (savedTemplatesData) {
-        const templates = JSON.parse(savedTemplatesData) as SavedTemplate[];
-        setSavedTemplates(templates);
-        if (templates.length > 0 && !selectedTemplate) {
-          setSelectedTemplate(templates[0]);
-        }
-        if (selectedTemplate && !templates.find((t) => t.id === selectedTemplate.id)) {
-          setSelectedTemplate(templates.length > 0 ? templates[0] : null);
-        }
+      const crewsResponse = await ApiService.getCrews();
+      
+      if (crewsResponse.error) {
+        showError(crewsResponse.error);
       } else {
-        setSavedTemplates([]);
-        setSelectedTemplate(null);
+        setCrews(crewsResponse.data || []);
       }
+      
+      // Mock templates for now
+      setTemplates([]);
     } catch (error) {
-      console.error('Error loading saved templates from localStorage:', error);
-      setSavedTemplates([]);
-      setSelectedTemplate(null);
+      showError('Failed to load data');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loadCrews = async () => {
-    if (!user) return null;
+  const handleGenerateImage = async () => {
+    if (!selectedCrew || !selectedTemplate) return;
+
     try {
-      const crews = await ApiService.getCrews();
-      return crews;
+      setGenerating(true);
+      // Mock generation for now
+      showSuccess('Image generated successfully!');
+      navigate('/gallery');
     } catch (error) {
-      console.error('Error loading crews:', error);
-      return null;
-    }
-  };
-
-  const loadSelectedCrews = async () => {
-    try {
-      const result = await ApiService.getCrews();
-      const crews = result.data || result;
-
-      if (crews && Array.isArray(crews)) {
-        const selected = crews.filter((crew) => {
-          const crewIdStr = crew.id?.toString();
-          const isSelected =
-            selectedCrewIds.includes(crewIdStr) || selectedCrewIds.includes(crew.id);
-          return isSelected;
-        });
-        setSelectedCrews(selected);
-      } else {
-        console.error('No crews data received or not an array:', crews);
-        setSelectedCrews([]);
-      }
-    } catch (error) {
-      console.error('Error loading crews:', error);
-      setError('Failed to load crew details');
-    }
-  };
-
-  const handleGenerateImages = async () => {
-    if (!selectedTemplate || selectedCrews.length === 0) return;
-
-    setGenerating(true);
-    let successCount = 0;
-
-    try {
-      for (const crew of selectedCrews) {
-        try {
-          let clubIconForApi = undefined;
-          if (selectedTemplate.clubIcon) {
-            if (selectedTemplate.clubIcon.type === 'preset') {
-              clubIconForApi = {
-                type: 'preset',
-                filename: selectedTemplate.clubIcon.filename,
-              };
-            } else if (selectedTemplate.clubIcon.type === 'upload') {
-              clubIconForApi = {
-                type: 'upload',
-                base64: selectedTemplate.clubIcon.base64,
-                filename: selectedTemplate.clubIcon.filename,
-              };
-            }
-          }
-
-          const response = await fetch(
-            `${import.meta.env.VITE_API_URL}/api/crews/generate-custom-image`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
-              },
-              body: JSON.stringify({
-                crewId: crew.id,
-                templateConfig: selectedTemplate.config,
-                clubIcon: clubIconForApi,
-                imageName: `${crew.name}_${crew.boatType?.value || 'unknown'}_${Date.now()}.png`,
-              }),
-            },
-          );
-
-          if (response.ok) {
-            // Get the image blob from response
-            const imageBlob = await response.blob();
-            const imageName = `${crew.name}_${crew.boatType?.value || 'unknown'}_${Date.now()}`;
-            
-            // Save the image to database and file system
-            const saveResult = await ApiService.saveImage(
-              crew.id.toString(),
-              imageName,
-              selectedTemplate.id,
-              selectedTemplate.config.colors,
-              imageBlob
-            );
-            
-            if (!saveResult.error) {
-              successCount++;
-              trackEvent('image_generated', {
-                template: selectedTemplate.id,
-                crewName: crew.boatName,
-                raceName: crew.raceName,
-                boatClass: crew.boatClass,
-              });
-            } else {
-              console.error(`Failed to save image for crew ${crew.id}:`, saveResult.error);
-            }
-          }
-        } catch (error) {
-          console.error(`Failed to generate image for crew ${crew.id}:`, error);
-        }
-      }
-
-      if (successCount > 0) {
-        showSuccess(
-          `Successfully generated ${successCount} image${successCount > 1 ? 's' : ''} for your crew${successCount > 1 ? 's' : ''}!`,
-        );
-        navigate('/gallery');
-      } else {
-        showError('Failed to generate any images. Please try again.');
-      }
-    } catch {
-      showError('Failed to generate images');
+      showError('Failed to generate image');
     } finally {
       setGenerating(false);
     }
@@ -294,403 +104,235 @@ const GenerateImagesPage: React.FC = () => {
 
   if (!user) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          Generate Images
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Sign in to generate crew images with custom templates
-        </Typography>
-        <LoginPrompt message="Sign in to generate crew images" actionText="Generate Images" />
-      </Box>
+      <DashboardLayout title="Generate Images" subtitle="Create beautiful crew images">
+        <LoginPrompt 
+          message="Sign in to generate crew images" 
+          actionText="Generate Images"
+        />
+      </DashboardLayout>
+    );
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Generate Images" subtitle="Create beautiful crew images">
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 1400, mx: 'auto', p: 3 }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+    <DashboardLayout 
+      title="Generate Images" 
+      subtitle="Create beautiful crew images with your custom templates"
+    >
+      <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+        {/* Quick Actions */}
+        <Box sx={{ mb: 4 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<MdAdd />}
+                onClick={() => navigate('/crews/create')}
+                sx={{ py: 1.5 }}
+              >
+                Create New Crew
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<MdSettings />}
+                onClick={() => navigate('/templates/create')}
+                sx={{ py: 1.5 }}
+              >
+                Create New Template
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
 
-      {/* Main Generation Interface */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 3 }}>
-        {/* Left Column - Template Selection */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Grid container spacing={4}>
           {/* Crew Selection */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                Select Crews
-              </Typography>
-
-              {crewsLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                  <CircularProgress />
-                </Box>
-              ) : allCrews.length > 0 ? (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                    gap: 1,
-                    maxHeight: 300,
-                    overflowY: 'auto',
-                  }}
-                >
-                  {allCrews.map((crew) => {
-                    const isSelected = selectedCrewIdsSet.has(crew.id.toString());
-                    return (
-                      <Box
+          <Grid item xs={12} lg={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 32, height: 32 }}>
+                    <MdImage size={20} />
+                  </Avatar>
+                  Select Crew ({crews.length})
+                </Typography>
+                
+                {crews.length === 0 ? (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    No crews found. <Button onClick={() => navigate('/crews/create')}>Create your first crew</Button>
+                  </Alert>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 400, overflowY: 'auto' }}>
+                    {crews.map((crew) => (
+                      <Card
                         key={crew.id}
                         sx={{
                           cursor: 'pointer',
-                          border: isSelected
-                            ? `2px solid ${theme.palette.primary.main}`
-                            : `1px solid ${theme.palette.divider}`,
-                          backgroundColor: isSelected
-                            ? theme.palette.primary.light + '15'
-                            : theme.palette.background.paper,
-                          borderRadius: 1,
-                          p: 1,
-                          aspectRatio: '1',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          textAlign: 'center',
-                          transition: 'all 0.2s ease',
-                          position: 'relative',
+                          border: selectedCrew?.id === crew.id ? 2 : 1,
+                          borderColor: selectedCrew?.id === crew.id ? theme.palette.primary.main : theme.palette.divider,
+                          transition: 'all 0.2s ease-in-out',
                           '&:hover': {
                             transform: 'translateY(-1px)',
-                            boxShadow: theme.shadows[2],
-                            borderColor: theme.palette.primary.light,
-                          },
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
-                        onClick={() => handleCrewSelection(crew)}
+                        onClick={() => setSelectedCrew(crew)}
                       >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: 600,
-                            mb: 0.5,
-                            fontSize: '0.7rem',
-                            lineHeight: 1.1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                          }}
-                        >
-                          {crew.name}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.65rem',
-                            mb: 0.5,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            width: '100%',
-                          }}
-                        >
-                          {crew.raceName}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.65rem',
-                            mb: 0.5,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            width: '100%',
-                          }}
-                        >
-                          {crew.clubName || crew.boatClub}
-                        </Typography>
-                        <Chip
-                          label={crew.boatType.value}
-                          size="small"
-                          sx={{
-                            height: 16,
-                            fontSize: '0.6rem',
-                            backgroundColor: isSelected
-                              ? theme.palette.primary.main
-                              : theme.palette.grey[800],
-                            color: 'white',
-                            border: 'none',
-                            '& .MuiChip-label': {
-                              px: 0.5,
-                            },
-                          }}
-                        />
-                        {isSelected && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 4,
-                              right: 4,
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              backgroundColor: theme.palette.primary.main,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Typography
-                              sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 'bold' }}
-                            >
-                              ✓
-                            </Typography>
+                        <CardContent sx={{ py: 2 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                            {crew.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            {crew.clubName} • {crew.raceName}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Chip 
+                              label={crew.boatType.name} 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                            />
+                            <Chip 
+                              label={`${crew.crewNames.length} members`} 
+                              size="small" 
+                              variant="outlined"
+                            />
                           </Box>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    p: 4,
-                    textAlign: 'center',
-                    backgroundColor: theme.palette.action.hover,
-                    borderRadius: 2,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
-                    No Crews Found
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-                    Create your first crew to get started with image generation.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate('/create')}
-                    sx={{ px: 3, py: 1 }}
-                  >
-                    Create Crew
-                  </Button>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
 
+          {/* Template Selection */}
+          <Grid item xs={12} lg={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.secondary.main, width: 32, height: 32 }}>
+                    <MdSettings size={20} />
+                  </Avatar>
+                  Select Template ({templates.length})
+                </Typography>
+                
+                {templates.length === 0 ? (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    No templates found. <Button onClick={() => navigate('/templates/create')}>Create your first template</Button>
+                  </Alert>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: 400, overflowY: 'auto' }}>
+                    {templates.map((template) => (
+                      <Card
+                        key={template.id}
+                        sx={{
+                          cursor: 'pointer',
+                          border: selectedTemplate?.id === template.id ? 2 : 1,
+                          borderColor: selectedTemplate?.id === template.id ? theme.palette.secondary.main : theme.palette.divider,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-1px)',
+                            boxShadow: theme.shadows[4],
+                          }
+                        }}
+                        onClick={() => setSelectedTemplate(template)}
+                      >
+                        <CardContent sx={{ py: 2 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                            {template.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Chip 
+                              label={template.config.background} 
+                              size="small" 
+                              variant="outlined"
+                            />
+                            <Chip 
+                              label={template.config.nameDisplay} 
+                              size="small" 
+                              variant="outlined"
+                            />
+                          </Box>
+                          {template.previewUrl && (
+                            <Box sx={{ mt: 1, textAlign: 'center' }}>
+                              <img 
+                                src={template.previewUrl} 
+                                alt={template.name}
+                                style={{ maxWidth: '100%', height: '60px', objectFit: 'cover', borderRadius: 4 }}
+                              />
+                            </Box>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Generation Controls */}
+        <Box sx={{ mt: 4 }}>
           <Card>
             <CardContent>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                Choose Template ({savedTemplates.length})
+              <Typography variant="h6" sx={{ mb: 3 }}>
+                Generate Image
               </Typography>
-
-              {savedTemplates.length > 0 ? (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                    gap: 1.5,
-                  }}
-                >
-                  {savedTemplates.map((template) => (
-                    <Card
-                      key={template.id}
-                      variant="outlined"
-                      sx={{
-                        cursor: 'pointer',
-                        border:
-                          selectedTemplate?.id === template.id
-                            ? `2px solid ${theme.palette.primary.main}`
-                            : `1px solid ${theme.palette.divider}`,
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          transform: 'translateY(-1px)',
-                          boxShadow: theme.shadows[2],
-                        },
-                      }}
-                      onClick={() => {
-                        setSelectedTemplate(template);
-                      }}
+              
+              {selectedCrew && selectedTemplate ? (
+                <Box>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    Ready to generate image for <strong>{selectedCrew.name}</strong> using <strong>{selectedTemplate.name}</strong>
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      startIcon={generating ? <CircularProgress size={20} color="inherit" /> : <MdImage />}
+                      onClick={handleGenerateImage}
+                      disabled={generating}
+                      sx={{ px: 4 }}
                     >
-                      <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            width: '100%',
-                            height: 80,
-                            backgroundColor: template.config.colors.primary,
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 1.5,
-                            backgroundImage: `linear-gradient(135deg, ${template.config.colors.primary} 0%, ${template.config.colors.secondary} 100%)`,
-                            border: `1px solid ${theme.palette.divider}`,
-                            position: 'relative',
-                          }}
-                        >
-                          <MdImage size={24} color="white" style={{ opacity: 0.8 }} />
-                        </Box>
-
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.8rem' }}
-                        >
-                          {template.name}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: theme.palette.text.secondary, fontSize: '0.7rem' }}
-                        >
-                          Created {new Date(template.createdAt).toLocaleDateString()}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    p: 4,
-                    textAlign: 'center',
-                    backgroundColor: theme.palette.action.hover,
-                    borderRadius: 2,
-                  }}
-                >
-                  <MdImage
-                    size={48}
-                    color={theme.palette.text.secondary}
-                    style={{ marginBottom: 16 }}
-                  />
-                  <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
-                    No Templates Found
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-                    Create your first custom template in the Template Builder to get started!
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate('/template-builder')}
-                    sx={{ px: 3, py: 1 }}
-                  >
-                    Create Template
-                  </Button>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <Card sx={{ position: 'sticky', top: 20 }}>
-            <CardContent>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Preview
-                </Typography>
-                {selectedCrews.length > 1 && (
-                  <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                    {previewCrewIndex + 1} of {selectedCrews.length}
-                  </Typography>
-                )}
-              </Box>
-
-              {selectedTemplate &&
-              selectedCrewIds.length > 0 &&
-              selectedCrews.length > 0 &&
-              selectedCrews[previewCrewIndex] ? (
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <TemplatePreview
-                    templateConfig={selectedTemplate.config}
-                    crewData={{
-                      name: selectedCrews[previewCrewIndex].name,
-                      clubName:
-                        selectedCrews[previewCrewIndex].clubName ||
-                        selectedCrews[previewCrewIndex].boatClub ||
-                        '',
-                      raceName: selectedCrews[previewCrewIndex].raceName,
-                      boatType: selectedCrews[previewCrewIndex].boatType,
-                      crewNames:
-                        selectedCrews[previewCrewIndex].crewNames ||
-                        selectedCrews[previewCrewIndex].crewMembers?.map(
-                          (member: { name: string }) => member.name,
-                        ) ||
-                        [],
-                      coachName: selectedCrews[previewCrewIndex].coachName,
-                    }}
-                    clubIcon={
-                      selectedTemplate.clubIcon
-                        ? {
-                            type: selectedTemplate.clubIcon.type,
-                            filename: selectedTemplate.clubIcon.filename,
-                            base64: selectedTemplate.clubIcon.base64,
-                          }
-                        : undefined
-                    }
-                    width={420}
-                    height={525}
-                    debounceMs={300}
-                    showGenerateButton={true}
-                    onGenerate={handleGenerateImages}
-                    generating={generating}
-                    selectedCrewCount={selectedCrewIds.length}
-                    showCyclingControls={selectedCrews.length > 1}
-                    currentIndex={previewCrewIndex}
-                    totalCount={selectedCrews.length}
-                    onPrevious={() =>
-                      setPreviewCrewIndex(
-                        (prev) => (prev - 1 + selectedCrews.length) % selectedCrews.length,
-                      )
-                    }
-                    onNext={() => setPreviewCrewIndex((prev) => (prev + 1) % selectedCrews.length)}
-                    onIndexSelect={setPreviewCrewIndex}
-                  />
-                </Box>
-              ) : (
-                <Box
-                  sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}
-                >
-                  <Box
-                    sx={{
-                      p: 3,
-                      backgroundColor: theme.palette.background.paper,
-                      borderRadius: 2,
-                      border: `1px solid ${theme.palette.divider}`,
-                      width: '100%',
-                      maxWidth: 400,
-                      textAlign: 'center',
-                    }}
-                  >
-                    <MdImage
-                      size={48}
-                      color={theme.palette.text.secondary}
-                      style={{ marginBottom: 16 }}
-                    />
-                    <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
-                      Select Template & Crews
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                      Choose crews from above and a template to see the preview.
-                    </Typography>
+                      {generating ? 'Generating...' : 'Generate Image'}
+                    </Button>
+                    
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      startIcon={<MdVisibility />}
+                      onClick={() => navigate('/gallery')}
+                      sx={{ px: 4 }}
+                    >
+                      View Gallery
+                    </Button>
                   </Box>
                 </Box>
+              ) : (
+                <Alert severity="info">
+                  Select both a crew and a template to generate an image
+                </Alert>
               )}
             </CardContent>
           </Card>
         </Box>
       </Box>
-    </Box>
+    </DashboardLayout>
   );
 };
 

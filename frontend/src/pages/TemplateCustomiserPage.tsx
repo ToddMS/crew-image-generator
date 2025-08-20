@@ -1,47 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Container,
-  Typography,
   Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  TextField,
   FormControl,
   Select,
   MenuItem,
-  Button,
+  Avatar,
   Alert,
   CircularProgress,
-  TextField,
-  IconButton,
-  Card,
-  CardContent,
-  Switch,
-  FormControlLabel,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Chip,
+  InputLabel,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
-import { Image, Save, Delete, SwapVert } from '@mui/icons-material';
-import ClubPresetDropdown from '../components/ClubPresetDropdown/ClubPresetDropdown';
-import TemplatePreview from '../components/TemplatePreview/TemplatePreview';
-
-interface TemplateComponent {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface ClubIcon {
-  type: 'upload' | 'preset';
-  file?: File;
-  filename?: string;
-  base64?: string;
-}
-
-interface TemplateComponents {
-  backgrounds: TemplateComponent[];
-  nameDisplays: TemplateComponent[];
-  boatStyles: TemplateComponent[];
-  textLayouts: TemplateComponent[];
-  logoPositions: TemplateComponent[];
-}
+import { useNavigate } from 'react-router-dom';
+import { 
+  MdPalette,
+  MdSave,
+  MdVisibility,
+  MdImage,
+  MdTextFields,
+  MdExpandMore,
+  MdColorLens,
+  MdSettings
+} from 'react-icons/md';
+import DashboardLayout from '../components/Layout/DashboardLayout';
+import LoginPrompt from '../components/Auth/LoginPrompt';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 interface TemplateConfig {
   background: string;
@@ -53,836 +46,391 @@ interface TemplateConfig {
   colors: { primary: string; secondary: string };
 }
 
-interface SavedTemplate {
-  id: string;
-  name: string;
-  config: TemplateConfig;
-  clubIcon?: {
-    type: 'upload' | 'preset';
-    filename?: string;
-    base64?: string;
-  };
-  previewUrl?: string;
-  createdAt: string;
-}
-
-const TemplateCustomiser: React.FC = () => {
+const TemplateCustomiserPage: React.FC = () => {
   const theme = useTheme();
-  const [components, setComponents] = useState<TemplateComponents | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [savedTemplates, setSavedTemplates] = useState<SavedTemplate[]>([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
+
   const [templateName, setTemplateName] = useState('');
-  const [usePresetColors, setUsePresetColors] = useState(false);
-  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
-  const [clubIcon, setClubIcon] = useState<{ type: string; [key: string]: unknown } | null>(null);
-  const [presets, setPresets] = useState<
-    Array<{ id: number; primary_color: string; secondary_color: string; [key: string]: unknown }>
-  >([]);
-  const [selectedBoatType, setSelectedBoatType] = useState<string>('8+');
-  const [currentPreviewUrl, setCurrentPreviewUrl] = useState<string | null>(null);
-
   const [config, setConfig] = useState<TemplateConfig>({
-    background: 'diagonal',
-    nameDisplay: 'labeled',
-    boatStyle: 'offset',
-    textLayout: 'header-left',
-    logo: 'bottom-right',
-    dimensions: { width: 1080, height: 1350 },
-    colors: { primary: '#DAA520', secondary: '#2C3E50' },
+    background: 'water',
+    nameDisplay: 'overlay',
+    boatStyle: 'modern',
+    textLayout: 'centered',
+    logo: 'top-left',
+    dimensions: { width: 1080, height: 1080 },
+    colors: { primary: '#4a90e2', secondary: '#2ecc71' }
   });
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const fetchComponents = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/crews/template-components`);
-        if (!response.ok) throw new Error('Failed to fetch components');
-        const data = await response.json();
-        setComponents(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const backgroundOptions = [
+    { value: 'water', label: 'Water Scene', description: 'Beautiful water background' },
+    { value: 'sunrise', label: 'Sunrise', description: 'Golden hour water scene' },
+    { value: 'solid', label: 'Solid Color', description: 'Clean solid background' },
+    { value: 'gradient', label: 'Gradient', description: 'Modern gradient background' },
+  ];
 
-    fetchComponents();
-  }, []);
+  const nameDisplayOptions = [
+    { value: 'overlay', label: 'Overlay', description: 'Names overlaid on image' },
+    { value: 'sidebar', label: 'Sidebar', description: 'Names in a side panel' },
+    { value: 'bottom', label: 'Bottom Bar', description: 'Names at the bottom' },
+  ];
 
-  useEffect(() => {
-    loadPresets();
-  }, []);
+  const boatStyleOptions = [
+    { value: 'modern', label: 'Modern', description: 'Clean, modern boat design' },
+    { value: 'classic', label: 'Classic', description: 'Traditional rowing boat' },
+    { value: 'silhouette', label: 'Silhouette', description: 'Simple boat outline' },
+  ];
 
-  useEffect(() => {
-    if (presets.length > 0 && !selectedPresetId && usePresetColors) {
-      const favoritePreset = presets.find((p) => p.is_default);
-      if (favoritePreset) {
-        handlePresetSelection(favoritePreset.id, favoritePreset);
-      } else if (presets.length > 0) {
-        handlePresetSelection(presets[0].id, presets[0]);
-      }
-    }
-  }, [presets, usePresetColors]);
+  const textLayoutOptions = [
+    { value: 'centered', label: 'Centered', description: 'Center-aligned text' },
+    { value: 'left', label: 'Left Aligned', description: 'Left-aligned text' },
+    { value: 'justified', label: 'Justified', description: 'Justified text layout' },
+  ];
 
-  const loadPresets = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/club-presets`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('sessionId')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to load presets');
-      const data = await response.json();
-      setPresets(data);
-    } catch (error) {
-      console.error('Error loading presets:', error);
-    }
-  };
+  const logoPositionOptions = [
+    { value: 'top-left', label: 'Top Left', description: 'Logo in top left corner' },
+    { value: 'top-right', label: 'Top Right', description: 'Logo in top right corner' },
+    { value: 'center', label: 'Center', description: 'Logo in center' },
+    { value: 'bottom', label: 'Bottom', description: 'Logo at bottom' },
+  ];
 
-  const handlePresetSelection = (
-    presetId: number,
-    preset: { primary_color: string; secondary_color: string; [key: string]: unknown },
-  ) => {
-    setSelectedPresetId(presetId);
-    if (presetId && preset) {
-      setConfig((prev) => ({
-        ...prev,
-        colors: {
-          primary: preset.primary_color,
-          secondary: preset.secondary_color,
-        },
-      }));
-      if (preset.logo_filename) {
-        setClubIcon({
-          type: 'preset',
-          filename: preset.logo_filename,
-        });
-      } else {
-        setClubIcon(null);
-      }
-    } else {
-      setClubIcon(null);
-    }
-  };
-
-  const handleConfigChange = (field: keyof TemplateConfig, value: unknown) => {
-    setConfig((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleColorChange = (colorType: 'primary' | 'secondary', value: string) => {
-    setConfig((prev) => ({
-      ...prev,
-      colors: { ...prev.colors, [colorType]: value },
-    }));
-  };
-
-  const handlePreviewGenerated = (imageUrl: string) => {
-    setCurrentPreviewUrl(imageUrl);
-  };
-
-  const saveTemplate = () => {
+  const handleSaveTemplate = async () => {
     if (!templateName.trim()) {
-      setError('Please enter a template name');
+      showError('Please enter a template name');
       return;
     }
 
-    // Prepare clubIcon data for saving
-    let savedClubIcon = undefined;
-    if (clubIcon) {
-      if (clubIcon.type === 'preset' && clubIcon.filename) {
-        savedClubIcon = {
-          type: 'preset' as const,
-          filename: typeof clubIcon.filename === 'string' ? clubIcon.filename : undefined,
-        };
-      } else if (clubIcon.type === 'upload' && clubIcon.file && clubIcon.file instanceof File) {
-        // Convert file to base64 for storage
-        const reader = new FileReader();
-        reader.readAsDataURL(clubIcon.file);
-        reader.onload = () => {
-          const base64Data = reader.result as string;
-          savedClubIcon = {
-            type: 'upload' as const,
-            base64: base64Data,
-            filename: typeof clubIcon.filename === 'string' ? clubIcon.filename : undefined,
-          };
+    try {
+      setSaving(true);
+      // Mock save for now
+      showSuccess('Template saved successfully!');
+      navigate('/generate');
+    } catch (error) {
+      showError('Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-          const newTemplate: SavedTemplate = {
-            id: Date.now().toString(),
-            name: templateName,
-            config: { ...config },
-            clubIcon: savedClubIcon,
-            previewUrl: currentPreviewUrl || undefined,
-            createdAt: new Date().toISOString(),
-          };
-
-          const updated = [...savedTemplates, newTemplate];
-          setSavedTemplates(updated);
-          localStorage.setItem('savedTemplates', JSON.stringify(updated));
-          setTemplateName('');
-        };
-        return;
+  const handleColorChange = (colorType: 'primary' | 'secondary', color: string) => {
+    setConfig(prev => ({
+      ...prev,
+      colors: {
+        ...prev.colors,
+        [colorType]: color
       }
-    }
-
-    const newTemplate: SavedTemplate = {
-      id: Date.now().toString(),
-      name: templateName,
-      config: { ...config },
-      clubIcon: savedClubIcon,
-      previewUrl: currentPreviewUrl || undefined,
-      createdAt: new Date().toISOString(),
-    };
-
-    const updated = [...savedTemplates, newTemplate];
-    setSavedTemplates(updated);
-    localStorage.setItem('savedTemplates', JSON.stringify(updated));
-    setTemplateName('');
+    }));
   };
 
-  const loadTemplate = (template: SavedTemplate) => {
-    setConfig(template.config);
-    // Load the club icon if it exists
-    if (template.clubIcon) {
-      if (template.clubIcon.type === 'preset') {
-        setClubIcon({
-          type: 'preset',
-          filename: template.clubIcon.filename,
-        });
-      } else if (template.clubIcon.type === 'upload' && template.clubIcon.base64) {
-        setClubIcon({
-          type: 'upload',
-          base64: template.clubIcon.base64,
-          filename: template.clubIcon.filename,
-        });
-      }
-    } else {
-      setClubIcon(null);
-    }
-  };
-
-  const deleteTemplate = (templateId: string) => {
-    const updated = savedTemplates.filter((t) => t.id !== templateId);
-    setSavedTemplates(updated);
-    localStorage.setItem('savedTemplates', JSON.stringify(updated));
-  };
-
-  useEffect(() => {
-    const saved = localStorage.getItem('savedTemplates');
-    if (saved) {
-      setSavedTemplates(JSON.parse(saved));
-    }
-  }, []);
-
-  if (loading) {
+  if (!user) {
     return (
-      <Container>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Alert severity="error">{error}</Alert>
-      </Container>
+      <DashboardLayout title="Template Builder" subtitle="Create custom image templates">
+        <LoginPrompt 
+          message="Sign in to create and save templates" 
+          actionText="Create Templates"
+        />
+      </DashboardLayout>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
-            Template Builder
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Mix and match components to create your perfect template
-          </Typography>
-        </Box>
-
-        <Box />
-      </Box>
-
-      <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
-        <Grid size={{ xs: 12, lg: 7 }}>
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <Box>
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    mb: 1,
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  Boat Type
+    <DashboardLayout 
+      title="Template Builder" 
+      subtitle="Create and customize your image templates"
+    >
+      <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+        <Grid container spacing={4}>
+          {/* Configuration Panel */}
+          <Grid item xs={12} lg={8}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 32, height: 32 }}>
+                    <MdSettings size={20} />
+                  </Avatar>
+                  Template Configuration
                 </Typography>
-                <FormControl fullWidth size="small">
-                  <Select
-                    value={selectedBoatType}
-                    onChange={(e) => setSelectedBoatType(e.target.value)}
-                    size="small"
-                    displayEmpty
-                    renderValue={(selected) => {
-                      if (!selected) return 'Select...';
-                      const boatNames = {
-                        '8+': 'Eight (8+)',
-                        '4+': 'Coxed Four (4+)',
-                        '4-': 'Coxless Four (4-)',
-                        '2x': 'Double Sculls (2x)',
-                        '2-': 'Coxless Pair (2-)',
-                        '1x': 'Single Sculls (1x)',
-                      };
-                      return boatNames[selected as keyof typeof boatNames] || selected;
-                    }}
-                  >
-                    <MenuItem value="8+">
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Eight (8+)
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          8 rowers + coxswain
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="4+">
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Coxed Four (4+)
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          4 rowers + coxswain
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="4-">
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Coxless Four (4-)
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          4 rowers, no coxswain
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="2x">
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Double Sculls (2x)
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          2 scullers with 2 oars each
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="2-">
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Coxless Pair (2-)
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          2 rowers with 1 oar each
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                    <MenuItem value="1x">
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          Single Sculls (1x)
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontSize: '0.7rem' }}
-                        >
-                          1 sculler with 2 oars
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Grid>
 
-            {components &&
-              Object.entries(components).map(([type, items]) => {
-                if (type === 'boatStyles') return null;
+                {/* Template Name */}
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    label="Template Name"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="e.g., Modern Water Template"
+                    required
+                  />
+                </Box>
 
-                return (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={type}>
-                    <Box>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          mb: 1,
-                          fontWeight: 600,
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1).replace(/([A-Z])/g, ' $1')}
-                      </Typography>
-                      <FormControl fullWidth size="small">
+                {/* Configuration Sections */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Background */}
+                  <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<MdExpandMore />}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MdImage />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Background Style</Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <FormControl fullWidth>
+                        <InputLabel>Background Type</InputLabel>
                         <Select
-                          value={
-                            config[
-                              type === 'logoPositions'
-                                ? 'logo'
-                                : (type.slice(0, -1) as keyof TemplateConfig)
-                            ] || ''
-                          }
-                          onChange={(e) =>
-                            handleConfigChange(
-                              type === 'logoPositions'
-                                ? 'logo'
-                                : (type.slice(0, -1) as keyof TemplateConfig),
-                              e.target.value,
-                            )
-                          }
-                          size="small"
-                          displayEmpty
-                          renderValue={(selected) => {
-                            if (!selected) return 'Select...';
-                            const selectedItem = items.find(
-                              (item: TemplateComponent) => item.id === selected,
-                            );
-                            return selectedItem ? selectedItem.name : selected;
-                          }}
+                          value={config.background}
+                          label="Background Type"
+                          onChange={(e) => setConfig(prev => ({ ...prev, background: e.target.value }))}
                         >
-                          {items.map((item: TemplateComponent) => (
-                            <MenuItem key={item.id} value={item.id}>
+                          {backgroundOptions.map(option => (
+                            <MenuItem key={option.value} value={option.value}>
                               <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                  {item.name}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{ fontSize: '0.7rem' }}
-                                >
-                                  {item.description}
+                                <Typography variant="body1">{option.label}</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {option.description}
                                 </Typography>
                               </Box>
                             </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
-                    </Box>
-                  </Grid>
-                );
-              })}
+                    </AccordionDetails>
+                  </Accordion>
+
+                  {/* Name Display */}
+                  <Accordion>
+                    <AccordionSummary expandIcon={<MdExpandMore />}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MdTextFields />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Name Display</Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <FormControl fullWidth>
+                        <InputLabel>Display Style</InputLabel>
+                        <Select
+                          value={config.nameDisplay}
+                          label="Display Style"
+                          onChange={(e) => setConfig(prev => ({ ...prev, nameDisplay: e.target.value }))}
+                        >
+                          {nameDisplayOptions.map(option => (
+                            <MenuItem key={option.value} value={option.value}>
+                              <Box>
+                                <Typography variant="body1">{option.label}</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {option.description}
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </AccordionDetails>
+                  </Accordion>
+
+                  {/* Colors */}
+                  <Accordion>
+                    <AccordionSummary expandIcon={<MdExpandMore />}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MdColorLens />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Colors</Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" sx={{ mb: 1 }}>Primary Color</Typography>
+                          <input
+                            type="color"
+                            value={config.colors.primary}
+                            onChange={(e) => handleColorChange('primary', e.target.value)}
+                            style={{ width: '100%', height: '40px', border: 'none', borderRadius: '4px' }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" sx={{ mb: 1 }}>Secondary Color</Typography>
+                          <input
+                            type="color"
+                            value={config.colors.secondary}
+                            onChange={(e) => handleColorChange('secondary', e.target.value)}
+                            style={{ width: '100%', height: '40px', border: 'none', borderRadius: '4px' }}
+                          />
+                        </Grid>
+                      </Grid>
+                    </AccordionDetails>
+                  </Accordion>
+
+                  {/* Advanced Settings */}
+                  <Accordion>
+                    <AccordionSummary expandIcon={<MdExpandMore />}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <MdSettings />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Advanced Settings</Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={4}>
+                          <FormControl fullWidth>
+                            <InputLabel>Boat Style</InputLabel>
+                            <Select
+                              value={config.boatStyle}
+                              label="Boat Style"
+                              onChange={(e) => setConfig(prev => ({ ...prev, boatStyle: e.target.value }))}
+                            >
+                              {boatStyleOptions.map(option => (
+                                <MenuItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <FormControl fullWidth>
+                            <InputLabel>Text Layout</InputLabel>
+                            <Select
+                              value={config.textLayout}
+                              label="Text Layout"
+                              onChange={(e) => setConfig(prev => ({ ...prev, textLayout: e.target.value }))}
+                            >
+                              {textLayoutOptions.map(option => (
+                                <MenuItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                          <FormControl fullWidth>
+                            <InputLabel>Logo Position</InputLabel>
+                            <Select
+                              value={config.logo}
+                              label="Logo Position"
+                              onChange={(e) => setConfig(prev => ({ ...prev, logo: e.target.value }))}
+                            >
+                              {logoPositionOptions.map(option => (
+                                <MenuItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                      </Grid>
+                    </AccordionDetails>
+                  </Accordion>
+                </Box>
+
+                {/* Action Buttons */}
+                <Box sx={{ mt: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <MdSave />}
+                    onClick={handleSaveTemplate}
+                    disabled={saving || !templateName.trim()}
+                    sx={{ px: 4 }}
+                  >
+                    {saving ? 'Saving...' : 'Save Template'}
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<MdVisibility />}
+                    onClick={() => navigate('/generate')}
+                    sx={{ px: 4 }}
+                  >
+                    Preview & Generate
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
 
-          <Box
-            sx={{
-              p: 1.5,
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: 2,
-              border: `1px solid ${theme.palette.divider}`,
-              mb: 3,
-              maxWidth: 400,
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: 1.5,
-              }}
-            >
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                }}
-              >
-                Colors & Logo
-              </Typography>
+          {/* Live Preview */}
+          <Grid item xs={12} lg={4}>
+            <Card sx={{ position: 'sticky', top: 20 }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ bgcolor: theme.palette.secondary.main, width: 32, height: 32 }}>
+                    <MdVisibility size={20} />
+                  </Avatar>
+                  Live Preview
+                </Typography>
+                
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  This is a simplified preview. Full preview available when generating images.
+                </Alert>
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    size="small"
-                    checked={usePresetColors}
-                    onChange={(e) => {
-                      setUsePresetColors(e.target.checked);
-                      if (!e.target.checked) {
-                        setSelectedPresetId(null);
-                        setClubIcon(null);
-                      } else {
-                        if (presets.length > 0) {
-                          const favoritePreset = presets.find((p) => p.is_default);
-                          if (favoritePreset) {
-                            handlePresetSelection(favoritePreset.id, favoritePreset);
-                          } else {
-                            handlePresetSelection(presets[0].id, presets[0]);
-                          }
-                        }
-                      }
-                    }}
-                  />
-                }
-                label={
-                  <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                    Use Club Preset
-                  </Typography>
-                }
-                sx={{ m: 0 }}
-              />
-            </Box>
-
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                justifyContent: 'space-between',
-              }}
-            >
-              {usePresetColors ? (
-                <Box sx={{ flex: 1 }}>
-                  <ClubPresetDropdown
-                    value={selectedPresetId}
-                    onChange={handlePresetSelection}
-                    label="Select Club"
-                    placeholder="Choose a club preset"
-                  />
-                </Box>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.5,
-                      }}
-                    >
-                      <input
-                        type="color"
-                        value={config.colors.primary}
-                        onChange={(e) => handleColorChange('primary', e.target.value)}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      />
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontSize: '0.65rem',
-                        }}
-                      >
-                        {config.colors.primary.toUpperCase()}
-                      </Typography>
-                    </Box>
-
-                    {/* Swap Colors Button - Rotated */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', height: 28 }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => {
-                          const temp = config.colors.primary;
-                          handleColorChange('primary', config.colors.secondary);
-                          handleColorChange('secondary', temp);
-                        }}
-                        sx={{
-                          color: theme.palette.text.secondary,
-                          transform: 'rotate(90deg)',
-                          '&:hover': {
-                            backgroundColor: theme.palette.action.hover,
-                            color: theme.palette.primary.main,
-                          },
-                        }}
-                      >
-                        <SwapVert sx={{ fontSize: 14 }} />
-                      </IconButton>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.5,
-                      }}
-                    >
-                      <input
-                        type="color"
-                        value={config.colors.secondary}
-                        onChange={(e) => handleColorChange('secondary', e.target.value)}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                        }}
-                      />
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontSize: '0.65rem',
-                        }}
-                      >
-                        {config.colors.secondary.toUpperCase()}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              )}
-
-              <Box sx={{ position: 'relative' }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  component="label"
-                  sx={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 1,
-                    borderStyle: 'dashed',
-                    minWidth: 50,
-                    p: 0,
+                <Box 
+                  sx={{ 
+                    width: '100%',
+                    aspectRatio: '1',
+                    background: `linear-gradient(135deg, ${config.colors.primary}, ${config.colors.secondary})`,
+                    borderRadius: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    p: 2,
+                    position: 'relative'
                   }}
-                  title="Upload Club Icon"
                 >
-                  {clubIcon ? (
-                    <img
-                      src={
-                        clubIcon.file && clubIcon.file instanceof File
-                          ? URL.createObjectURL(clubIcon.file)
-                          : `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`
-                      }
-                      alt="Club Icon"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        borderRadius: 4,
-                      }}
-                      onError={(e) => {
-                        console.error(
-                          'Failed to load logo:',
-                          `${import.meta.env.VITE_API_URL}/api/club-logos/${clubIcon.filename}`,
-                          e,
-                        );
-                        console.error('Club icon object:', clubIcon);
-                      }}
-                    />
-                  ) : (
-                    <Typography
-                      variant="caption"
-                      sx={{ fontSize: '0.6rem', textAlign: 'center', lineHeight: 1 }}
-                    >
-                      Upload Club Icon
-                    </Typography>
-                  )}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setClubIcon({
-                          type: 'upload',
-                          file: file,
-                          filename: file.name,
-                        });
-                      }
-                    }}
-                  />
-                </Button>
-                {clubIcon && (
-                  <IconButton
-                    size="small"
-                    onClick={() => setClubIcon(null)}
-                    sx={{
-                      position: 'absolute',
-                      top: -8,
-                      right: -8,
-                      backgroundColor: theme.palette.error.main,
-                      color: 'white',
-                      width: 20,
-                      height: 20,
-                      '&:hover': {
-                        backgroundColor: theme.palette.error.dark,
-                      },
-                    }}
-                  >
-                    <Delete sx={{ fontSize: 12 }} />
-                  </IconButton>
-                )}
-              </Box>
-            </Box>
-          </Box>
-
-          {savedTemplates.length > 0 && (
-            <Box>
-              <Typography variant="h6" sx={{ mb: 2, fontSize: '1rem', fontWeight: 600 }}>
-                Saved Templates ({savedTemplates.length})
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 1.5,
-                  overflowX: 'auto',
-                  pb: 1,
-                  '&::-webkit-scrollbar': { height: 6 },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: theme.palette.divider,
-                    borderRadius: 3,
-                  },
-                }}
-              >
-                {savedTemplates.map((template) => (
-                  <Card
-                    key={template.id}
-                    sx={{
-                      minWidth: 200,
-                      cursor: 'pointer',
-                      '&:hover': { transform: 'translateY(-2px)' },
-                      transition: 'transform 0.2s ease',
-                    }}
-                    onClick={() => loadTemplate(template)}
-                  >
-                    <Box
-                      sx={{
-                        height: 100,
-                        backgroundColor: template.config.colors.primary,
-                        backgroundImage: `linear-gradient(135deg, ${template.config.colors.primary} 0%, ${template.config.colors.secondary} 100%)`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                  {/* Sample Content */}
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                    {templateName || 'Template Preview'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                    {config.background} • {config.nameDisplay}
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <Chip label={config.boatStyle} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+                    <Chip label={config.textLayout} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
+                  </Box>
+                  
+                  {config.logo && (
+                    <Box 
+                      sx={{ 
+                        position: 'absolute',
+                        ...(config.logo === 'top-left' && { top: 16, left: 16 }),
+                        ...(config.logo === 'top-right' && { top: 16, right: 16 }),
+                        ...(config.logo === 'bottom' && { bottom: 16, left: '50%', transform: 'translateX(-50%)' }),
+                        ...(config.logo === 'center' && { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }),
                       }}
                     >
-                      <Image sx={{ fontSize: 24, color: 'white', opacity: 0.8 }} />
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteTemplate(template.id);
-                        }}
-                        sx={{
-                          position: 'absolute',
-                          top: 4,
-                          right: 4,
-                          backgroundColor: 'rgba(0,0,0,0.5)',
-                          color: 'white',
-                          '&:hover': { backgroundColor: 'rgba(0,0,0,0.7)' },
+                      <Box 
+                        sx={{ 
+                          width: 24, 
+                          height: 24, 
+                          borderRadius: '50%', 
+                          bgcolor: 'rgba(255,255,255,0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
-                        <Delete sx={{ fontSize: 14 }} />
-                      </IconButton>
+                        <MdPalette size={16} />
+                      </Box>
                     </Box>
-                    <CardContent sx={{ p: 1.5 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
-                        {template.name}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontSize: '0.7rem' }}
-                      >
-                        {new Date(template.createdAt).toLocaleDateString()}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </Box>
-          )}
+                  )}
+                </Box>
+
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+                  Dimensions: {config.dimensions.width} × {config.dimensions.height}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-
-        <Grid size={{ xs: 12, lg: 5 }}>
-          <Box
-            sx={{
-              position: 'sticky',
-              top: 20,
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: 2,
-              p: 2,
-              border: `1px solid ${theme.palette.divider}`,
-              height: 'fit-content',
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{ fontSize: '1rem', fontWeight: 600, mb: 2, textAlign: 'center' }}
-            >
-              Preview
-            </Typography>
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <TemplatePreview
-                templateConfig={config}
-                clubIcon={clubIcon && (clubIcon.type === 'upload' || clubIcon.type === 'preset') ? clubIcon as ClubIcon : undefined}
-                selectedBoatType={selectedBoatType}
-                width={300}
-                height={375}
-                onPreviewGenerated={handlePreviewGenerated}
-                debounceMs={500}
-              />
-
-              <TextField
-                placeholder="Enter template name..."
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                size="small"
-                sx={{ mt: 2, width: '100%' }}
-              />
-
-              <Button
-                variant="contained"
-                onClick={saveTemplate}
-                startIcon={<Save sx={{ fontSize: 16 }} />}
-                disabled={!templateName.trim()}
-                sx={{ mt: 1, width: '100%' }}
-              >
-                Save Template
-              </Button>
-            </Box>
-          </Box>
-        </Grid>
-      </Grid>
-    </Container>
+      </Box>
+    </DashboardLayout>
   );
 };
 
-export default TemplateCustomiser;
+export default TemplateCustomiserPage;

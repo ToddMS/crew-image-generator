@@ -1,32 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  Stepper,
-  Step,
-  StepLabel,
-  LinearProgress,
-  Tooltip,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  MdSave,
-  MdCheckCircle,
-  MdNavigateNext,
-  MdNavigateBefore,
-  MdCheck,
-  MdGroup,
-} from 'react-icons/md';
-import RowingIcon from '@mui/icons-material/Rowing';
-import CrewInfoComponent from '../components/CrewInfoComponent/CrewInfoComponent';
-import CrewNamesComponent from '../components/CrewNamesComponent/CrewNamesComponent';
 import AuthModal from '../components/Auth/AuthModal';
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/RowgramThemeContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
+import './CreateCrew.css';
 
 const boatClassToSeats: Record<string, number> = {
   '8+': 8,
@@ -54,10 +34,10 @@ const boatClassToBoatType = (boatClass: string) => {
 };
 
 const CreateCrewPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useThemeMode();
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
 
@@ -85,17 +65,17 @@ const CreateCrewPage: React.FC = () => {
   const steps = [
     {
       label: 'Crew Information',
-      icon: <RowingIcon />,
+      icon: '⚓',
       description: 'Basic details about your crew',
     },
     {
       label: 'Add Members',
-      icon: <MdGroup />,
+      icon: '👥',
       description: 'Enter crew member names',
     },
     {
       label: 'Review & Save',
-      icon: <MdCheckCircle />,
+      icon: '✅',
       description: 'Review and save your crew',
     },
   ];
@@ -259,18 +239,8 @@ const CreateCrewPage: React.FC = () => {
   };
 
   const handleNext = () => {
-    const currentForm = document.querySelector(`[data-step="${activeStep}"] form`);
-
-    if (currentForm instanceof HTMLFormElement) {
-      currentForm.requestSubmit();
-
-      if (currentForm.checkValidity()) {
-        proceedToNextStep();
-      }
-    } else {
-      if (canProceedFromStep(activeStep)) {
-        proceedToNextStep();
-      }
+    if (canProceedFromStep(activeStep)) {
+      proceedToNextStep();
     }
   };
 
@@ -305,30 +275,26 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
-  const handleCrewInfoSubmit = useCallback(
-    (
-      newBoatClass: string,
-      newClubName: string,
-      newRaceName: string,
-      newBoatName: string,
-      newCoachName?: string,
-    ) => {
-      setBoatClass(newBoatClass);
-      setClubName(newClubName);
-      setRaceName(newRaceName);
-      setBoatName(newBoatName);
-      setCoachName(newCoachName || '');
-      setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
-      setCoxName('');
-    },
-    [],
-  );
-
   const handleNameChange = (idx: number, value: string) => {
     setCrewNames((names) => names.map((n, i) => (i === idx ? value : n)));
   };
 
-  const handleCoxNameChange = (value: string) => setCoxName(value);
+  const handleNavClick = (path: string) => {
+    navigate(path);
+  };
+
+  const getCurrentPage = () => {
+    const path = window.location.pathname;
+    if (path === '/') return 'dashboard';
+    if (path.includes('/crews/create') || path.includes('/create')) return 'create';
+    if (path.includes('/crews')) return 'crews';
+    if (path.includes('/templates')) return 'templates';
+    if (path.includes('/generate')) return 'generate';
+    if (path.includes('/gallery')) return 'gallery';
+    if (path.includes('/analytics')) return 'analytics';
+    if (path.includes('/settings')) return 'settings';
+    return 'dashboard';
+  };
 
   const handleSaveCrew = async () => {
     if (!user) {
@@ -421,142 +387,231 @@ const CreateCrewPage: React.FC = () => {
     switch (step) {
       case 0:
         return (
-          <Box data-step="0">
-            <CrewInfoComponent
-              onSubmit={handleCrewInfoSubmit}
-              initialValues={{
-                boatClass,
-                clubName,
-                raceName,
-                boatName,
-                coachName,
-              }}
-              showValidation={showValidation}
-            />
-          </Box>
+          <div className="form-container">
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (canProceedFromStep(0)) {
+                proceedToNextStep();
+              }
+            }}>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="boatClass">
+                    Boat Class <span className="required">*</span>
+                  </label>
+                  <select
+                    id="boatClass"
+                    value={boatClass}
+                    onChange={(e) => {
+                      const newBoatClass = e.target.value;
+                      setBoatClass(newBoatClass);
+                      setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
+                      setCoxName('');
+                    }}
+                    className={showValidation && !boatClass ? 'error' : ''}
+                    required
+                  >
+                    <option value="">Select boat class</option>
+                    <option value="8+">8+ (Eight with Coxswain)</option>
+                    <option value="4+">4+ (Four with Coxswain)</option>
+                    <option value="4-">4- (Four without Coxswain)</option>
+                    <option value="4x">4x (Quad Sculls)</option>
+                    <option value="2-">2- (Coxless Pair)</option>
+                    <option value="2x">2x (Double Sculls)</option>
+                    <option value="1x">1x (Single Sculls)</option>
+                  </select>
+                  {showValidation && !boatClass && (
+                    <div className="error-message">Please select a boat class</div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="clubName">
+                    Club Name <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="clubName"
+                    value={clubName}
+                    onChange={(e) => setClubName(e.target.value)}
+                    className={showValidation && !clubName ? 'error' : ''}
+                    placeholder="Enter club name"
+                    required
+                  />
+                  {showValidation && !clubName && (
+                    <div className="error-message">Please enter club name</div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="raceName">
+                    Race/Event Name <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="raceName"
+                    value={raceName}
+                    onChange={(e) => setRaceName(e.target.value)}
+                    className={showValidation && !raceName ? 'error' : ''}
+                    placeholder="Enter race or event name"
+                    required
+                  />
+                  {showValidation && !raceName && (
+                    <div className="error-message">Please enter race name</div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="boatName">
+                    Boat Name <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="boatName"
+                    value={boatName}
+                    onChange={(e) => setBoatName(e.target.value)}
+                    className={showValidation && !boatName ? 'error' : ''}
+                    placeholder="Enter boat name"
+                    required
+                  />
+                  {showValidation && !boatName && (
+                    <div className="error-message">Please enter boat name</div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="coachName">Coach Name (Optional)</label>
+                  <input
+                    type="text"
+                    id="coachName"
+                    value={coachName}
+                    onChange={(e) => setCoachName(e.target.value)}
+                    placeholder="Enter coach name (optional)"
+                  />
+                </div>
+              </div>
+            </form>
+          </div>
         );
 
       case 1:
+        if (!canProceedFromStep(0)) {
+          return (
+            <div className="form-container" style={{ textAlign: 'center', padding: '3rem' }}>
+              <p style={{ fontSize: '1.1rem', color: 'var(--gray-600)', marginBottom: '1rem' }}>
+                ⬅️ Please complete crew information first
+              </p>
+              <p style={{ color: 'var(--gray-500)' }}>
+                Go back to fill in boat class, club name, race name, and boat name
+              </p>
+            </div>
+          );
+        }
+
         return (
-          <Box data-step="1">
-            {!canProceedFromStep(0) ? (
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  py: 8,
-                  color: theme.palette.text.secondary,
-                }}
-              >
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  ⬅️ Please complete crew information first
-                </Typography>
-                <Typography variant="body2">
-                  Go back to fill in boat class, club name, race name, and boat name
-                </Typography>
-              </Box>
-            ) : (
-              <CrewNamesComponent
-                boatClass={boatClass}
-                crewNames={crewNames}
-                coxName={coxName}
-                onNameChange={handleNameChange}
-                onCoxNameChange={handleCoxNameChange}
-                onSaveCrew={() => {}} // Empty function, save happens in step 3
-                clubName={clubName}
-                raceName={raceName}
-                boatName={boatName}
-                saving={false}
-                canSave={false}
-                user={user ? { id: user.id.toString(), name: user.name } : undefined}
-                isEditing={!!editingCrewId}
-                hideButton={true} // Hide the save button from this component
-                showValidation={showStep1Validation}
-              />
-            )}
-          </Box>
+          <div className="form-container">
+            <div className="crew-names-section">
+              <div className="crew-names-header">
+                <h3>Enter Crew Member Names</h3>
+                <p style={{ color: 'var(--gray-600)', margin: 0 }}>
+                  {boatClass} - {boatClassToSeats[boatClass]} rowers
+                  {boatClassHasCox(boatClass) && ' + coxswain'}
+                </p>
+              </div>
+
+              {boatClassHasCox(boatClass) && (
+                <div className="cox-input">
+                  <div className="form-group">
+                    <label htmlFor="coxName">
+                      Coxswain <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="coxName"
+                      value={coxName}
+                      onChange={(e) => setCoxName(e.target.value)}
+                      className={showStep1Validation && !coxName.trim() ? 'error' : ''}
+                      placeholder="Enter coxswain name"
+                      required
+                    />
+                    {showStep1Validation && !coxName.trim() && (
+                      <div className="error-message">Please enter coxswain name</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="crew-names-grid">
+                {crewNames.map((name, index) => {
+                  const seatNumber = boatClassToSeats[boatClass] - index;
+                  const seatName =
+                    seatNumber === 1
+                      ? 'Bow'
+                      : seatNumber === boatClassToSeats[boatClass]
+                        ? 'Stroke'
+                        : `${seatNumber}`;
+                  
+                  return (
+                    <div key={index} className="crew-name-input">
+                      <div className="seat-label">{seatName}</div>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => handleNameChange(index, e.target.value)}
+                        className={showStep1Validation && !name.trim() ? 'error' : ''}
+                        placeholder="Enter rower name"
+                        required
+                      />
+                      {showStep1Validation && !name.trim() && (
+                        <div className="error-message">Please enter rower name</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         );
 
       case 2:
         return (
-          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}
-              >
-                Crew Details
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
-                    Boat Class:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
+          <div className="form-container">
+            <div className="review-section">
+              <div className="review-card">
+                <h3>Crew Details</h3>
+                <div className="review-item">
+                  <span className="review-label">Boat Class:</span>
+                  <span className="review-value">
                     {boatClass} - {boatClassToBoatType(boatClass)?.name}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
-                    Club:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
-                    {clubName}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
-                    Race:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
-                    {raceName}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.825rem' }}>
-                    Boat Name:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.825rem' }}>
-                    {boatName}
-                  </Typography>
-                </Box>
+                  </span>
+                </div>
+                <div className="review-item">
+                  <span className="review-label">Club:</span>
+                  <span className="review-value">{clubName}</span>
+                </div>
+                <div className="review-item">
+                  <span className="review-label">Race:</span>
+                  <span className="review-value">{raceName}</span>
+                </div>
+                <div className="review-item">
+                  <span className="review-label">Boat Name:</span>
+                  <span className="review-value">{boatName}</span>
+                </div>
                 {coachName && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontSize: '0.825rem' }}
-                    >
-                      Coach:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
-                      {coachName}
-                    </Typography>
-                  </Box>
+                  <div className="review-item">
+                    <span className="review-label">Coach:</span>
+                    <span className="review-value">{coachName}</span>
+                  </div>
                 )}
-              </Box>
-            </Box>
+              </div>
 
-            <Box sx={{ flex: 1 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.95rem' }}
-              >
-                Crew Members
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+              <div className="review-card">
+                <h3>Crew Members</h3>
                 {boatClassHasCox(boatClass) && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontSize: '0.825rem' }}
-                    >
-                      Coxswain:
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
-                      {coxName}
-                    </Typography>
-                  </Box>
+                  <div className="review-item">
+                    <span className="review-label">Coxswain:</span>
+                    <span className="review-value">{coxName}</span>
+                  </div>
                 )}
                 {crewNames.map((name, index) => {
                   const seatNumber = boatClassToSeats[boatClass] - index;
@@ -566,24 +621,17 @@ const CreateCrewPage: React.FC = () => {
                       : seatNumber === boatClassToSeats[boatClass]
                         ? 'Stroke'
                         : `${seatNumber} Seat`;
+                  
                   return (
-                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ fontSize: '0.825rem' }}
-                      >
-                        {seatName}:
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontSize: '0.825rem' }}>
-                        {name}
-                      </Typography>
-                    </Box>
+                    <div key={index} className="review-item">
+                      <span className="review-label">{seatName}:</span>
+                      <span className="review-value">{name}</span>
+                    </div>
                   );
                 })}
-              </Box>
-            </Box>
-          </Box>
+              </div>
+            </div>
+          </div>
         );
 
       default:
@@ -591,150 +639,189 @@ const CreateCrewPage: React.FC = () => {
     }
   };
 
+  const currentPage = getCurrentPage();
+
   return (
-    <Box
-      sx={{
-        maxWidth: 1000,
-        mx: 'auto',
-        width: '100%',
-        px: 3,
-        pt: 0,
-        pb: 0,
-      }}
-    >
-      <Box sx={{ mb: 2.5 }}>
-        <Box
-          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            Step {activeStep + 1} of {steps.length}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {Math.round(((activeStep + 1) / steps.length) * 100)}% complete
-          </Typography>
-        </Box>
-        <LinearProgress
-          variant="determinate"
-          value={((activeStep + 1) / steps.length) * 100}
-          sx={{
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: theme.palette.grey[200],
-            '& .MuiLinearProgress-bar': {
-              borderRadius: 2,
-            },
-          }}
-        />
-      </Box>
-
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((step, index) => (
-          <Step key={step.label} completed={completedSteps.has(index)}>
-            <StepLabel
-              icon={
-                <Box
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: completedSteps.has(index)
-                      ? theme.palette.success.main
-                      : activeStep === index
-                        ? theme.palette.primary.main
-                        : theme.palette.grey[300],
-                    color:
-                      completedSteps.has(index) || activeStep === index
-                        ? 'white'
-                        : theme.palette.text.secondary,
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {completedSteps.has(index) ? (
-                    <MdCheck size={14} />
-                  ) : index === 0 ? (
-                    <RowingIcon sx={{ fontSize: 14 }} />
-                  ) : (
-                    React.cloneElement(step.icon as React.ReactElement<{ size?: number }>, {
-                      size: 14,
-                    })
-                  )}
-                </Box>
-              }
+    <div className="create-crew-container">
+      {/* Navigation */}
+      <nav className="main-nav">
+        <div className="nav-container">
+          <button className="logo" onClick={() => handleNavClick('/')}>
+            <div className="logo-icon">⚓</div>
+            <span>RowGram</span>
+          </button>
+          
+          <div className="nav-links">
+            <button 
+              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/')}
             >
-              <Box sx={{ textAlign: 'left' }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                  {step.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                  {step.description}
-                </Typography>
-              </Box>
-            </StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <Box sx={{ mb: 4 }}>{renderStepContent(activeStep)}</Box>
-
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          pt: 1.5,
-          mt: 1,
-          pb: 0,
-          borderTop: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Button variant="outlined" onClick={handleBack} startIcon={<MdNavigateBefore />}>
-          {activeStep === 0 ? 'Dashboard' : 'Back'}
-        </Button>
-
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {activeStep === steps.length - 1 ? (
-            <Tooltip title={!user ? 'Please sign in to save your crew' : ''} placement="top">
-              <span>
-                <Button
-                  variant="contained"
-                  onClick={handleSaveCrew}
-                  disabled={saving || !canProceedFromStep(activeStep)}
-                  endIcon={saving ? <MdCheckCircle /> : <MdSave />}
-                  size="large"
-                  sx={{
-                    opacity: !user ? 0.6 : 1,
-                    backgroundColor: !user ? theme.palette.grey[400] : undefined,
-                    '&:hover': {
-                      backgroundColor: !user ? theme.palette.grey[400] : undefined,
-                    },
-                  }}
-                >
-                  {saving ? 'Saving...' : editingCrewId ? 'Update Crew' : 'Save Crew'}
-                </Button>
-              </span>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              endIcon={<MdNavigateNext />}
-              size="large"
+              Dashboard
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews')}
             >
-              Next Step
-            </Button>
-          )}
-        </Box>
-      </Box>
+              My Crews
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews/create')}
+            >
+              Create Crew
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/templates/create')}
+            >
+              Templates
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/generate')}
+            >
+              Generate
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/gallery')}
+            >
+              Gallery
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/settings')}
+            >
+              Settings
+            </button>
+          </div>
+          
+          <div className="nav-actions">
+            <button 
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            
+            {user ? (
+              <div className="user-menu">
+                <span className="user-name">{user.club_name || user.name}</span>
+                <div className="user-avatar">
+                  {user.name?.[0] || 'U'}
+                </div>
+                <button className="logout-btn" onClick={logout} title="Logout">
+                  ↗️
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="login-btn"
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
 
-      <AuthModal
-        open={showAuthModal}
+      <div className="container">
+        {/* Header */}
+        <div className="create-crew-header">
+          <h1>{editingCrewId ? 'Edit Your Crew' : 'Create New Crew'}</h1>
+          <p>Set up your rowing crew with all the details and member information</p>
+        </div>
+
+        {/* Progress Section */}
+        <div className="progress-section">
+          <div className="progress-header">
+            <span className="progress-text">
+              Step {activeStep + 1} of {steps.length}
+            </span>
+            <span className="progress-text">
+              {Math.round(((activeStep + 1) / steps.length) * 100)}% complete
+            </span>
+          </div>
+          <div className="progress-bar-container">
+            <div 
+              className="progress-bar" 
+              style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Stepper */}
+        <div className="stepper">
+          {steps.map((step, index) => (
+            <div 
+              key={step.label} 
+              className={`step ${
+                completedSteps.has(index) ? 'completed' : 
+                activeStep === index ? 'active' : 'inactive'
+              }`}
+            >
+              <div className="step-icon">
+                {completedSteps.has(index) ? '✓' : step.icon}
+              </div>
+              <div className="step-content">
+                <div className="step-label">{step.label}</div>
+                <div className="step-description">{step.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Step Content */}
+        {renderStepContent(activeStep)}
+
+        {/* Action Buttons */}
+        <div className="action-buttons">
+          <button 
+            className="btn btn-secondary" 
+            onClick={handleBack}
+          >
+            ← {activeStep === 0 ? 'Dashboard' : 'Back'}
+          </button>
+
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            {activeStep === steps.length - 1 ? (
+              <button
+                className={`btn btn-primary ${saving ? 'btn-loading' : ''}`}
+                onClick={handleSaveCrew}
+                disabled={saving || !canProceedFromStep(activeStep) || !user}
+                title={!user ? 'Please sign in to save your crew' : ''}
+              >
+                {saving ? 'Saving...' : editingCrewId ? 'Update Crew' : 'Save Crew'}
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (activeStep === 0) {
+                    setShowValidation(true);
+                  } else if (activeStep === 1) {
+                    setShowStep1Validation(true);
+                  }
+                  handleNext();
+                }}
+                disabled={!canProceedFromStep(activeStep)}
+              >
+                Next Step →
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        open={showAuthModal} 
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />
-    </Box>
+    </div>
   );
 };
 

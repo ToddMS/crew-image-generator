@@ -1,249 +1,285 @@
-import React from 'react';
-import { Box, Card, CardContent, Typography, Button, Paper, Avatar } from '@mui/material';
-import Grid from '@mui/material/Grid2';
-import { useTheme } from '@mui/material/styles';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  MdPersonAdd,
-  MdImage,
-  MdPhotoLibrary,
-  MdArrowForward,
-  MdCheckCircle,
-} from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
-import OnboardingFlow from '../components/Onboarding/OnboardingFlow';
-import { useOnboarding } from '../context/OnboardingContext';
+import { useNotification } from '../context/NotificationContext';
+import { useThemeMode } from '../context/RowgramThemeContext';
+import { ApiService } from '../services/api.service';
+import AuthModal from '../components/Auth/AuthModal';
+import './Dashboard.css';
+
+interface DashboardStats {
+  totalCrews: number;
+  totalTemplates: number;
+  totalImages: number;
+  lastGenerated: string;
+}
 
 const DashboardPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { shouldShowOnboarding, completeOnboarding } = useOnboarding();
+  const { user, logout } = useAuth();
+  const { showError } = useNotification();
+  const { isDarkMode, toggleTheme } = useThemeMode();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalCrews: 0,
+    totalTemplates: 0,
+    totalImages: 0,
+    lastGenerated: 'Never'
+  });
+  const [loading, setLoading] = useState(true);
 
-  const handleOnboardingComplete = () => {
-    completeOnboarding();
-    // Navigate to create crew page after onboarding
-    setTimeout(() => {
-      navigate('/create');
-    }, 500);
+  useEffect(() => {
+    if (user) {
+      loadDashboardStats();
+    }
+  }, [user]);
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Load crews
+      const crewsResponse = await ApiService.getCrews();
+      const totalCrews = crewsResponse.data?.length || 0;
+      
+      // Mock other stats for now - you can add these API calls when ready
+      const totalTemplates = 5;
+      const totalImages = Math.floor(totalCrews * 2.5); // Estimate based on crews
+      const lastGenerated = totalImages > 0 ? 'Today' : 'Never';
+
+      setStats({
+        totalCrews,
+        totalTemplates,
+        totalImages,
+        lastGenerated
+      });
+    } catch (error) {
+      showError('Failed to load dashboard data');
+      console.error('Dashboard stats error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const steps = [
-    {
-      label: 'Create Your Crew',
-      description:
-        'Start by creating a crew lineup with boat type, club name, race name, and crew members.',
-      icon: <MdPersonAdd size={24} />,
-      action: () => navigate('/create'),
-      actionText: 'Create Crew',
-    },
-    {
-      label: 'Generate Images',
-      description: 'Turn your crew lineup into beautiful, shareable images using our templates.',
-      icon: <MdImage size={24} />,
-      action: () => navigate('/generate'),
-      actionText: 'Generate Images',
-    },
-    {
-      label: 'View & Download',
-      description:
-        'Browse your generated images in the gallery and download them individually or in bulk.',
-      icon: <MdPhotoLibrary size={24} />,
-      action: () => navigate('/gallery'),
-      actionText: 'View Gallery',
-    },
-  ];
+  const handleActionClick = (action: string) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    switch (action) {
+      case 'create':
+        navigate('/crews/create');
+        break;
+      case 'generate':
+        navigate('/generate');
+        break;
+      case 'gallery':
+        navigate('/gallery');
+        break;
+      default:
+        break;
+    }
+  };
 
-  const features = [
-    {
-      title: 'Multiple Boat Types',
-      description: 'Support for 8+, 4+, 4-, 4x, 2-, 2x, and 1x boats',
-    },
-    {
-      title: 'Custom Templates',
-      description: 'Choose from multiple image templates for your crew lineups',
-    },
-    {
-      title: 'Club Branding',
-      description: 'Add your club colors and logo to personalize your images',
-    },
-    {
-      title: 'Bulk Generation',
-      description: 'Generate images for multiple crews at once to save time',
-    },
-    {
-      title: 'Easy Sharing',
-      description: 'Download individual images or bulk ZIP files for sharing',
-    },
-    {
-      title: 'Cloud Storage',
-      description: 'Your crews and images are saved securely to your account',
-    },
-  ];
+  const handleNavClick = (path: string) => {
+    navigate(path);
+  };
+
+  const getCurrentPage = () => {
+    const path = window.location.pathname;
+    if (path === '/') return 'dashboard';
+    if (path.includes('/crews')) return 'crews';
+    if (path.includes('/templates')) return 'templates';
+    if (path.includes('/generate')) return 'generate';
+    if (path.includes('/gallery')) return 'gallery';
+    if (path.includes('/analytics')) return 'analytics';
+    if (path.includes('/settings')) return 'settings';
+    return 'dashboard';
+  };
+
+  const currentPage = getCurrentPage();
+
+  // Don't auto-show login modal - let users explore first
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
-      {/* Welcome Header */}
-      <Paper
-        sx={{
-          p: 4,
-          mb: 4,
-          textAlign: 'center',
-          background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-          border: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        {user ? (
-          <Box
-            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, mb: 3 }}
-          >
-            <Avatar src={user.profile_picture} alt={user.name} sx={{ width: 64, height: 64 }}>
-              {user.name?.charAt(0)}
-            </Avatar>
-            <Box sx={{ textAlign: 'left' }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0.5 }}>
-                Welcome back, {user.name?.split(' ')[0]}!
-              </Typography>
-              <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-                Ready to create some amazing crew lineups?
-              </Typography>
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-              Welcome to RowGram
-            </Typography>
-            <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-              Create beautiful crew lineup images for rowing teams
-            </Typography>
-          </Box>
-        )}
-
-        <Typography variant="h6" sx={{ color: theme.palette.primary.main, fontWeight: 600 }}>
-          🚣‍♂️ Your Complete Crew Lineup Solution
-        </Typography>
-      </Paper>
-
-      {/* How It Works */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}>
-            How It Works
-          </Typography>
-
-          <Grid container spacing={4}>
-            {steps.map((step, index) => (
-              <Grid size={{ xs: 12, md: 4 }} key={index}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Box
-                    sx={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: '50%',
-                      backgroundColor: theme.palette.primary.main,
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mx: 'auto',
-                      mb: 2,
-                    }}
-                  >
-                    {step.icon}
-                  </Box>
-
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    {index + 1}. {step.label}
-                  </Typography>
-
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
-                    {step.description}
-                  </Typography>
-
-                  <Button
-                    variant="outlined"
-                    onClick={step.action}
-                    endIcon={<MdArrowForward />}
-                    sx={{
-                      textTransform: 'none',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {step.actionText}
-                  </Button>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Features */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, textAlign: 'center' }}>
-            Features
-          </Typography>
-
-          <Grid container spacing={3}>
-            {features.map((feature, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
-                <Box sx={{ textAlign: 'center', p: 2 }}>
-                  <MdCheckCircle
-                    size={32}
-                    color={theme.palette.success.main}
-                    style={{ marginBottom: 8 }}
-                  />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                    {feature.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                    {feature.description}
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Quick Start */}
-      {user && (
-        <Card>
-          <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
-              Ready to Get Started?
-            </Typography>
-            <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
-              Create your crew lineup and generate beautiful images in minutes
-            </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/create')}
-              startIcon={<MdPersonAdd />}
-              sx={{
-                py: 1.5,
-                px: 4,
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                textTransform: 'none',
-              }}
+    <div className="dashboard-container">
+      {/* Navigation */}
+      <nav className="main-nav">
+        <div className="nav-container">
+          <button className="logo" onClick={() => handleNavClick('/')}>
+            <div className="logo-icon">⚓</div>
+            <span>RowGram</span>
+          </button>
+          
+          <div className="nav-links">
+            <button 
+              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/')}
             >
-              Create Your Crew
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+              Dashboard
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews')}
+            >
+              My Crews
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/templates/create')}
+            >
+              Templates
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/generate')}
+            >
+              Generate
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/gallery')}
+            >
+              Gallery
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'analytics' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/analytics')}
+            >
+              Analytics
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/settings')}
+            >
+              Settings
+            </button>
+          </div>
+          
+          <div className="nav-actions">
+            <button 
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            
+            {user ? (
+              <div className="user-menu">
+                <span className="user-name">{user.club_name || user.name}</span>
+                <div className="user-avatar">
+                  {user.name?.[0] || 'U'}
+                </div>
+                <button className="logout-btn" onClick={logout} title="Logout">
+                  ↗️
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="login-btn"
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
 
-      {/* Onboarding Flow */}
-      <OnboardingFlow
-        open={shouldShowOnboarding}
-        onClose={() => completeOnboarding()}
-        onComplete={handleOnboardingComplete}
+      <div className="container">
+        <section className="hero">
+          <h1>{user ? 'Welcome back to RowGram' : 'Welcome to RowGram'}</h1>
+          <p>{user ? 'Create professional rowing crew images for Instagram in just a few clicks' : 'Create professional rowing crew images for Instagram - Sign in to get started'}</p>
+        </section>
+
+        <div className="action-cards">
+          <div className="action-card" onClick={() => handleActionClick('create')}>
+            <div className="action-icon">👥</div>
+            <h3>Create Crew</h3>
+            <p>Set up a new crew with members, cox, and coach details</p>
+            <div className="action-arrow">
+              Get started <span>→</span>
+            </div>
+          </div>
+          
+          <div className="action-card" onClick={() => handleActionClick('generate')}>
+            <div className="action-icon">🎨</div>
+            <h3>Generate Images</h3>
+            <p>Turn your crews into beautiful Instagram-ready images</p>
+            <div className="action-arrow">
+              Create now <span>→</span>
+            </div>
+          </div>
+          
+          <div className="action-card" onClick={() => handleActionClick('gallery')}>
+            <div className="action-icon">📸</div>
+            <h3>View Gallery</h3>
+            <p>Browse and download all your generated crew images</p>
+            <div className="action-arrow">
+              Browse <span>→</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="stats-section">
+          <div className="stats-header">
+            <h2>Your Activity</h2>
+            <button 
+              className="view-all-btn"
+              onClick={() => navigate('/analytics')}
+            >
+              View analytics →
+            </button>
+          </div>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">👥</div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {loading ? '...' : user ? stats.totalCrews : '—'}
+                </div>
+                <div className="stat-label">Active Crews</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">🎨</div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {loading ? '...' : user ? stats.totalTemplates : '5'}
+                </div>
+                <div className="stat-label">Templates</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">📸</div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {loading ? '...' : user ? stats.totalImages : '—'}
+                </div>
+                <div className="stat-label">Images Created</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">📅</div>
+              <div className="stat-content">
+                <div className="stat-value">
+                  {loading ? '...' : user ? stats.lastGenerated : '—'}
+                </div>
+                <div className="stat-label">Last Generated</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        open={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
       />
-    </Box>
+    </div>
   );
 };
 

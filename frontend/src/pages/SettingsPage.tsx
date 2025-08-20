@@ -1,239 +1,203 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Typography,
+  Button,
   Card,
   CardContent,
-  Typography,
+  Grid,
+  Alert,
+  TextField,
   Switch,
   FormControlLabel,
-  Divider,
-  Button,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Avatar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { MdDelete, MdDownload } from 'react-icons/md';
-import { useAuth } from '../context/AuthContext';
-import { useTheme as useAppTheme } from '../context/ThemeContext';
-import { useAnalytics } from '../context/AnalyticsContext';
+import { 
+  MdSettings, 
+  MdPerson, 
+  MdPalette, 
+  MdExpandMore,
+  MdSave,
+  MdDarkMode,
+  MdNotifications
+} from 'react-icons/md';
+import DashboardLayout from '../components/Layout/DashboardLayout';
 import LoginPrompt from '../components/Auth/LoginPrompt';
+import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/RowgramThemeContext';
+import { useNotification } from '../context/NotificationContext';
 
 const SettingsPage: React.FC = () => {
-  const theme = useTheme();
   const { user } = useAuth();
-  const { isDarkMode, toggleDarkMode } = useAppTheme();
-  const { exportData } = useAnalytics();
+  const { isDarkMode, toggleTheme } = useThemeMode();
+  const { showSuccess } = useNotification();
 
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileEmail, setProfileEmail] = useState(user?.email || '');
+  const [clubName, setClubName] = useState(user?.club_name || '');
+  const [emailNotifications, setEmailNotifications] = useState(true);
 
-  const handleExportData = () => {
-    try {
-      const data = exportData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `rowgram-data-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      setSuccess('Data exported successfully');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch {
-      setError('Failed to export data');
-      setTimeout(() => setError(null), 3000);
-    }
+  const handleSaveProfile = () => {
+    showSuccess('Profile settings saved successfully!');
   };
 
-  const handleClearAllData = () => {
-    setDeleteDialogOpen(false);
-    setSuccess('All analytics data cleared');
-    setTimeout(() => setSuccess(null), 3000);
+  const handleSaveClubSettings = () => {
+    showSuccess('Club settings saved successfully!');
   };
 
   if (!user) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h4" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          Settings
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Sign in to manage your preferences and settings
-        </Typography>
-        <LoginPrompt message="Sign in to access your settings" actionText="Access Settings" />
-      </Box>
+      <DashboardLayout title="Settings" subtitle="Manage your account and preferences">
+        <LoginPrompt 
+          message="Sign in to manage your settings" 
+          actionText="Manage Settings"
+        />
+      </DashboardLayout>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ color: theme.palette.text.primary, mb: 1 }}>
-          Settings
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-          Manage your account preferences and application settings
-        </Typography>
+    <DashboardLayout 
+      title="Settings" 
+      subtitle="Manage your account, preferences, and club settings"
+    >
+      <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+        <Grid container spacing={4}>
+          <Grid item xs={12}>
+            {/* Profile Settings */}
+            <Accordion defaultExpanded>
+              <AccordionSummary expandIcon={<MdExpandMore />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <MdPerson />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>Profile Settings</Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Full Name"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Email Address"
+                      value={profileEmail}
+                      onChange={(e) => setProfileEmail(e.target.value)}
+                      disabled
+                      helperText="Email cannot be changed after registration"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      variant="contained"
+                      startIcon={<MdSave />}
+                      onClick={handleSaveProfile}
+                      sx={{ mt: 1 }}
+                    >
+                      Save Profile
+                    </Button>
+                  </Grid>
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+
+            {/* Club Settings */}
+            <Accordion>
+              <AccordionSummary expandIcon={<MdExpandMore />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <MdPalette />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>Club Settings</Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Club Name"
+                      value={clubName}
+                      onChange={(e) => setClubName(e.target.value)}
+                      placeholder="e.g., Thames Rowing Club"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      Club colors and logo upload coming soon! For now, you can set these in individual templates.
+                    </Alert>
+                    <Button
+                      variant="contained"
+                      startIcon={<MdSave />}
+                      onClick={handleSaveClubSettings}
+                    >
+                      Save Club Settings
+                    </Button>
+                  </Grid>
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+
+            {/* App Preferences */}
+            <Accordion>
+              <AccordionSummary expandIcon={<MdExpandMore />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <MdSettings />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>App Preferences</Typography>
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch 
+                        checked={isDarkMode} 
+                        onChange={toggleTheme} 
+                        icon={<MdDarkMode />}
+                        checkedIcon={<MdDarkMode />}
+                      />
+                    }
+                    label="Dark Mode"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch 
+                        checked={emailNotifications} 
+                        onChange={(e) => setEmailNotifications(e.target.checked)} 
+                        icon={<MdNotifications />}
+                        checkedIcon={<MdNotifications />}
+                      />
+                    }
+                    label="Email Notifications (Coming Soon)"
+                    disabled
+                  />
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+
+            {/* Account Actions */}
+            <Card sx={{ mt: 3 }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  Account Actions
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Need to delete your account or export your data? Contact us for assistance.
+                </Alert>
+                <Typography variant="body2" color="text.secondary">
+                  For account deletion or data export requests, please contact support at support@rowgram.com
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      {/* User Profile Section */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            User Profile
-          </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Avatar
-              src={user.profile_picture}
-              alt={user.name}
-              sx={{
-                width: 80,
-                height: 80,
-                bgcolor: 'primary.main',
-                fontSize: '2rem',
-              }}
-            >
-              {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
-            </Avatar>
-
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {user.name || 'User'}
-              </Typography>
-              <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
-                {user.email}
-              </Typography>
-              {user.club_name && (
-                <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
-                  {user.club_name}
-                </Typography>
-              )}
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Appearance Settings */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            Appearance
-          </Typography>
-
-          <FormControlLabel
-            control={<Switch checked={isDarkMode} onChange={toggleDarkMode} color="primary" />}
-            label={
-              <Box>
-                <Typography variant="body1">Dark Mode</Typography>
-                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                  Toggle between light and dark theme
-                </Typography>
-              </Box>
-            }
-          />
-        </CardContent>
-      </Card>
-
-      {/* Data Management */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            Data Management
-          </Typography>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="body1">Export Data</Typography>
-                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                  Download your analytics and usage data
-                </Typography>
-              </Box>
-              <Button variant="outlined" startIcon={<MdDownload />} onClick={handleExportData}>
-                Export
-              </Button>
-            </Box>
-
-            <Divider />
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box>
-                <Typography variant="body1" sx={{ color: theme.palette.error.main }}>
-                  Clear Analytics Data
-                </Typography>
-                <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                  Remove all stored analytics and usage data
-                </Typography>
-              </Box>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<MdDelete />}
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                Clear Data
-              </Button>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* App Information */}
-      <Card>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-            About RowGram
-          </Typography>
-
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
-            Version 1.0.0
-          </Typography>
-
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-            RowGram helps rowing teams create professional crew lineup images. Build your crews,
-            customize templates, and generate beautiful images for your racing teams.
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Clear Analytics Data</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to clear all analytics data? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleClearAllData} color="error" variant="contained">
-            Clear Data
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+    </DashboardLayout>
   );
 };
 

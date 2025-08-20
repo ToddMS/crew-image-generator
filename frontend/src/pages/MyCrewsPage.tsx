@@ -1,25 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  Alert,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MdPersonAdd } from 'react-icons/md';
-import SavedCrewsComponent from '../components/SavedCrewsComponent/SavedCrewComponent';
-import LoginPrompt from '../components/Auth/LoginPrompt';
+import AuthModal from '../components/Auth/AuthModal';
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/RowgramThemeContext';
 import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 import { Crew } from '../types/crew.types';
+import './MyCrews.css';
 
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
 
@@ -31,12 +19,13 @@ interface SavedCrew extends Crew {
 }
 
 const MyCrewsPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useThemeMode();
   const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [savedCrews, setSavedCrews] = useState<SavedCrew[]>([]);
   const [recentCrews, setRecentCrews] = useState<number[]>([]);
@@ -46,6 +35,22 @@ const MyCrewsPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
   const [showGeneratePanel, setShowGeneratePanel] = useState<boolean>(false);
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+  };
+
+  const getCurrentPage = () => {
+    const path = window.location.pathname;
+    if (path === '/') return 'dashboard';
+    if (path.includes('/crews')) return 'crews';
+    if (path.includes('/templates')) return 'templates';
+    if (path.includes('/generate')) return 'generate';
+    if (path.includes('/gallery')) return 'gallery';
+    if (path.includes('/analytics')) return 'analytics';
+    if (path.includes('/settings')) return 'settings';
+    return 'dashboard';
+  };
 
   useEffect(() => {
     loadCrews();
@@ -279,295 +284,796 @@ const MyCrewsPage: React.FC = () => {
     }
   };
 
+  const currentPage = getCurrentPage();
+
   if (!user) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          My Crews
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Sign in to view and manage your saved crew lineups
-        </Typography>
-        <LoginPrompt
-          message="Sign in to view and manage your saved crews"
-          actionText="View My Crews"
+      <div className="my-crews-container">
+        {/* Navigation */}
+        <nav className="main-nav">
+          <div className="nav-container">
+            <button className="logo" onClick={() => handleNavClick('/')}>
+              <div className="logo-icon">⚓</div>
+              <span>RowGram</span>
+            </button>
+            
+            <div className="nav-links">
+              <button 
+                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/')}
+              >
+                Dashboard
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/crews')}
+              >
+                My Crews
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/templates/create')}
+              >
+                Templates
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/generate')}
+              >
+                Generate
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/gallery')}
+              >
+                Gallery
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/settings')}
+              >
+                Settings
+              </button>
+            </div>
+            
+            <div className="nav-actions">
+              <button 
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+              
+              <button 
+                className="login-btn"
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div className="container">
+          <div className="empty-state">
+            <div className="empty-state-icon">👥</div>
+            <h2>My Crews</h2>
+            <p>Sign in to view and manage your saved crew lineups</p>
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowAuthModal(true)}
+            >
+              Sign In to View Crews
+            </button>
+          </div>
+        </div>
+        
+        <AuthModal 
+          open={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
         />
-      </Box>
+      </div>
     );
   }
 
   if (loading) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h6" sx={{ color: theme.palette.text.secondary }}>
-          Loading your crews...
-        </Typography>
-      </Box>
+      <div className="my-crews-container">
+        {/* Navigation */}
+        <nav className="main-nav">
+          <div className="nav-container">
+            <button className="logo" onClick={() => handleNavClick('/')}>
+              <div className="logo-icon">⚓</div>
+              <span>RowGram</span>
+            </button>
+            
+            <div className="nav-links">
+              <button 
+                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/')}
+              >
+                Dashboard
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/crews')}
+              >
+                My Crews
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/templates/create')}
+              >
+                Templates
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/generate')}
+              >
+                Generate
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/gallery')}
+              >
+                Gallery
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/settings')}
+              >
+                Settings
+              </button>
+            </div>
+            
+            <div className="nav-actions">
+              <button 
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+              
+              {user ? (
+                <div className="user-menu">
+                  <span className="user-name">{user.club_name || user.name}</span>
+                  <div className="user-avatar">
+                    {user.name?.[0] || 'U'}
+                  </div>
+                  <button className="logout-btn" onClick={logout} title="Logout">
+                    ↗️
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className="login-btn"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
+
+        <div className="container">
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <h3>Loading your crews...</h3>
+          </div>
+        </div>
+      </div>
     );
   }
 
-  if (error) {
+  if (error && !loading) {
     return (
-      <Box>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-        <Box sx={{ textAlign: 'center' }}>
-          <Button onClick={loadCrews} variant="contained">
-            Retry
-          </Button>
-        </Box>
-      </Box>
+      <div className="my-crews-container">
+        {/* Navigation */}
+        <nav className="main-nav">
+          <div className="nav-container">
+            <button className="logo" onClick={() => handleNavClick('/')}>
+              <div className="logo-icon">⚓</div>
+              <span>RowGram</span>
+            </button>
+            
+            <div className="nav-links">
+              <button 
+                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/')}
+              >
+                Dashboard
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/crews')}
+              >
+                My Crews
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/templates/create')}
+              >
+                Templates
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/generate')}
+              >
+                Generate
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/gallery')}
+              >
+                Gallery
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/settings')}
+              >
+                Settings
+              </button>
+            </div>
+            
+            <div className="nav-actions">
+              <button 
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+              
+              {user ? (
+                <div className="user-menu">
+                  <span className="user-name">{user.club_name || user.name}</span>
+                  <div className="user-avatar">
+                    {user.name?.[0] || 'U'}
+                  </div>
+                  <button className="logout-btn" onClick={logout} title="Logout">
+                    ↗️
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className="login-btn"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
+
+        <div className="container">
+          <div className="alert error">
+            ⚠️ {error}
+            <button className="alert-close" onClick={() => setError(null)}>×</button>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button className="btn btn-primary" onClick={loadCrews}>
+              Retry Loading Crews
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
-  if (savedCrews.length === 0) {
+  if (savedCrews.length === 0 && !loading) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          No Crews Yet
-        </Typography>
-        <Typography variant="body1" sx={{ color: theme.palette.text.secondary, mb: 4 }}>
-          Create your crew lineup to get started
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-          <Button
-            variant="contained"
-            startIcon={<MdPersonAdd />}
-            onClick={() => navigate('/create')}
-          >
-            Create Your Crew
-          </Button>
-        </Box>
-      </Box>
+      <div className="my-crews-container">
+        {/* Navigation */}
+        <nav className="main-nav">
+          <div className="nav-container">
+            <button className="logo" onClick={() => handleNavClick('/')}>
+              <div className="logo-icon">⚓</div>
+              <span>RowGram</span>
+            </button>
+            
+            <div className="nav-links">
+              <button 
+                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/')}
+              >
+                Dashboard
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/crews')}
+              >
+                My Crews
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/templates/create')}
+              >
+                Templates
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/generate')}
+              >
+                Generate
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/gallery')}
+              >
+                Gallery
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+                onClick={() => handleNavClick('/settings')}
+              >
+                Settings
+              </button>
+            </div>
+            
+            <div className="nav-actions">
+              <button 
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+              
+              {user ? (
+                <div className="user-menu">
+                  <span className="user-name">{user.club_name || user.name}</span>
+                  <div className="user-avatar">
+                    {user.name?.[0] || 'U'}
+                  </div>
+                  <button className="logout-btn" onClick={logout} title="Logout">
+                    ↗️
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  className="login-btn"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
+
+        <div className="container">
+          <div className="empty-state">
+            <div className="empty-state-icon">🚣</div>
+            <h2>No Crews Yet</h2>
+            <p>Create your first crew lineup to get started with generating beautiful rowing images</p>
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/crews/create')}
+            >
+              👥 Create Your First Crew
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box>
-      {/* Success Message */}
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage(null)}>
-          {successMessage}
-        </Alert>
-      )}
+    <div className="my-crews-container">
+      {/* Navigation */}
+      <nav className="main-nav">
+        <div className="nav-container">
+          <button className="logo" onClick={() => handleNavClick('/')}>
+            <div className="logo-icon">⚓</div>
+            <span>RowGram</span>
+          </button>
+          
+          <div className="nav-links">
+            <button 
+              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/')}
+            >
+              Dashboard
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews')}
+            >
+              My Crews
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/templates/create')}
+            >
+              Templates
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/generate')}
+            >
+              Generate
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/gallery')}
+            >
+              Gallery
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/settings')}
+            >
+              Settings
+            </button>
+          </div>
+          
+          <div className="nav-actions">
+            <button 
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            
+            {user ? (
+              <div className="user-menu">
+                <span className="user-name">{user.club_name || user.name}</span>
+                <div className="user-avatar">
+                  {user.name?.[0] || 'U'}
+                </div>
+                <button className="logout-btn" onClick={logout} title="Logout">
+                  ↗️
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="login-btn"
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
 
-      {/* Error Message */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {/* My Crews Section - Primary Focus */}
-      <Box sx={{ mb: 4 }}>
+      <div className="container">
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box>
-            <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-              {selectedCrews.size > 0
-                ? `${selectedCrews.size} of ${savedCrews.length} crews selected`
-                : `${savedCrews.length} crew${savedCrews.length !== 1 ? 's' : ''} in your account`}
-            </Typography>
-          </Box>
+        <div className="my-crews-header">
+          <h1>My Crews</h1>
+          <p>Manage and organize all your rowing crew lineups in one place</p>
+        </div>
 
-          {/* Sort Dropdown */}
-          {savedCrews.length > 0 && (
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel>Sort by</InputLabel>
-              <Select value={sortBy} label="Sort by" onChange={(e) => setSortBy(e.target.value)}>
-                <MenuItem value="recent">Recently Created</MenuItem>
-                <MenuItem value="club">Club Name</MenuItem>
-                <MenuItem value="race">Race Name</MenuItem>
-                <MenuItem value="boat_class">Boat Class</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-        </Box>
+        {/* Success Message */}
+        {successMessage && (
+          <div className="alert success">
+            ✅ {successMessage}
+            <button className="alert-close" onClick={() => setSuccessMessage(null)}>×</button>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="alert error">
+            ⚠️ {error}
+            <button className="alert-close" onClick={() => setError(null)}>×</button>
+          </div>
+        )}
+
+        {/* Controls Section */}
+        <div className="controls-section">
+          <div className="controls-left">
+            <div className="crew-count">
+              {selectedCrews.size > 0 ? (
+                <span className="selection-count">
+                  {selectedCrews.size} of {savedCrews.length} crews selected
+                </span>
+              ) : (
+                `${savedCrews.length} crew${savedCrews.length !== 1 ? 's' : ''} in your account`
+              )}
+            </div>
+          </div>
+          
+          <div className="controls-right">
+            {savedCrews.length > 0 && (
+              <div className="sort-dropdown">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                  aria-label="Sort crews by"
+                >
+                  <option value="recent">Recently Created</option>
+                  <option value="club">Club Name</option>
+                  <option value="race">Race Name</option>
+                  <option value="boat_class">Boat Class</option>
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Recently Saved Crews */}
         {getRecentlyViewedCrews().length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Recently Saved
-            </Typography>
-            <SavedCrewsComponent
-              savedCrews={getRecentlyViewedCrews()}
-              recentCrews={[]}
-              onDeleteCrew={(index) => {
-                const recentCrews = getRecentlyViewedCrews();
-                const crew = recentCrews[index];
-                const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-                handleDeleteCrew(originalIndex);
-              }}
-              onEditCrew={(index) => {
-                const recentCrews = getRecentlyViewedCrews();
-                const crew = recentCrews[index];
-                const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-                handleEditCrew(originalIndex);
-              }}
-              bulkMode={true}
-              selectedCrews={selectedCrews}
-              onCrewSelection={handleCrewSelection}
-              onBulkDelete={handleBulkDelete}
-            />
-          </Box>
+          <div className="crews-section">
+            <div className="section-header">
+              <span className="section-title">Recently Saved</span>
+              <span className="section-badge">{getRecentlyViewedCrews().length}</span>
+            </div>
+            
+            <div className="crews-grid">
+              {getRecentlyViewedCrews().map((crew) => (
+                <div 
+                  key={crew.id} 
+                  className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
+                >
+                  <div className="crew-card-header">
+                    <div className="crew-card-title">
+                      <h3>{crew.boatName}</h3>
+                      <div className="crew-card-subtitle">
+                        <span>{crew.boatClub}</span>
+                        <span>•</span>
+                        <span>{crew.boatClass}</span>
+                      </div>
+                    </div>
+                    <div 
+                      className={`crew-card-checkbox ${selectedCrews.has(crew.id) ? 'checked' : ''}`}
+                      onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
+                    ></div>
+                  </div>
+
+                  <div className="crew-info">
+                    <div className="crew-info-item">
+                      <span className="crew-info-label">Race:</span>
+                      <span className="crew-info-value">{crew.raceName}</span>
+                    </div>
+                    <div className="crew-info-item">
+                      <span className="crew-info-label">Boat Class:</span>
+                      <span className="crew-info-value">{crew.boatClass}</span>
+                    </div>
+                    {crew.coachName && (
+                      <div className="crew-info-item">
+                        <span className="crew-info-label">Coach:</span>
+                        <span className="crew-info-value">{crew.coachName}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="crew-members">
+                    <div className="crew-members-title">Crew Members</div>
+                    <div className="crew-members-grid">
+                      {crew.crewMembers.slice(0, 6).map((member, idx) => (
+                        <div key={idx} className="crew-member">
+                          <div className="crew-member-seat">{member.seat}</div>
+                          <div className="crew-member-name">{member.name}</div>
+                        </div>
+                      ))}
+                      {crew.crewMembers.length > 6 && (
+                        <div className="crew-member">
+                          <div className="crew-member-seat">+</div>
+                          <div className="crew-member-name">
+                            {crew.crewMembers.length - 6} more
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="crew-actions">
+                    <button 
+                      className="crew-action-btn primary"
+                      onClick={() => {
+                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                        handleEditCrew(originalIndex);
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button 
+                      className="crew-action-btn secondary"
+                      onClick={() => {
+                        navigate('/generate', {
+                          state: { selectedCrewIds: [crew.id] }
+                        });
+                      }}
+                    >
+                      🎨 Generate
+                    </button>
+                    <button 
+                      className="crew-action-btn danger"
+                      onClick={() => {
+                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                        handleDeleteCrew(originalIndex);
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* All Other Crews */}
-        <Box>
-          {getRecentlyViewedCrews().length > 0 && (
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              All Crews
-            </Typography>
-          )}
-          <SavedCrewsComponent
-            savedCrews={getRemainingCrews()}
-            recentCrews={[]}
-            onDeleteCrew={(index) => {
-              const remainingCrews = getRemainingCrews();
-              const crew = remainingCrews[index];
-              const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-              handleDeleteCrew(originalIndex);
-            }}
-            onEditCrew={(index) => {
-              const remainingCrews = getRemainingCrews();
-              const crew = remainingCrews[index];
-              const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-              handleEditCrew(originalIndex);
-            }}
-            bulkMode={true}
-            selectedCrews={selectedCrews}
-            onCrewSelection={handleCrewSelection}
-            onBulkDelete={handleBulkDelete}
-          />
-        </Box>
-      </Box>
+        {getRemainingCrews().length > 0 && (
+          <div className="crews-section">
+            <div className="section-header">
+              <span className="section-title">
+                {getRecentlyViewedCrews().length > 0 ? 'All Crews' : 'Your Crews'}
+              </span>
+              <span className="section-badge">{getRemainingCrews().length}</span>
+            </div>
+            
+            <div className="crews-grid">
+              {getRemainingCrews().map((crew) => (
+                <div 
+                  key={crew.id} 
+                  className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
+                >
+                  <div className="crew-card-header">
+                    <div className="crew-card-title">
+                      <h3>{crew.boatName}</h3>
+                      <div className="crew-card-subtitle">
+                        <span>{crew.boatClub}</span>
+                        <span>•</span>
+                        <span>{crew.boatClass}</span>
+                      </div>
+                    </div>
+                    <div 
+                      className={`crew-card-checkbox ${selectedCrews.has(crew.id) ? 'checked' : ''}`}
+                      onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
+                    ></div>
+                  </div>
+
+                  <div className="crew-info">
+                    <div className="crew-info-item">
+                      <span className="crew-info-label">Race:</span>
+                      <span className="crew-info-value">{crew.raceName}</span>
+                    </div>
+                    <div className="crew-info-item">
+                      <span className="crew-info-label">Boat Class:</span>
+                      <span className="crew-info-value">{crew.boatClass}</span>
+                    </div>
+                    {crew.coachName && (
+                      <div className="crew-info-item">
+                        <span className="crew-info-label">Coach:</span>
+                        <span className="crew-info-value">{crew.coachName}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="crew-members">
+                    <div className="crew-members-title">Crew Members</div>
+                    <div className="crew-members-grid">
+                      {crew.crewMembers.slice(0, 6).map((member, idx) => (
+                        <div key={idx} className="crew-member">
+                          <div className="crew-member-seat">{member.seat}</div>
+                          <div className="crew-member-name">{member.name}</div>
+                        </div>
+                      ))}
+                      {crew.crewMembers.length > 6 && (
+                        <div className="crew-member">
+                          <div className="crew-member-seat">+</div>
+                          <div className="crew-member-name">
+                            {crew.crewMembers.length - 6} more
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="crew-actions">
+                    <button 
+                      className="crew-action-btn primary"
+                      onClick={() => {
+                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                        handleEditCrew(originalIndex);
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button 
+                      className="crew-action-btn secondary"
+                      onClick={() => {
+                        navigate('/generate', {
+                          state: { selectedCrewIds: [crew.id] }
+                        });
+                      }}
+                    >
+                      🎨 Generate
+                    </button>
+                    <button 
+                      className="crew-action-btn danger"
+                      onClick={() => {
+                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                        handleDeleteCrew(originalIndex);
+                      }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Bottom Sticky Bar for Selection Actions */}
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1300,
-          transform: selectedCrews.size > 0 ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.3s ease-in-out',
-          backgroundColor: theme.palette.background.paper,
-          borderTop: `1px solid ${theme.palette.divider}`,
-          boxShadow: theme.shadows[8],
-          p: 2,
-        }}
-      >
-        <Box
-          sx={{
-            maxWidth: 1200,
-            mx: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2,
-          }}
-        >
+      <div className={`selection-bar ${selectedCrews.size > 0 ? 'visible' : ''}`}>
+        <div className="selection-bar-content">
           {/* Selection Info */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box
-              sx={{
-                backgroundColor: theme.palette.primary.main,
-                color: 'white',
-                px: 2,
-                py: 0.5,
-                borderRadius: 3,
-                fontWeight: 600,
-                fontSize: '0.9rem',
-              }}
-            >
+          <div className="selection-info">
+            <div className="selection-count-badge">
               {selectedCrews.size}
-            </Box>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+            </div>
+            <span className="selection-text">
               {selectedCrews.size === 1 ? 'crew selected' : 'crews selected'}
-            </Typography>
+            </span>
 
             {/* Quick Preview of Selected Crews */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
+            <div className="selection-previews">
               {Array.from(selectedCrews)
                 .slice(0, 3)
                 .map((crewId) => {
                   const crew = savedCrews.find((c) => c.id === crewId);
                   return crew ? (
-                    <Chip
-                      key={crewId}
-                      label={crew.boatClub}
-                      size="small"
-                      sx={{
-                        backgroundColor: theme.palette.action.selected,
-                        fontSize: '0.75rem',
-                        maxWidth: 120,
-                      }}
-                    />
+                    <div key={crewId} className="selection-preview-chip">
+                      {crew.boatClub}
+                    </div>
                   ) : null;
                 })}
               {selectedCrews.size > 3 && (
-                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                <span className="selection-more">
                   +{selectedCrews.size - 3} more
-                </Typography>
+                </span>
               )}
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Action Buttons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button
-              variant="text"
+          <div className="selection-actions">
+            <button
+              className="btn btn-text"
               onClick={() => setSelectedCrews(new Set())}
-              sx={{ color: theme.palette.text.secondary }}
             >
               Clear Selection
-            </Button>
+            </button>
 
-            <Button
-              variant="outlined"
-              color="error"
+            <button
+              className="btn btn-outline-danger"
               onClick={handleBulkDelete}
-              sx={{
-                minWidth: 120,
-                borderColor: theme.palette.error.main,
-                color: theme.palette.error.main,
-                '&:hover': {
-                  borderColor: theme.palette.error.dark,
-                  color: theme.palette.error.dark,
-                  backgroundColor: theme.palette.error.main + '08',
-                },
-              }}
             >
-              Delete {selectedCrews.size}
-            </Button>
+              🗑️ Delete {selectedCrews.size}
+            </button>
 
-            <Button
-              variant="contained"
+            <button
+              className="btn btn-primary"
               onClick={() => {
-                // Navigate to generate page with selected crew IDs
                 navigate('/generate', {
                   state: {
                     selectedCrewIds: Array.from(selectedCrews),
                   },
                 });
               }}
-              sx={{
-                minWidth: 160,
-                bgcolor: theme.palette.primary.main,
-                '&:hover': {
-                  bgcolor: theme.palette.primary.dark,
-                },
-              }}
             >
-              Generate Images
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+              🎨 Generate Images
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        open={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
+    </div>
   );
 };
 

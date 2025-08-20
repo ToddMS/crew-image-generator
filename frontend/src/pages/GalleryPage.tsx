@@ -2,693 +2,395 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardMedia,
-  IconButton,
-  Dialog,
-  DialogContent,
-  CircularProgress,
-  TextField,
-  InputAdornment,
   Button,
-  Checkbox,
-  Tooltip,
+  Card,
+  CardContent,
+  Grid,
+  Avatar,
+  CircularProgress,
+  IconButton,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  CardMedia,
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import { useTheme } from '@mui/material/styles';
-import { MdDelete, MdClose, MdImage, MdSearch, MdClear, MdDownload } from 'react-icons/md';
-import { ApiService } from '../services/api.service';
+import { useNavigate } from 'react-router-dom';
+import { 
+  MdImage, 
+  MdDownload, 
+  MdDelete,
+  MdMoreVert,
+  MdAdd,
+  MdFullscreen,
+  MdDateRange
+} from 'react-icons/md';
+import DashboardLayout from '../components/Layout/DashboardLayout';
+import LoginPrompt from '../components/Auth/LoginPrompt';
 import { useAuth } from '../context/AuthContext';
-import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
-import { SavedImageResponse } from '../types/image.types';
+import { ApiService } from '../services/api.service';
 
-interface GalleryImage extends SavedImageResponse {
-  crew_name: string;
-  race_name: string;
-  club_name: string;
-}
-
-interface Crew {
+interface SavedImage {
   id: string;
-  name: string;
-  clubName: string;
-  raceName: string;
-  boatType: {
-    id: number;
-    value: string;
-    seats: number;
-    name: string;
-  };
+  crewName: string;
+  templateName: string;
+  imageUrl: string;
+  thumbnailUrl?: string;
+  createdAt: string;
+  dimensions: { width: number; height: number };
+  fileSize: number;
+  format: string;
 }
 
-interface GalleryPageProps {
-  refreshTrigger?: number;
-}
-
-const GalleryPage: React.FC<GalleryPageProps> = ({ refreshTrigger }) => {
-  const { user } = useAuth();
-  const { trackEvent } = useAnalytics();
-  const { showSuccess, showError } = useNotification();
+const GalleryPage: React.FC = () => {
   const theme = useTheme();
-  const [allImages, setAllImages] = useState<GalleryImage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedImages, setSelectedImages] = useState<Set<number>>(new Set());
-  const [isDownloading, setIsDownloading] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
 
-  const loadAllData = async () => {
-    if (!user) return;
+  const [images, setImages] = useState<SavedImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(null);
+  const [filter, setFilter] = useState<'all' | 'recent' | 'favorites'>('all');
 
-    setLoading(true);
+  useEffect(() => {
+    if (user) {
+      loadImages();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const loadImages = async () => {
     try {
-      const crewsResponse = await ApiService.getCrews();
-      if (crewsResponse.data && !crewsResponse.error) {
-        const imagePromises = crewsResponse.data.map(async (crew: Crew) => {
-          const imagesResponse = await ApiService.getSavedImages(crew.id);
-          if (imagesResponse.data && !imagesResponse.error) {
-            return imagesResponse.data.map((img) => ({
-              ...img,
-              crew_name: crew.name,
-              race_name: crew.raceName,
-              club_name: crew.clubName,
-            }));
-          }
-          return [];
-        });
-
-        const allImagesArrays = await Promise.all(imagePromises);
-        const flatImages = allImagesArrays.flat();
-
-        flatImages.sort(
-          (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
-        );
-
-        setAllImages(flatImages);
-      }
+      // Mock data for now
+      setImages([]);
     } catch (error) {
-      console.error('Error loading gallery data:', error);
+      showError('Failed to load images');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadAllData();
-  }, [user]);
-
-  useEffect(() => {
-    if (refreshTrigger && refreshTrigger > 0) {
-      loadAllData();
-    }
-  }, [refreshTrigger]);
-
-  const handleImageClick = (image: GalleryImage) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, image: SavedImage) => {
+    setAnchorEl(event.currentTarget);
     setSelectedImage(image);
-    setDialogOpen(true);
   };
 
-  const handleDeleteImage = async (imageId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    if (!window.confirm('Are you sure you want to delete this image?')) {
-      return;
-    }
-
-    try {
-      const imageToDelete = allImages.find((img) => img.id === imageId);
-      const response = await ApiService.deleteSavedImage(imageId);
-      if (!response.error) {
-        setAllImages((prev) => prev.filter((img) => img.id !== imageId));
-        if (selectedImage?.id === imageId) {
-          setDialogOpen(false);
-          setSelectedImage(null);
-        }
-
-        showSuccess(`Image "${imageToDelete?.image_name || 'image'}" deleted successfully!`);
-      }
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      showError('Failed to delete image. Please try again.');
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedImages.size === 0) return;
-
-    const selectedCount = selectedImages.size;
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedCount} selected image${selectedCount > 1 ? 's' : ''}? This action cannot be undone.`,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const deletePromises = Array.from(selectedImages).map((imageId) =>
-        ApiService.deleteSavedImage(imageId),
-      );
-
-      await Promise.all(deletePromises);
-
-      setAllImages((prev) => prev.filter((img) => !selectedImages.has(img.id)));
-
-      setSelectedImages(new Set());
-
-      trackEvent('gallery_bulk_delete', {
-        imageCount: selectedCount,
-      });
-
-      showSuccess(`Successfully deleted ${selectedCount} image${selectedCount > 1 ? 's' : ''}!`);
-    } catch (error) {
-      console.error('Error in bulk delete:', error);
-      showError('Failed to delete some images. Please try again.');
-    }
-  };
-
-  const handleDownloadImage = async (image: GalleryImage, event: React.MouseEvent) => {
-    event.stopPropagation();
-
-    try {
-      const imageUrl = getImageUrl(image.image_url || image.imagePath || '');
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${image.image_name}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      trackEvent('gallery_download', {
-        type: 'single',
-        imageName: image.image_name,
-        crewName: image.crew_name,
-        raceName: image.race_name,
-      });
-
-      showSuccess(`Downloaded "${image.image_name}" successfully!`);
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      showError('Failed to download image. Please try again.');
-    }
-  };
-
-  const handleImageSelection = (imageId: number, checked: boolean) => {
-    const newSelected = new Set(selectedImages);
-    if (checked) {
-      newSelected.add(imageId);
-    } else {
-      newSelected.delete(imageId);
-    }
-    setSelectedImages(newSelected);
-  };
-
-  const handleBulkDownload = async () => {
-    if (selectedImages.size === 0) return;
-
-    setIsDownloading(true);
-
-    try {
-      const selectedImageData = allImages.filter((img) => selectedImages.has(img.id));
-
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-
-      for (let i = 0; i < selectedImageData.length; i++) {
-        const image = selectedImageData[i];
-        try {
-          const imageUrl = getImageUrl(image.image_url || image.imagePath || '');
-          const response = await fetch(imageUrl);
-
-          if (!response.ok) {
-            console.error(
-              `Failed to fetch image ${image.image_name}:`,
-              response.status,
-              response.statusText,
-            );
-            continue;
-          }
-
-          const blob = await response.blob();
-
-          const cleanFileName =
-            `${image.crew_name}_${image.race_name}_${image.image_name}_${image.id}`.replace(
-              /[^a-zA-Z0-9_-]/g,
-              '_',
-            );
-          zip.file(`${cleanFileName}.png`, blob);
-        } catch (error) {
-          console.error(`Error adding image ${image.image_name} to zip:`, error);
-        }
-      }
-
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-      const url = URL.createObjectURL(zipBlob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      const timestamp = new Date().toISOString().split('T')[0];
-      const clubNames = [...new Set(selectedImageData.map((img) => img.club_name))];
-      const zipFileName =
-        clubNames.length === 1
-          ? `${clubNames[0]}_images_${timestamp}.zip`
-          : `crew_images_${timestamp}.zip`;
-
-      link.download = zipFileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      trackEvent('gallery_download', {
-        type: 'bulk_zip',
-        imageCount: selectedImageData.length,
-        zipFileName: zipFileName,
-        clubs: [...new Set(selectedImageData.map((img) => img.club_name))],
-      });
-
-      showSuccess(
-        `Successfully downloaded ${selectedImageData.length} image${selectedImageData.length > 1 ? 's' : ''} as ZIP file!`,
-      );
-
-      setSelectedImages(new Set());
-    } catch (error) {
-      console.error('Error in bulk download:', error);
-      showError('Failed to create ZIP download. Please try again.');
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
+  const handleMenuClose = () => {
+    setAnchorEl(null);
     setSelectedImage(null);
   };
 
-  const getImageUrl = (imageUrl: string) => {
-    return `${import.meta.env.VITE_API_URL}${imageUrl}`;
+  const handleDownload = async (image: SavedImage) => {
+    try {
+      const response = await fetch(image.imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${image.crewName}-${image.templateName}.${image.format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      showSuccess('Image downloaded successfully');
+    } catch (error) {
+      showError('Failed to download image');
+    }
+    handleMenuClose();
   };
 
-  const filteredImages = allImages.filter((image) => {
-    if (!searchTerm) return true;
+  const handleDelete = async () => {
+    if (!selectedImage) return;
 
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (image.image_name || image.imageName || '').toLowerCase().includes(searchLower) ||
-      image.crew_name?.toLowerCase().includes(searchLower) ||
-      image.race_name?.toLowerCase().includes(searchLower) ||
-      image.club_name?.toLowerCase().includes(searchLower)
-    );
-  });
+    try {
+      const response = await ApiService.deleteSavedImage(parseInt(selectedImage.id));
+      if (response.error) {
+        showError(response.error);
+      } else {
+        setImages(prev => prev.filter(img => img.id !== selectedImage.id));
+        showSuccess('Image deleted successfully');
+      }
+    } catch (error) {
+      showError('Failed to delete image');
+    } finally {
+      setDeleteDialogOpen(false);
+      handleMenuClose();
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   if (!user) {
     return (
-      <Box
-        sx={{
-          textAlign: 'center',
-          py: 8,
-          backgroundColor: theme.palette.background.default,
-        }}
-      >
-        <Typography variant="h5" sx={{ color: theme.palette.text.primary, mb: 2 }}>
-          Please sign in to view your gallery
-        </Typography>
-      </Box>
+      <DashboardLayout title="Gallery" subtitle="View and manage your generated images">
+        <LoginPrompt 
+          message="Sign in to view your image gallery" 
+          actionText="View Gallery"
+        />
+      </DashboardLayout>
     );
   }
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
-        <CircularProgress size={48} />
-        <Typography sx={{ ml: 2, color: theme.palette.text.secondary }}>
-          Loading your gallery...
-        </Typography>
-      </Box>
+      <DashboardLayout title="Gallery" subtitle="View and manage your generated images">
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header and Controls */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-            {selectedImages.size > 0
-              ? `${selectedImages.size} of ${filteredImages.length} images selected`
-              : `${filteredImages.length} image${filteredImages.length !== 1 ? 's' : ''} in your gallery`}
-          </Typography>
-        </Box>
-        {selectedImages.size > 0 && (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+    <DashboardLayout 
+      title="Gallery" 
+      subtitle={`View and manage your generated images (${images.length} total)`}
+    >
+      <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+        {/* Header Actions */}
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button
-              variant="contained"
-              startIcon={<MdDownload />}
-              onClick={handleBulkDownload}
-              disabled={isDownloading}
+              variant={filter === 'all' ? 'contained' : 'outlined'}
+              onClick={() => setFilter('all')}
               size="small"
             >
-              {isDownloading ? 'Creating ZIP...' : `Download ZIP (${selectedImages.size})`}
-            </Button>
-            <Button variant="outlined" color="error" onClick={handleBulkDelete} size="small">
-              Delete {selectedImages.size}
+              All Images ({images.length})
             </Button>
             <Button
-              variant="outlined"
-              onClick={() => {
-                setSelectedImages(new Set());
-              }}
+              variant={filter === 'recent' ? 'contained' : 'outlined'}
+              onClick={() => setFilter('recent')}
               size="small"
             >
-              Clear Selection
+              Recent
             </Button>
           </Box>
-        )}
-      </Box>
 
-      {/* Search Bar */}
-      <Box sx={{ mb: 4 }}>
-        <TextField
-          fullWidth
-          placeholder="Search images by name, club, race, or crew..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <MdSearch size={20} color={theme.palette.text.secondary} />
-              </InputAdornment>
-            ),
-            endAdornment: searchTerm && (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchTerm('')}>
-                  <MdClear size={16} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-            },
-          }}
-        />
-
-        {searchTerm && (
-          <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>
-            {filteredImages.length === 0
-              ? `No images found matching "${searchTerm}"`
-              : `Found ${filteredImages.length} image${filteredImages.length === 1 ? '' : 's'}`}
-          </Typography>
-        )}
-      </Box>
-
-      {/* Images Grid */}
-      {filteredImages.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <MdImage size={64} color={theme.palette.text.disabled} />
-          <Typography
-            variant="h6"
-            sx={{
-              color: theme.palette.text.secondary,
-              mt: 2,
-            }}
+          <Button
+            variant="contained"
+            startIcon={<MdAdd />}
+            onClick={() => navigate('/generate')}
+            sx={{ px: 3 }}
           >
-            {allImages.length === 0
-              ? 'No images yet. Generate and save images to see them here.'
-              : 'No images match your filters.'}
-          </Typography>
+            Generate New Image
+          </Button>
         </Box>
-      ) : (
-        <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
-          {filteredImages.map((image) => (
-            <Grid
-              size={{ xs: 12 / 5 }}
-              key={image.id}
-              sx={{ display: 'flex', justifyContent: 'center', maxWidth: '20%', flexBasis: '20%' }}
-            >
-              <Card
-                onClick={() => handleImageSelection(image.id, !selectedImages.has(image.id))}
-                sx={{
-                  position: 'relative',
-                  cursor: 'pointer',
-                  backgroundColor: theme.palette.background.paper,
-                  border: selectedImages.has(image.id)
-                    ? `2px solid ${theme.palette.primary.main}`
-                    : `1px solid ${theme.palette.divider}`,
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                  transition: 'all 0.2s ease',
-                  display: 'inline-flex',
-                  flexDirection: 'column',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: theme.shadows[8],
-                    backgroundColor: selectedImages.has(image.id)
-                      ? `${theme.palette.primary.main}12`
-                      : `${theme.palette.primary.main}04`,
-                    '& .action-buttons': {
-                      opacity: 1,
-                    },
-                  },
-                }}
+
+        {images.length === 0 ? (
+          <Card sx={{ textAlign: 'center', py: 8 }}>
+            <CardContent>
+              <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 80, height: 80, mx: 'auto', mb: 3 }}>
+                <MdImage size={40} />
+              </Avatar>
+              <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+                No Images Yet
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
+                Start creating beautiful crew images by selecting a crew and template
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<MdAdd />}
+                onClick={() => navigate('/generate')}
+                sx={{ px: 4, py: 1.5 }}
               >
-                <Box
-                  sx={{
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                Generate Your First Image
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Grid container spacing={3}>
+            {images.map((image) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={image.id}>
+                <Card 
+                  sx={{ 
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: theme.shadows[8],
+                    }
                   }}
                 >
+                  {/* Image */}
                   <CardMedia
                     component="img"
-                    sx={{
-                      height: 260,
-                      objectFit: 'contain',
-                      display: 'block',
+                    height="200"
+                    image={image.thumbnailUrl || image.imageUrl}
+                    alt={`${image.crewName} - ${image.templateName}`}
+                    sx={{ 
+                      cursor: 'pointer',
+                      objectFit: 'cover'
                     }}
-                    image={getImageUrl(image.image_url || image.imagePath || '')}
-                    alt={image.image_name || image.imageName || ''}
+                    onClick={() => setFullscreenImage(image)}
                   />
+                  
+                  <CardContent sx={{ pb: 1 }}>
+                    {/* Title and Menu */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, flex: 1, pr: 1 }}>
+                        {image.crewName}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleMenuOpen(e, image)}
+                        sx={{ mt: -0.5 }}
+                      >
+                        <MdMoreVert />
+                      </IconButton>
+                    </Box>
 
-                  {/* Selection Checkbox */}
-                  <Checkbox
-                    checked={selectedImages.has(image.id)}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleImageSelection(image.id, e.target.checked);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    size="small"
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      zIndex: 2,
-                      padding: '4px',
-                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                      borderRadius: '50%',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                      },
-                      '&.Mui-checked': {
-                        backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 1)',
-                        },
-                      },
-                    }}
-                  />
+                    {/* Template and Date */}
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Template: {image.templateName}
+                    </Typography>
+                    
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
+                      <MdDateRange size={14} />
+                      {formatDate(image.createdAt)}
+                    </Typography>
 
-                  {/* Action buttons */}
-                  <Box
-                    className="action-buttons"
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      left: 8,
-                      display: 'flex',
-                      gap: 1,
-                      opacity: 0,
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                    <IconButton
+                    {/* Image Info */}
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      <Chip 
+                        label={`${image.dimensions.width}×${image.dimensions.height}`} 
+                        size="small" 
+                        variant="outlined"
+                      />
+                      <Chip 
+                        label={formatFileSize(image.fileSize)} 
+                        size="small" 
+                        variant="outlined"
+                      />
+                    </Box>
+                  </CardContent>
+
+                  {/* Quick Actions */}
+                  <Box sx={{ p: 1, pt: 0, display: 'flex', gap: 1 }}>
+                    <Button
+                      fullWidth
                       size="small"
-                      sx={{
-                        backgroundColor: 'rgba(25, 118, 210, 0.8)',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 0.9)',
-                        },
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleImageClick(image);
-                      }}
+                      startIcon={<MdDownload />}
+                      onClick={() => handleDownload(image)}
+                      variant="outlined"
                     >
-                      <MdImage size={18} />
-                    </IconButton>
-
+                      Download
+                    </Button>
                     <IconButton
+                      onClick={() => setFullscreenImage(image)}
                       size="small"
-                      sx={{
-                        backgroundColor: 'rgba(76, 175, 80, 0.8)',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgba(76, 175, 80, 0.9)',
-                        },
-                      }}
-                      onClick={(e) => handleDownloadImage(image, e)}
+                      sx={{ border: 1, borderColor: 'divider' }}
                     >
-                      <MdDownload size={18} />
-                    </IconButton>
-
-                    <IconButton
-                      size="small"
-                      sx={{
-                        backgroundColor: 'rgba(244, 67, 54, 0.8)',
-                        color: 'white',
-                        '&:hover': {
-                          backgroundColor: 'rgba(244, 67, 54, 0.9)',
-                        },
-                      }}
-                      onClick={(e) => handleDeleteImage(image.id, e)}
-                    >
-                      <MdDelete size={18} />
+                      <MdFullscreen />
                     </IconButton>
                   </Box>
-                </Box>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
 
-                <Box
-                  sx={{
-                    p: 1.5,
-                    maxWidth: 220,
-                    width: '100%',
-                  }}
-                >
-                  {/* Picture Name - Top */}
-                  <Tooltip
-                    title={(image.image_name || image.imageName || '').length > 30 ? (image.image_name || image.imageName || '') : ''}
-                    arrow
-                    disableHoverListener={(image.image_name || image.imageName || '').length <= 30}
-                  >
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        color: theme.palette.text.primary,
-                        fontWeight: 600,
-                        mb: 0.5,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontSize: '0.875rem',
-                        width: '100%',
-                        cursor: (image.image_name || image.imageName || '').length > 30 ? 'pointer' : 'default',
-                      }}
-                    >
-                      {image.image_name}
-                    </Typography>
-                  </Tooltip>
+        {/* Context Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={() => selectedImage && handleDownload(selectedImage)}>
+            <MdDownload style={{ marginRight: 8 }} />
+            Download
+          </MenuItem>
+          <MenuItem onClick={() => setFullscreenImage(selectedImage)}>
+            <MdFullscreen style={{ marginRight: 8 }} />
+            View Fullscreen
+          </MenuItem>
+          <MenuItem onClick={() => setDeleteDialogOpen(true)} sx={{ color: 'error.main' }}>
+            <MdDelete style={{ marginRight: 8 }} />
+            Delete
+          </MenuItem>
+        </Menu>
 
-                  {/* Club and Crew Name - Middle */}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: theme.palette.primary.main,
-                      fontSize: '0.8rem',
-                      fontWeight: 500,
-                      mb: 0.25,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {image.club_name} - {image.crew_name}
-                  </Typography>
-
-                  {/* Race Name - Bottom */}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: theme.palette.text.secondary,
-                      fontSize: '0.8rem',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {image.race_name}
-                  </Typography>
-                </Box>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      {/* Full Size Image Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        PaperProps={{
-          sx: {
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 2,
-            maxHeight: '80vh',
-          },
-        }}
-      >
-        <Box sx={{ position: 'relative' }}>
-          <IconButton
-            onClick={handleCloseDialog}
-            sx={{
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              zIndex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              },
-            }}
-          >
-            <MdClose />
-          </IconButton>
-
-          <DialogContent sx={{ p: 0 }}>
-            {selectedImage && (
-              <Box onClick={handleCloseDialog} sx={{ cursor: 'pointer' }}>
-                <img
-                  src={getImageUrl(selectedImage.image_url || selectedImage.imagePath || '')}
-                  alt={selectedImage.image_name || selectedImage.imageName || ''}
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    maxHeight: '80vh',
-                    objectFit: 'contain',
-                  }}
-                />
-              </Box>
-            )}
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+          <DialogTitle>Delete Image</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete "{selectedImage?.crewName} - {selectedImage?.templateName}"? 
+              This action cannot be undone.
+            </Typography>
           </DialogContent>
-        </Box>
-      </Dialog>
-    </Box>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleDelete} color="error" variant="contained">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Fullscreen Image Dialog */}
+        <Dialog 
+          open={Boolean(fullscreenImage)} 
+          onClose={() => setFullscreenImage(null)}
+          maxWidth="lg"
+          fullWidth
+        >
+          {fullscreenImage && (
+            <>
+              <DialogTitle>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6">
+                    {fullscreenImage.crewName} - {fullscreenImage.templateName}
+                  </Typography>
+                  <Button
+                    startIcon={<MdDownload />}
+                    onClick={() => handleDownload(fullscreenImage)}
+                    variant="outlined"
+                  >
+                    Download
+                  </Button>
+                </Box>
+              </DialogTitle>
+              <DialogContent>
+                <img
+                  src={fullscreenImage.imageUrl}
+                  alt={`${fullscreenImage.crewName} - ${fullscreenImage.templateName}`}
+                  style={{ width: '100%', height: 'auto', borderRadius: 8 }}
+                />
+                <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <Chip label={`${fullscreenImage.dimensions.width} × ${fullscreenImage.dimensions.height}`} />
+                  <Chip label={formatFileSize(fullscreenImage.fileSize)} />
+                  <Chip label={fullscreenImage.format.toUpperCase()} />
+                  <Chip label={formatDate(fullscreenImage.createdAt)} />
+                </Box>
+              </DialogContent>
+            </>
+          )}
+        </Dialog>
+      </Box>
+    </DashboardLayout>
   );
 };
 
