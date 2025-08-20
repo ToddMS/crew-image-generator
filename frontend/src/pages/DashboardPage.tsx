@@ -89,11 +89,11 @@ const DashboardPage: React.FC = () => {
   const getCurrentPage = () => {
     const path = window.location.pathname;
     if (path === '/') return 'dashboard';
+    if (path.includes('/crews/create') || path.includes('/create')) return 'create';
     if (path.includes('/crews')) return 'crews';
     if (path.includes('/templates')) return 'templates';
     if (path.includes('/generate')) return 'generate';
     if (path.includes('/gallery')) return 'gallery';
-    if (path.includes('/analytics')) return 'analytics';
     if (path.includes('/settings')) return 'settings';
     return 'dashboard';
   };
@@ -126,6 +126,12 @@ const DashboardPage: React.FC = () => {
               My Crews
             </button>
             <button 
+              className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews/create')}
+            >
+              Create Crew
+            </button>
+            <button 
               className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
               onClick={() => handleNavClick('/templates/create')}
             >
@@ -142,12 +148,6 @@ const DashboardPage: React.FC = () => {
               onClick={() => handleNavClick('/gallery')}
             >
               Gallery
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'analytics' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/analytics')}
-            >
-              Analytics
             </button>
             <button 
               className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
@@ -196,7 +196,6 @@ const DashboardPage: React.FC = () => {
 
         <div className="action-cards">
           <div className="action-card" onClick={() => handleActionClick('create')}>
-            <div className="action-icon">👥</div>
             <h3>Create Crew</h3>
             <p>Set up a new crew with members, cox, and coach details</p>
             <div className="action-arrow">
@@ -205,7 +204,6 @@ const DashboardPage: React.FC = () => {
           </div>
           
           <div className="action-card" onClick={() => handleActionClick('generate')}>
-            <div className="action-icon">🎨</div>
             <h3>Generate Images</h3>
             <p>Turn your crews into beautiful Instagram-ready images</p>
             <div className="action-arrow">
@@ -214,7 +212,6 @@ const DashboardPage: React.FC = () => {
           </div>
           
           <div className="action-card" onClick={() => handleActionClick('gallery')}>
-            <div className="action-icon">📸</div>
             <h3>View Gallery</h3>
             <p>Browse and download all your generated crew images</p>
             <div className="action-arrow">
@@ -228,9 +225,9 @@ const DashboardPage: React.FC = () => {
             <h2>Your Activity</h2>
             <button 
               className="view-all-btn"
-              onClick={() => navigate('/analytics')}
+              onClick={() => navigate('/crews')}
             >
-              View analytics →
+              View all crews →
             </button>
           </div>
           <div className="stats-grid">

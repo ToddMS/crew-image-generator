@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AuthModal from '../components/Auth/AuthModal';
 import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../context/RowgramThemeContext';
-import { useAnalytics } from '../context/AnalyticsContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
 import './CreateCrew.css';
@@ -38,7 +37,6 @@ const CreateCrewPage: React.FC = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useThemeMode();
-  const { trackEvent } = useAnalytics();
   const { showSuccess, showError } = useNotification();
 
   const [activeStep, setActiveStep] = useState(0);
@@ -65,17 +63,14 @@ const CreateCrewPage: React.FC = () => {
   const steps = [
     {
       label: 'Crew Information',
-      icon: '⚓',
       description: 'Basic details about your crew',
     },
     {
       label: 'Add Members',
-      icon: '👥',
       description: 'Enter crew member names',
     },
     {
       label: 'Review & Save',
-      icon: '✅',
       description: 'Review and save your crew',
     },
   ];
@@ -291,7 +286,6 @@ const CreateCrewPage: React.FC = () => {
     if (path.includes('/templates')) return 'templates';
     if (path.includes('/generate')) return 'generate';
     if (path.includes('/gallery')) return 'gallery';
-    if (path.includes('/analytics')) return 'analytics';
     if (path.includes('/settings')) return 'settings';
     return 'dashboard';
   };
@@ -318,9 +312,6 @@ const CreateCrewPage: React.FC = () => {
 
     setSaving(true);
     try {
-      const hasCox = boatClassHasCox(boatClass);
-      const allNames = hasCox ? [coxName, ...crewNames] : crewNames;
-
       const boatType = boatClassToBoatType(boatClass);
       const allCrewNames = [...(boatClassHasCox(boatClass) ? [coxName] : []), ...crewNames];
 
@@ -343,12 +334,6 @@ const CreateCrewPage: React.FC = () => {
       if (result.data) {
         clearDraft();
 
-        trackEvent(editingCrewId ? 'crew_updated' : 'crew_created', {
-          boatClass,
-          crewSize: allNames.length,
-          clubName,
-          raceName,
-        });
 
         const crewId = String(editingCrewId || result.data?.id);
         if (user && crewId && crewId !== 'undefined') {
@@ -511,23 +496,13 @@ const CreateCrewPage: React.FC = () => {
         return (
           <div className="form-container">
             <div className="crew-names-section">
-              <div className="crew-names-header">
-                <h3>Enter Crew Member Names</h3>
-                <p style={{ color: 'var(--gray-600)', margin: 0 }}>
-                  {boatClass} - {boatClassToSeats[boatClass]} rowers
-                  {boatClassHasCox(boatClass) && ' + coxswain'}
-                </p>
-              </div>
 
               {boatClassHasCox(boatClass) && (
                 <div className="cox-input">
-                  <div className="form-group">
-                    <label htmlFor="coxName">
-                      Coxswain <span className="required">*</span>
-                    </label>
+                  <div className="crew-name-input">
+                    <div className="seat-label">Coxswain <span className="required">*</span></div>
                     <input
                       type="text"
-                      id="coxName"
                       value={coxName}
                       onChange={(e) => setCoxName(e.target.value)}
                       className={showStep1Validation && !coxName.trim() ? 'error' : ''}
@@ -553,7 +528,7 @@ const CreateCrewPage: React.FC = () => {
                   
                   return (
                     <div key={index} className="crew-name-input">
-                      <div className="seat-label">{seatName}</div>
+                      <div className="seat-label">{seatName} <span className="required">*</span></div>
                       <input
                         type="text"
                         value={name}
@@ -728,30 +703,6 @@ const CreateCrewPage: React.FC = () => {
       </nav>
 
       <div className="container">
-        {/* Header */}
-        <div className="create-crew-header">
-          <h1>{editingCrewId ? 'Edit Your Crew' : 'Create New Crew'}</h1>
-          <p>Set up your rowing crew with all the details and member information</p>
-        </div>
-
-        {/* Progress Section */}
-        <div className="progress-section">
-          <div className="progress-header">
-            <span className="progress-text">
-              Step {activeStep + 1} of {steps.length}
-            </span>
-            <span className="progress-text">
-              {Math.round(((activeStep + 1) / steps.length) * 100)}% complete
-            </span>
-          </div>
-          <div className="progress-bar-container">
-            <div 
-              className="progress-bar" 
-              style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
         {/* Stepper */}
         <div className="stepper">
           {steps.map((step, index) => (
@@ -763,7 +714,7 @@ const CreateCrewPage: React.FC = () => {
               }`}
             >
               <div className="step-icon">
-                {completedSteps.has(index) ? '✓' : step.icon}
+                {completedSteps.has(index) ? '✓' : (index + 1)}
               </div>
               <div className="step-content">
                 <div className="step-label">{step.label}</div>

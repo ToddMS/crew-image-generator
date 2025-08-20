@@ -8,13 +8,11 @@ import { IoHomeOutline, IoPeopleOutline } from 'react-icons/io5';
 import { MdPhotoLibrary, MdInsights } from 'react-icons/md';
 import { PiSquaresFourLight } from 'react-icons/pi';
 import { useAuth } from '../../context/AuthContext';
-import { useAnalytics } from '../../context/AnalyticsContext';
 import AuthModal from '../Auth/AuthModal';
 import UserProfileDropdown from '../Auth/UserProfileDropdown';
 
 const HeaderComponent: React.FC = () => {
   const { user, isAdmin } = useAuth();
-  const { trackEvent } = useAnalytics();
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,7 +58,6 @@ const HeaderComponent: React.FC = () => {
     if (!isAdmin()) {
       return;
     }
-    trackEvent('analytics_viewed');
     navigate('/analytics');
   };
 
