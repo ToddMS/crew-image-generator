@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AuthModal from '../components/Auth/AuthModal';
-import { useAuth } from '../context/AuthContext';
-import { useThemeMode } from '../context/RowgramThemeContext';
-import { useNotification } from '../context/NotificationContext';
-import { ApiService } from '../services/api.service';
+import AuthModal from '../../components/Auth/AuthModal';
+import { useAuth } from '../../context/AuthContext';
+import { useThemeMode } from '../../context/RowgramThemeContext';
+import { useNotification } from '../../context/NotificationContext';
+import { ApiService } from '../../services/api.service';
 import './CreateCrew.css';
 
 const boatClassToSeats: Record<string, number> = {

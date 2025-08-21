@@ -1,14 +1,36 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AuthModal from '../components/Auth/AuthModal';
-import { useAuth } from '../context/AuthContext';
-import { useThemeMode } from '../context/RowgramThemeContext';
-import { useNotification } from '../context/NotificationContext';
-import { ApiService } from '../services/api.service';
-import { Crew } from '../types/crew.types';
+import AuthModal from '../../components/Auth/AuthModal';
+import { useAuth } from '../../context/AuthContext';
+import { useThemeMode } from '../../context/RowgramThemeContext';
+import { useNotification } from '../../context/NotificationContext';
+import { ApiService } from '../../services/api.service';
+import { Crew } from '../../types/crew.types';
 import './MyCrews.css';
 
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
+
+const convertToCompactSeatLabel = (seatLabel: string): string => {
+  // Convert any existing seat label format to compact format
+  const labelMap: Record<string, string> = {
+    'Cox': 'C',
+    'Coxswain': 'C',
+    'Stroke Seat': 'S',
+    'Stroke': 'S',
+    '8 Seat': '8',
+    '7 Seat': '7',
+    '6 Seat': '6',
+    '5 Seat': '5',
+    '4 Seat': '4',
+    '3 Seat': '3',
+    '2 Seat': '2',
+    'Bow Seat': 'B',
+    'Bow': 'B',
+    'Single': 'S'
+  };
+  
+  return labelMap[seatLabel] || seatLabel;
+};
 
 interface SavedCrew extends Crew {
   boatClub: string;
@@ -32,6 +54,7 @@ const MyCrewsPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
   const [showGeneratePanel, setShowGeneratePanel] = useState<boolean>(false);
+  const [expandedCrewMembers, setExpandedCrewMembers] = useState<Set<string>>(new Set());
 
   const handleNavClick = (path: string) => {
     navigate(path);
@@ -76,31 +99,22 @@ const MyCrewsPage: React.FC = () => {
       if (result.data) {
         const transformedCrews = result.data.map((crew) => {
           const getSeatLabel = (idx: number, totalRowers: number, hasCox: boolean) => {
-            if (hasCox && idx === 0) return 'Cox';
+            if (hasCox && idx === 0) return 'C';
             const rowerIdx = hasCox ? idx - 1 : idx;
 
             if (totalRowers === 8) {
-              const seats = [
-                'Stroke Seat',
-                '7 Seat',
-                '6 Seat',
-                '5 Seat',
-                '4 Seat',
-                '3 Seat',
-                '2 Seat',
-                'Bow',
-              ];
+              const seats = ['S', '7', '6', '5', '4', '3', '2', 'B'];
               return seats[rowerIdx];
             } else if (totalRowers === 4) {
-              const seats = ['Stroke Seat', '3 Seat', '2 Seat', 'Bow'];
+              const seats = ['S', '3', '2', 'B'];
               return seats[rowerIdx];
             } else if (totalRowers === 2) {
-              const seats = ['Stroke Seat', 'Bow'];
+              const seats = ['S', 'B'];
               return seats[rowerIdx];
             } else if (totalRowers === 1) {
-              return 'Single';
+              return 'S';
             }
-            return `${rowerIdx + 1} Seat`;
+            return `${rowerIdx + 1}`;
           };
 
           const totalRowers = crew.boatType.seats;
@@ -158,12 +172,31 @@ const MyCrewsPage: React.FC = () => {
     }
   };
 
+  const distributeCrewsIntoColumns = (crews: SavedCrew[], columnCount: number = 3) => {
+    const columns: SavedCrew[][] = Array.from({ length: columnCount }, () => []);
+    
+    crews.forEach((crew, index) => {
+      const columnIndex = index % columnCount;
+      columns[columnIndex].push(crew);
+    });
+    
+    return columns;
+  };
+
   const handleDeleteCrew = async (index: number) => {
     const crew = savedCrews[index];
+    
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete "${crew.boatName}"?\n\nThis action cannot be undone.`
+    );
+    
+    if (!isConfirmed) {
+      return;
+    }
+    
     try {
       await ApiService.deleteCrew(crew.id);
       setSavedCrews((prev) => prev.filter((_, idx) => idx !== index));
-
 
       showSuccess(`Crew "${crew.boatName}" deleted successfully!`);
     } catch (error) {
@@ -215,6 +248,15 @@ const MyCrewsPage: React.FC = () => {
 
     if (crewsToDelete.length === 0) return;
 
+    const crewNames = crewsToDelete.map(crew => crew.boatName).join(', ');
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}?\n\nCrews: ${crewNames}\n\nThis action cannot be undone.`
+    );
+    
+    if (!isConfirmed) {
+      return;
+    }
+
     try {
       await Promise.all(crewsToDelete.map((crew) => ApiService.deleteCrew(crew.id)));
 
@@ -229,6 +271,16 @@ const MyCrewsPage: React.FC = () => {
       console.error('Error in bulk delete:', error);
       showError('Failed to delete some crews. Please try again.');
     }
+  };
+
+  const toggleCrewMembersExpansion = (crewId: string) => {
+    const newExpanded = new Set(expandedCrewMembers);
+    if (newExpanded.has(crewId)) {
+      newExpanded.delete(crewId);
+    } else {
+      newExpanded.add(crewId);
+    }
+    setExpandedCrewMembers(newExpanded);
   };
 
   const currentPage = getCurrentPage();
@@ -729,20 +781,22 @@ const MyCrewsPage: React.FC = () => {
           </div>
         )}
 
-        <div className="controls-section">
-          <div className="controls-left">
-            <div className="crew-count">
-              {selectedCrews.size > 0 ? (
-                <span className="selection-count">
-                  {selectedCrews.size} of {savedCrews.length} crews selected
-                </span>
-              ) : (
-                `${savedCrews.length} crew${savedCrews.length !== 1 ? 's' : ''} in your account`
-              )}
+        <div className="crews-section">
+          <div className="section-header">
+            <div className="section-header-left">
+              <span className="section-title">Your Crews</span>
+              <span className="section-badge">{getSortedCrews().length}</span>
+              <div className="crew-count">
+                {selectedCrews.size > 0 ? (
+                  <span className="selection-count">
+                    {selectedCrews.size} of {savedCrews.length} crews selected
+                  </span>
+                ) : (
+                  ``
+                )}
+              </div>
             </div>
-          </div>
-          
-          <div className="controls-right">
+            <div className='crew-dropdown'>
             {savedCrews.length > 0 && (
               <div className="sort-dropdown">
                 <select 
@@ -757,21 +811,18 @@ const MyCrewsPage: React.FC = () => {
                 </select>
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="crews-section">
-          <div className="section-header">
-            <span className="section-title">Your Crews</span>
-            <span className="section-badge">{getSortedCrews().length}</span>
+            </div>
           </div>
           
           <div className="crews-grid">
-            {getSortedCrews().map((crew) => (
-              <div 
-                key={crew.id} 
-                className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
-              >
+            {distributeCrewsIntoColumns(getSortedCrews()).map((column, columnIndex) => (
+              <div key={columnIndex} className="crew-column">
+                {column.map((crew) => (
+                  <div 
+                    key={crew.id} 
+                    className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
+                    onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
+                  >
                 <div className="crew-card-header">
                   <div className="crew-card-title">
                     <h3>{crew.boatName}</h3>
@@ -787,73 +838,112 @@ const MyCrewsPage: React.FC = () => {
                   ></div>
                 </div>
 
-                <div className="crew-info">
-                  <div className="crew-info-item">
-                    <span className="crew-info-label">Race:</span>
-                    <span className="crew-info-value">{crew.raceName}</span>
+                <div className="crew-compact-info">
+                  <div className="crew-compact-row">
+                    <span className="crew-compact-label">Race:</span>
+                    <span className="crew-compact-value">{crew.raceName}</span>
                   </div>
-                  <div className="crew-info-item">
-                    <span className="crew-info-label">Boat Class:</span>
-                    <span className="crew-info-value">{crew.boatClass}</span>
-                  </div>
-                  {crew.coachName && (
-                    <div className="crew-info-item">
-                      <span className="crew-info-label">Coach:</span>
-                      <span className="crew-info-value">{crew.coachName}</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="crew-members">
-                  <div className="crew-members-title">Crew Members</div>
-                  <div className="crew-members-grid">
-                    {crew.crewMembers.slice(0, 6).map((member, idx) => (
-                      <div key={idx} className="crew-member">
-                        <div className="crew-member-seat">{member.seat}</div>
-                        <div className="crew-member-name">{member.name}</div>
-                      </div>
-                    ))}
-                    {crew.crewMembers.length > 6 && (
-                      <div className="crew-member">
-                        <div className="crew-member-seat">+</div>
-                        <div className="crew-member-name">
-                          {crew.crewMembers.length - 6} more
-                        </div>
-                      </div>
-                    )}
+                  <div 
+                    className="crew-members-header" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCrewMembersExpansion(crew.id);
+                    }}
+                  >
+                    <span className="crew-members-title">
+                      {crew.crewMembers.length} Crew Members
+                    </span>
+                    <span className={`crew-members-toggle ${expandedCrewMembers.has(crew.id) ? 'expanded' : ''}`}>
+                      ▼
+                    </span>
                   </div>
+                  
+                  
+                  {expandedCrewMembers.has(crew.id) && (
+                    <div 
+                      className="crew-boat-layout"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCrewMembersExpansion(crew.id);
+                      }}
+                    >
+                      {/* Coach floated left */}
+                      {crew.coachName && (
+                        <div className="coach-position">
+                          <div className="crew-member-seat coach">Coach</div>
+                          <div className="crew-member-name">{crew.coachName}</div>
+                        </div>
+                      )}
+                      
+                      {/* Cox at top center if exists */}
+                      {crew.crewMembers.some(member => convertToCompactSeatLabel(member.seat) === 'C') && (
+                        <div className="cox-position">
+                          {crew.crewMembers
+                            .filter(member => convertToCompactSeatLabel(member.seat) === 'C')
+                            .map((member, idx) => (
+                              <div key={idx} className="crew-member-boat">
+                                <div className="crew-member-seat">{convertToCompactSeatLabel(member.seat)}</div>
+                                <div className="crew-member-name">{member.name}</div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                      
+                      {/* Rowers in single column */}
+                      <div className="rowers-layout">
+                        {crew.crewMembers
+                          .filter(member => convertToCompactSeatLabel(member.seat) !== 'C')
+                          .map((member, idx) => (
+                            <div key={idx} className="rower-position">
+                              <div className="crew-member-boat">
+                                <div className="crew-member-seat">{convertToCompactSeatLabel(member.seat)}</div>
+                                <div className="crew-member-name">{member.name}</div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="crew-actions">
                   <button 
                     className="crew-action-btn primary"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
                       handleEditCrew(originalIndex);
                     }}
                   >
-                    ✏️ Edit
+                    Edit
                   </button>
                   <button 
                     className="crew-action-btn secondary"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       navigate('/generate', {
                         state: { selectedCrewIds: [crew.id] }
                       });
                     }}
                   >
-                    🎨 Generate
+                    Generate
                   </button>
                   <button 
                     className="crew-action-btn danger"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
                       handleDeleteCrew(originalIndex);
                     }}
                   >
-                    🗑️ Delete
+                    Delete
                   </button>
                 </div>
+              </div>
+                ))}
               </div>
             ))}
           </div>

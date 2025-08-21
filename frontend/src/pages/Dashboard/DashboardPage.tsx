@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useNotification } from '../context/NotificationContext';
-import { useThemeMode } from '../context/RowgramThemeContext';
-import { ApiService } from '../services/api.service';
-import AuthModal from '../components/Auth/AuthModal';
+import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
+import { useThemeMode } from '../../context/RowgramThemeContext';
+import { ApiService } from '../../services/api.service';
+import AuthModal from '../../components/Auth/AuthModal';
 import './Dashboard.css';
 
 interface DashboardStats {
@@ -256,15 +256,6 @@ const DashboardPage: React.FC = () => {
                   {loading ? '...' : user ? stats.totalImages : '—'}
                 </div>
                 <div className="stat-label">Images Created</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📅</div>
-              <div className="stat-content">
-                <div className="stat-value">
-                  {loading ? '...' : user ? stats.lastGenerated : '—'}
-                </div>
-                <div className="stat-label">Last Generated</div>
               </div>
             </div>
           </div>
