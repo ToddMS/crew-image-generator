@@ -407,6 +407,13 @@
   border-bottom: 2px solid var(--gray-200);
 }
 
+.section-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.5rem;
+}
+
 .section-header-left {
   display: flex;
   align-items: center;
@@ -426,6 +433,80 @@
   border-radius: 1rem;
   font-size: 0.875rem;
   font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  box-sizing: border-box;
+}
+
+.section-badge.selection {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  box-sizing: border-box;
+}
+
+/* Inline Selection Actions */
+.selection-actions-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+}
+
+.btn-text-small {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-500);
+}
+
+.btn-text-small:hover {
+  color: var(--gray-900);
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+}
+
+.btn-outline-danger-small {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius);
+}
+
+.btn-outline-danger-small:hover {
+  background: var(--error);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.btn-primary-small {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--primary-dark);
+}
+
+.btn-primary-small:hover {
+  background: var(--primary);
+  color: var(--white);
+  transform: translateY(-1px);
 }
 
 /* Crews Grid */
@@ -688,7 +769,7 @@
   display: flex;
   align-items: center;
   gap: 0.375rem;
-  align-self: center;
+  align-self: flex-start;
 }
 
 .rowers-layout {
@@ -782,6 +863,18 @@
 
 .crew-actions {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.crew-actions-left {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.crew-actions-right {
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -799,35 +892,37 @@
 }
 
 .crew-action-btn.primary {
-  background: var(--primary);
-  color: var(--white);
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: none;
 }
 
 .crew-action-btn.primary:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
+  background: var(--gray-200);
 }
 
 .crew-action-btn.secondary {
-  background: var(--gray-100);
-  color: var(--gray-700);
-  border: 1px solid var(--gray-300);
+  background: var(--primary-light);
+  color: var(--primary);
+  border: none;
 }
 
 .crew-action-btn.secondary:hover {
-  background: var(--gray-200);
-  border-color: var(--gray-400);
+  background: var(--primary);
+  color: var(--white);
+  transform: translateY(-1px);
 }
 
 .crew-action-btn.danger {
   background: rgba(239, 68, 68, 0.1);
   color: var(--error);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: none;
 }
 
 .crew-action-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: var(--error);
+  background: var(--error);
+  color: var(--white);
+  transform: translateY(-1px);
 }
 
 /* Sticky Selection Bar */

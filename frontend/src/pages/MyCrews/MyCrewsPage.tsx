@@ -10,28 +10,6 @@ import './MyCrews.css';
 
 const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass === '4+';
 
-const convertToCompactSeatLabel = (seatLabel: string): string => {
-  // Convert any existing seat label format to compact format
-  const labelMap: Record<string, string> = {
-    'Cox': 'C',
-    'Coxswain': 'C',
-    'Stroke Seat': 'S',
-    'Stroke': 'S',
-    '8 Seat': '8',
-    '7 Seat': '7',
-    '6 Seat': '6',
-    '5 Seat': '5',
-    '4 Seat': '4',
-    '3 Seat': '3',
-    '2 Seat': '2',
-    'Bow Seat': 'B',
-    'Bow': 'B',
-    'Single': 'S'
-  };
-  
-  return labelMap[seatLabel] || seatLabel;
-};
-
 interface SavedCrew extends Crew {
   boatClub: string;
   boatName: string;
@@ -316,7 +294,7 @@ const MyCrewsPage: React.FC = () => {
               </button>
               <button 
                 className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates/create')}
+                onClick={() => handleNavClick('/templates')}
               >
                 Templates
               </button>
@@ -412,7 +390,7 @@ const MyCrewsPage: React.FC = () => {
               </button>
               <button 
                 className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates/create')}
+                onClick={() => handleNavClick('/templates')}
               >
                 Templates
               </button>
@@ -508,7 +486,7 @@ const MyCrewsPage: React.FC = () => {
               </button>
               <button 
                 className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates/create')}
+                onClick={() => handleNavClick('/templates')}
               >
                 Templates
               </button>
@@ -609,7 +587,7 @@ const MyCrewsPage: React.FC = () => {
               </button>
               <button 
                 className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates/create')}
+                onClick={() => handleNavClick('/templates')}
               >
                 Templates
               </button>
@@ -711,7 +689,7 @@ const MyCrewsPage: React.FC = () => {
             </button>
             <button 
               className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/templates/create')}
+              onClick={() => handleNavClick('/templates')}
             >
               Templates
             </button>
@@ -788,7 +766,7 @@ const MyCrewsPage: React.FC = () => {
               <span className="section-badge">{getSortedCrews().length}</span>
               <div className="crew-count">
                 {selectedCrews.size > 0 ? (
-                  <span className="selection-count">
+                  <span className="section-badge selection">
                     {selectedCrews.size} of {savedCrews.length} crews selected
                   </span>
                 ) : (
@@ -796,21 +774,52 @@ const MyCrewsPage: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className='crew-dropdown'>
-            {savedCrews.length > 0 && (
-              <div className="sort-dropdown">
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value)}
-                  aria-label="Sort crews by"
-                >
-                  <option value="recent">Recently Created</option>
-                  <option value="club">Club Name</option>
-                  <option value="race">Race Name</option>
-                  <option value="boat_class">Boat Class</option>
-                </select>
+            <div className="section-header-right">
+              {selectedCrews.size > 0 && (
+                <div className="selection-actions-inline">
+                  <button
+                    className="btn btn-text-small"
+                    onClick={() => setSelectedCrews(new Set())}
+                  >
+                    Clear ({selectedCrews.size})
+                  </button>
+                  <button
+                    className="btn btn-outline-danger-small"
+                    onClick={handleBulkDelete}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="btn btn-primary-small"
+                    onClick={() => {
+                      navigate('/generate', {
+                        state: {
+                          selectedCrewIds: Array.from(selectedCrews),
+                        },
+                      });
+                    }}
+                  >
+                    Generate
+                  </button>
+                </div>
+              )}
+              
+              <div className='crew-dropdown'>
+              {savedCrews.length > 0 && (
+                <div className="sort-dropdown">
+                  <select 
+                    value={sortBy} 
+                    onChange={(e) => setSortBy(e.target.value)}
+                    aria-label="Sort crews by"
+                  >
+                    <option value="recent">Recently Created</option>
+                    <option value="club">Club Name</option>
+                    <option value="race">Race Name</option>
+                    <option value="boat_class">Boat Class</option>
+                  </select>
+                </div>
+              )}
               </div>
-            )}
             </div>
           </div>
           
@@ -879,13 +888,13 @@ const MyCrewsPage: React.FC = () => {
                       )}
                       
                       {/* Cox at top center if exists */}
-                      {crew.crewMembers.some(member => convertToCompactSeatLabel(member.seat) === 'C') && (
+                      {crew.crewMembers.some(member => member.seat === 'C') && (
                         <div className="cox-position">
                           {crew.crewMembers
-                            .filter(member => convertToCompactSeatLabel(member.seat) === 'C')
+                            .filter(member => member.seat === 'C')
                             .map((member, idx) => (
                               <div key={idx} className="crew-member-boat">
-                                <div className="crew-member-seat">{convertToCompactSeatLabel(member.seat)}</div>
+                                <div className="crew-member-seat">{member.seat}</div>
                                 <div className="crew-member-name">{member.name}</div>
                               </div>
                             ))}
@@ -895,11 +904,11 @@ const MyCrewsPage: React.FC = () => {
                       {/* Rowers in single column */}
                       <div className="rowers-layout">
                         {crew.crewMembers
-                          .filter(member => convertToCompactSeatLabel(member.seat) !== 'C')
+                          .filter(member => member.seat !== 'C')
                           .map((member, idx) => (
                             <div key={idx} className="rower-position">
                               <div className="crew-member-boat">
-                                <div className="crew-member-seat">{convertToCompactSeatLabel(member.seat)}</div>
+                                <div className="crew-member-seat">{member.seat}</div>
                                 <div className="crew-member-name">{member.name}</div>
                               </div>
                             </div>
@@ -910,37 +919,41 @@ const MyCrewsPage: React.FC = () => {
                 </div>
 
                 <div className="crew-actions">
-                  <button 
-                    className="crew-action-btn primary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-                      handleEditCrew(originalIndex);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    className="crew-action-btn secondary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/generate', {
-                        state: { selectedCrewIds: [crew.id] }
-                      });
-                    }}
-                  >
-                    Generate
-                  </button>
-                  <button 
-                    className="crew-action-btn danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-                      handleDeleteCrew(originalIndex);
-                    }}
-                  >
-                    Delete
-                  </button>
+                  <div className="crew-actions-left">
+                    <button 
+                      className="crew-action-btn primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                        handleEditCrew(originalIndex);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  <div className="crew-actions-right">
+                    <button 
+                      className="crew-action-btn secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/generate', {
+                          state: { selectedCrewIds: [crew.id] }
+                        });
+                      }}
+                    >
+                      Generate
+                    </button>
+                    <button 
+                      className="crew-action-btn danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                        handleDeleteCrew(originalIndex);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
                 ))}
@@ -950,65 +963,6 @@ const MyCrewsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className={`selection-bar ${selectedCrews.size > 0 ? 'visible' : ''}`}>
-        <div className="selection-bar-content">
-          <div className="selection-info">
-            <div className="selection-count-badge">
-              {selectedCrews.size}
-            </div>
-            <span className="selection-text">
-              {selectedCrews.size === 1 ? 'crew selected' : 'crews selected'}
-            </span>
-
-            <div className="selection-previews">
-              {Array.from(selectedCrews)
-                .slice(0, 3)
-                .map((crewId) => {
-                  const crew = savedCrews.find((c) => c.id === crewId);
-                  return crew ? (
-                    <div key={crewId} className="selection-preview-chip">
-                      {crew.boatClub}
-                    </div>
-                  ) : null;
-                })}
-              {selectedCrews.size > 3 && (
-                <span className="selection-more">
-                  +{selectedCrews.size - 3} more
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="selection-actions">
-            <button
-              className="btn btn-text"
-              onClick={() => setSelectedCrews(new Set())}
-            >
-              Clear Selection
-            </button>
-
-            <button
-              className="btn btn-outline-danger"
-              onClick={handleBulkDelete}
-            >
-              🗑️ Delete {selectedCrews.size}
-            </button>
-
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                navigate('/generate', {
-                  state: {
-                    selectedCrewIds: Array.from(selectedCrews),
-                  },
-                });
-              }}
-            >
-              🎨 Generate Images
-            </button>
-          </div>
-        </div>
-      </div>
       
       <AuthModal 
         open={showAuthModal} 

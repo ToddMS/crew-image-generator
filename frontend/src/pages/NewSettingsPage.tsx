@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useThemeMode } from '../context/RowgramThemeContext';
 import { useNotification } from '../context/NotificationContext';
 import { ApiService } from '../services/api.service';
+import { ClubPreset } from '../types/club.types';
+import ClubPresetsComponent from '../components/ClubPresets/ClubPresetsComponent';
 import './Settings.css';
 
 interface ClubSettings {
@@ -37,7 +39,18 @@ const NewSettingsPage: React.FC = () => {
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileEmail, setProfileEmail] = useState(user?.email || '');
 
-  // Club settings
+  // Club presets
+  const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  const [newPreset, setNewPreset] = useState<Partial<ClubPreset>>({
+    club_name: '',
+    primary_color: '#2563eb',
+    secondary_color: '#10b981',
+    is_default: false
+  });
+  const [editingPresetId, setEditingPresetId] = useState<number | null>(null);
+
+  // Legacy club settings (for backward compatibility)
   const [clubSettings, setClubSettings] = useState<ClubSettings>({
     clubName: user?.club_name || '',
     primaryColor: '#2563eb',
@@ -77,10 +90,113 @@ const NewSettingsPage: React.FC = () => {
 
   const loadUserSettings = async () => {
     try {
+      // Load club presets
+      await loadClubPresets();
       // Load user preferences and club settings from API
       // For now, we'll use default values
     } catch (error) {
       console.error('Error loading user settings:', error);
+    }
+  };
+
+  const loadClubPresets = async () => {
+    try {
+      const response = await ApiService.getClubPresets();
+      if (response.success && response.data) {
+        setClubPresets(response.data);
+        // Set selected preset to default if available
+        const defaultPreset = response.data.find((preset: ClubPreset) => preset.is_default);
+        if (defaultPreset) {
+          setSelectedPresetId(defaultPreset.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading club presets:', error);
+      // Set some mock data for development
+      setClubPresets([
+        {
+          id: 1,
+          club_name: 'Thames Rowing Club',
+          primary_color: '#1e40af',
+          secondary_color: '#3b82f6',
+          is_default: true
+        },
+        {
+          id: 2,
+          club_name: 'Oxford University BC',
+          primary_color: '#1e3a8a',
+          secondary_color: '#60a5fa',
+          is_default: false
+        }
+      ]);
+      setSelectedPresetId(1);
+    }
+  };
+
+  const handleSaveNewPreset = async () => {
+    if (!newPreset.club_name || !newPreset.primary_color || !newPreset.secondary_color) {
+      showError('Please fill in all required fields');
+      return;
+    }
+
+    setSaving('new-preset');
+    try {
+      const response = await ApiService.createClubPreset(newPreset as Omit<ClubPreset, 'id'>);
+      if (response.success && response.data) {
+        setClubPresets(prev => [...prev, response.data]);
+        setNewPreset({
+          club_name: '',
+          primary_color: '#2563eb',
+          secondary_color: '#10b981',
+          is_default: false
+        });
+        showSuccess('Club preset saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving club preset:', error);
+      showError('Failed to save club preset. Please try again.');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleUpdatePreset = async (presetId: number, updatedPreset: Partial<ClubPreset>) => {
+    setSaving(`preset-${presetId}`);
+    try {
+      const response = await ApiService.updateClubPreset(presetId, updatedPreset);
+      if (response.success && response.data) {
+        setClubPresets(prev => 
+          prev.map(preset => preset.id === presetId ? { ...preset, ...updatedPreset } : preset)
+        );
+        setEditingPresetId(null);
+        showSuccess('Club preset updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating club preset:', error);
+      showError('Failed to update club preset. Please try again.');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleDeletePreset = async (presetId: number) => {
+    if (!confirm('Are you sure you want to delete this club preset?')) return;
+
+    setSaving(`delete-${presetId}`);
+    try {
+      const response = await ApiService.deleteClubPreset(presetId);
+      if (response.success) {
+        setClubPresets(prev => prev.filter(preset => preset.id !== presetId));
+        if (selectedPresetId === presetId) {
+          setSelectedPresetId(null);
+        }
+        showSuccess('Club preset deleted successfully!');
+      }
+    } catch (error) {
+      console.error('Error deleting club preset:', error);
+      showError('Failed to delete club preset. Please try again.');
+    } finally {
+      setSaving(null);
     }
   };
 
@@ -396,7 +512,7 @@ const NewSettingsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Club Settings */}
+          {/* Club Presets */}
           <div className="settings-section">
             <div 
               className={`section-header ${expandedSections.has('club') ? 'expanded' : ''}`}
@@ -405,87 +521,13 @@ const NewSettingsPage: React.FC = () => {
               <div className="section-title">
                 <div className="section-title-content">
                   <span className="section-icon">🏛️</span>
-                  Club Settings
+                  Club Presets
                 </div>
                 <span className="expand-icon">▼</span>
               </div>
             </div>
             <div className={`section-content ${expandedSections.has('club') ? 'expanded' : ''}`}>
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Club Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={clubSettings.clubName}
-                    onChange={(e) => setClubSettings(prev => ({ ...prev, clubName: e.target.value }))}
-                    placeholder="e.g., Thames Rowing Club"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Club Description</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={clubSettings.description || ''}
-                    onChange={(e) => setClubSettings(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Brief description of your club"
-                  />
-                </div>
-              </div>
-              
-              <div className="color-picker-group">
-                <div className="color-picker-item">
-                  <label className="color-label">Primary Color</label>
-                  <div 
-                    className="color-preview" 
-                    style={{ backgroundColor: clubSettings.primaryColor }}
-                  >
-                    <input
-                      type="color"
-                      className="color-input"
-                      value={clubSettings.primaryColor}
-                      onChange={(e) => setClubSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="color-picker-item">
-                  <label className="color-label">Secondary Color</label>
-                  <div 
-                    className="color-preview" 
-                    style={{ backgroundColor: clubSettings.secondaryColor }}
-                  >
-                    <input
-                      type="color"
-                      className="color-input"
-                      value={clubSettings.secondaryColor}
-                      onChange={(e) => setClubSettings(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="file-upload">
-                <div className="file-upload-icon">📁</div>
-                <div className="file-upload-text">Upload Club Logo</div>
-                <div className="file-upload-hint">PNG, JPG, or SVG up to 2MB</div>
-                <input
-                  type="file"
-                  className="file-input"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                />
-              </div>
-
-              <div className="form-actions">
-                <button 
-                  className={`btn btn-primary ${saving === 'club' ? 'loading' : ''}`}
-                  onClick={handleSaveClubSettings}
-                  disabled={saving === 'club'}
-                >
-                  {saving === 'club' ? 'Saving...' : '💾 Save Club Settings'}
-                </button>
-              </div>
+              <ClubPresetsComponent showManagement={true} />
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
+import { ClubPreset } from '../../types/club.types';
 import './CreateCrew.css';
 
 const boatClassToSeats: Record<string, number> = {
@@ -45,6 +46,58 @@ const CreateCrewPage: React.FC = () => {
     sessionStorage.setItem('create_crew_step', activeStep.toString());
     window.dispatchEvent(new CustomEvent('step-changed'));
   }, [activeStep]);
+
+  useEffect(() => {
+    loadClubPresets();
+  }, []);
+
+  const loadClubPresets = async () => {
+    try {
+      const response = await ApiService.getClubPresets();
+      if (response.success && response.data) {
+        setClubPresets(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading club presets:', error);
+      // Set some mock data for development
+      setClubPresets([
+        {
+          id: 1,
+          club_name: 'Thames Rowing Club',
+          primary_color: '#1e40af',
+          secondary_color: '#3b82f6',
+          is_default: true
+        },
+        {
+          id: 2,
+          club_name: 'Oxford University BC',
+          primary_color: '#1e3a8a',
+          secondary_color: '#60a5fa',
+          is_default: false
+        },
+        {
+          id: 3,
+          club_name: 'Cambridge University BC',
+          primary_color: '#0f766e',
+          secondary_color: '#14b8a6',
+          is_default: false
+        }
+      ]);
+    }
+  };
+
+  const handleClubPresetSelect = (presetId: number) => {
+    setSelectedPresetId(presetId);
+    const preset = clubPresets.find(p => p.id === presetId);
+    if (preset) {
+      setClubName(preset.club_name);
+      setShowClubPresets(false);
+    }
+  };
+
+  const handleToggleClubPresets = () => {
+    setShowClubPresets(!showClubPresets);
+  };
 
   useEffect(() => {
     const handleHeaderBack = () => {
@@ -88,6 +141,26 @@ const CreateCrewPage: React.FC = () => {
   const [showStep1Validation, setShowStep1Validation] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [preserveStateAfterLogin, setPreserveStateAfterLogin] = useState(false);
+  
+  // Club presets
+  const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  const [showClubPresets, setShowClubPresets] = useState(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.form-group') || !target.closest('[data-club-presets]')) {
+        setShowClubPresets(false);
+      }
+    };
+
+    if (showClubPresets) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showClubPresets]);
 
   const clearAllFields = () => {
     setBoatClass('');
@@ -274,6 +347,32 @@ const CreateCrewPage: React.FC = () => {
     setCrewNames((names) => names.map((n, i) => (i === idx ? value : n)));
   };
 
+  const focusNextInput = (currentElement: HTMLElement) => {
+    const form = currentElement.closest('form') || currentElement.closest('.form-container');
+    if (!form) return;
+    
+    const inputs = Array.from(form.querySelectorAll('input, select')) as HTMLElement[];
+    const currentIndex = inputs.indexOf(currentElement);
+    
+    if (currentIndex < inputs.length - 1) {
+      inputs[currentIndex + 1].focus();
+    } else if (activeStep === 0 && canProceedFromStep(0)) {
+      // On step 0, if we're on the last input (coach name), go to next step
+      proceedToNextStep();
+    } else if (activeStep === 1 && canProceedFromStep(1)) {
+      // On step 1, if we're on the last input, go to next step
+      proceedToNextStep();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, currentElement?: HTMLElement) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const target = currentElement || (e.target as HTMLElement);
+      focusNextInput(target);
+    }
+  };
+
   const handleNavClick = (path: string) => {
     navigate(path);
   };
@@ -393,6 +492,7 @@ const CreateCrewPage: React.FC = () => {
                       setCrewNames(Array(boatClassToSeats[newBoatClass] || 0).fill(''));
                       setCoxName('');
                     }}
+                    onKeyDown={handleKeyDown}
                     className={showValidation && !boatClass ? 'error' : ''}
                     required
                   >
@@ -410,19 +510,142 @@ const CreateCrewPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" data-club-presets>
                   <label htmlFor="clubName">
-                    Club Name <span className="required">*</span>
+                    Club <span className="required">*</span>
                   </label>
-                  <input
-                    type="text"
-                    id="clubName"
-                    value={clubName}
-                    onChange={(e) => setClubName(e.target.value)}
-                    className={showValidation && !clubName ? 'error' : ''}
-                    placeholder="Enter club name"
-                    required
-                  />
+                  <div style={{ position: 'relative', paddingRight: '110px' }}>
+                    <input
+                      type="text"
+                      id="clubName"
+                      value={clubName}
+                      onChange={(e) => {
+                        setClubName(e.target.value);
+                        setSelectedPresetId(null); // Clear preset selection when typing
+                      }}
+                      onKeyDown={handleKeyDown}
+                      className={showValidation && !clubName ? 'error' : ''}
+                      placeholder="Enter club name"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleToggleClubPresets}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '2px',
+                        bottom: '2px',
+                        background: 'var(--gray-100)',
+                        border: '1px solid var(--gray-300)',
+                        cursor: 'pointer',
+                        padding: '0 12px',
+                        borderRadius: '6px',
+                        color: 'var(--gray-700)',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}
+                      title="Choose from saved club presets"
+                    >
+                      Club Presets
+                    </button>
+                  </div>
+                  
+                  {/* Club presets dropdown */}
+                  {showClubPresets && (
+                    <div style={{
+                      position: 'absolute',
+                      zIndex: 1000,
+                      background: 'var(--white)',
+                      border: '1px solid var(--gray-300)',
+                      borderRadius: 'var(--radius)',
+                      marginTop: '0.5rem',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      boxShadow: 'var(--shadow)',
+                      width: '100%'
+                    }}>
+                      <div style={{ padding: '0.5rem' }}>
+                        {clubPresets.map((preset) => (
+                          <div
+                            key={preset.id}
+                            onClick={() => handleClubPresetSelect(preset.id)}
+                            style={{
+                              padding: '0.75rem',
+                              borderRadius: 'var(--radius)',
+                              cursor: 'pointer',
+                              marginBottom: '0.5rem',
+                              border: '2px solid transparent',
+                              backgroundColor: selectedPresetId === preset.id ? 'var(--primary-light)' : 'transparent',
+                              borderColor: selectedPresetId === preset.id ? 'var(--primary)' : 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (selectedPresetId !== preset.id) {
+                                e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                                e.currentTarget.style.borderColor = 'var(--primary-light)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (selectedPresetId !== preset.id) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                                e.currentTarget.style.borderColor = 'transparent';
+                              }
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.5rem', 
+                                fontWeight: 600, 
+                                color: 'var(--gray-900)' 
+                              }}>
+                                {preset.club_name}
+                                {preset.is_default && (
+                                  <span style={{
+                                    background: 'var(--primary)',
+                                    color: 'var(--white)',
+                                    padding: '0.125rem 0.5rem',
+                                    borderRadius: '0.75rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 500
+                                  }}>
+                                    Default
+                                  </span>
+                                )}
+                              </span>
+                              <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                                <div 
+                                  style={{ 
+                                    width: '20px', 
+                                    height: '20px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: preset.primary_color,
+                                    border: '2px solid var(--white)',
+                                    boxShadow: 'var(--shadow-sm)'
+                                  }}
+                                  title={`Primary: ${preset.primary_color}`}
+                                ></div>
+                                <div 
+                                  style={{ 
+                                    width: '20px', 
+                                    height: '20px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: preset.secondary_color,
+                                    border: '2px solid var(--white)',
+                                    boxShadow: 'var(--shadow-sm)'
+                                  }}
+                                  title={`Secondary: ${preset.secondary_color}`}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  
                   {showValidation && !clubName && (
                     <div className="error-message">Please enter club name</div>
                   )}
@@ -437,6 +660,7 @@ const CreateCrewPage: React.FC = () => {
                     id="raceName"
                     value={raceName}
                     onChange={(e) => setRaceName(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     className={showValidation && !raceName ? 'error' : ''}
                     placeholder="Enter race or event name"
                     required
@@ -455,6 +679,7 @@ const CreateCrewPage: React.FC = () => {
                     id="boatName"
                     value={boatName}
                     onChange={(e) => setBoatName(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     className={showValidation && !boatName ? 'error' : ''}
                     placeholder="Enter boat name"
                     required
@@ -471,6 +696,7 @@ const CreateCrewPage: React.FC = () => {
                     id="coachName"
                     value={coachName}
                     onChange={(e) => setCoachName(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     placeholder="Enter coach name (optional)"
                   />
                 </div>
@@ -505,6 +731,7 @@ const CreateCrewPage: React.FC = () => {
                       type="text"
                       value={coxName}
                       onChange={(e) => setCoxName(e.target.value)}
+                      onKeyDown={handleKeyDown}
                       className={showStep1Validation && !coxName.trim() ? 'error' : ''}
                       placeholder="Enter coxswain name"
                       required
@@ -521,10 +748,10 @@ const CreateCrewPage: React.FC = () => {
                   const seatNumber = boatClassToSeats[boatClass] - index;
                   const seatName =
                     seatNumber === 1
-                      ? 'Bow'
+                      ? 'Bow Seat'
                       : seatNumber === boatClassToSeats[boatClass]
-                        ? 'Stroke'
-                        : `${seatNumber}`;
+                        ? 'Stroke Seat'
+                        : `${seatNumber} Seat`;
                   
                   return (
                     <div key={index} className="crew-name-input">
@@ -533,6 +760,7 @@ const CreateCrewPage: React.FC = () => {
                         type="text"
                         value={name}
                         onChange={(e) => handleNameChange(index, e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className={showStep1Validation && !name.trim() ? 'error' : ''}
                         placeholder="Enter rower name"
                         required
@@ -592,9 +820,9 @@ const CreateCrewPage: React.FC = () => {
                   const seatNumber = boatClassToSeats[boatClass] - index;
                   const seatName =
                     seatNumber === 1
-                      ? 'Bow'
+                      ? 'Bow Seat'
                       : seatNumber === boatClassToSeats[boatClass]
-                        ? 'Stroke'
+                        ? 'Stroke Seat'
                         : `${seatNumber} Seat`;
                   
                   return (
@@ -647,7 +875,7 @@ const CreateCrewPage: React.FC = () => {
             </button>
             <button 
               className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/templates/create')}
+              onClick={() => handleNavClick('/templates')}
             >
               Templates
             </button>

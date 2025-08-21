@@ -133,7 +133,7 @@ const DashboardPage: React.FC = () => {
             </button>
             <button 
               className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/templates/create')}
+              onClick={() => handleNavClick('/templates')}
             >
               Templates
             </button>

@@ -6,7 +6,7 @@ import DashboardPage from './pages/Dashboard/DashboardPage';
 import CreateCrewPage from './pages/CreateCrews/CreateCrewPage';
 import MyCrewsPage from './pages/MyCrews/MyCrewsPage';
 import GeneratePage from './pages/GeneratePage';
-import TemplatesPage from './pages/TemplatesPage';
+import TemplatesPage from './pages/Templates/TemplatesPage';
 import NewGalleryPage from './pages/NewGalleryPage';
 import NewSettingsPage from './pages/NewSettingsPage';
 import NewTemplateBuilderPage from './pages/NewTemplateBuilderPage';

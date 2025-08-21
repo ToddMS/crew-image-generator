@@ -25,8 +25,11 @@ import {
   MdVisibility,
   MdExpandMore,
 } from 'react-icons/md';
-import DashboardLayout from '../components/Layout/DashboardLayout';
+import AuthModal from '../components/Auth/AuthModal';
+import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/RowgramThemeContext';
 import TemplatePreview from '../components/TemplatePreview/TemplatePreview';
+import './Templates/Templates.css';
 
 interface TemplateConfig {
   background: string;
@@ -104,8 +107,27 @@ const boatStyleOptions = [
 ];
 
 const NewTemplateBuilderPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useThemeMode();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const theme = useTheme();
+  
+  const handleNavClick = (path: string) => {
+    navigate(path);
+  };
+
+  const getCurrentPage = () => {
+    const path = window.location.pathname;
+    if (path === '/') return 'dashboard';
+    if (path.includes('/crews/create') || path.includes('/create')) return 'create';
+    if (path.includes('/crews')) return 'crews';
+    if (path.includes('/templates')) return 'templates';
+    if (path.includes('/generate')) return 'generate';
+    if (path.includes('/gallery')) return 'gallery';
+    if (path.includes('/settings')) return 'settings';
+    return 'dashboard';
+  };
   
   const [templateName, setTemplateName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<string>('');
@@ -227,12 +249,100 @@ const NewTemplateBuilderPage: React.FC = () => {
     </Box>
   );
 
+  const currentPage = getCurrentPage();
+
   return (
-    <DashboardLayout 
-      title="Template Builder" 
-      subtitle="Create custom templates for your crew images"
-    >
-      <Grid container spacing={4} sx={{ maxWidth: 1400, mx: 'auto' }}>
+    <div className="templates-container">
+      <nav className="main-nav">
+        <div className="nav-container">
+          <button className="logo" onClick={() => handleNavClick('/')}>
+            <div className="logo-icon">⚓</div>
+            <span>RowGram</span>
+          </button>
+          
+          <div className="nav-links">
+            <button 
+              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/')}
+            >
+              Dashboard
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews')}
+            >
+              My Crews
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/crews/create')}
+            >
+              Create Crew
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/templates')}
+            >
+              Templates
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/generate')}
+            >
+              Generate
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/gallery')}
+            >
+              Gallery
+            </button>
+            <button 
+              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('/settings')}
+            >
+              Settings
+            </button>
+          </div>
+          
+          <div className="nav-actions">
+            <button 
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? '☀️' : '🌙'}
+            </button>
+            
+            {user ? (
+              <div className="user-menu">
+                <span className="user-name">{user.club_name || user.name}</span>
+                <div className="user-avatar">
+                  {user.name?.[0] || 'U'}
+                </div>
+                <button className="logout-btn" onClick={logout} title="Logout">
+                  ↗️
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="login-btn"
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      <div className="container">
+        <section className="hero">
+          <h1>Template Builder</h1>
+          <p>Create custom templates for your crew images</p>
+        </section>
+
+        <Grid container spacing={4} sx={{ maxWidth: 1400, mx: 'auto' }}>
         {/* Configuration Panel */}
         <Grid item xs={12} lg={8}>
           <Card>
@@ -518,7 +628,13 @@ const NewTemplateBuilderPage: React.FC = () => {
           </Box>
         </Grid>
       </Grid>
-    </DashboardLayout>
+      </div>
+      
+      <AuthModal 
+        open={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+      />
+    </div>
   );
 };
 
