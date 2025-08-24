@@ -286,15 +286,16 @@
 }
 
 .preset-btn.danger {
-  background: #dc2626;
-  color: var(--white);
-  border: 1px solid #dc2626;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid var(--error);
 }
 
-.preset-btn.danger:hover {
-  background: #b91c1c;
-  border-color: #b91c1c;
-  transform: translateY(-1px);
+button.preset-btn.danger:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #dc2626 !important;
+  transform: translateY(-1px) !important;
 }
 
 .preset-btn.primary {
@@ -579,14 +580,15 @@
 }
 
 .btn-danger {
-  background: #dc2626 !important;
-  color: var(--white) !important;
-  border: 2px solid #dc2626 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--error) !important;
+  border: 1px solid var(--error) !important;
 }
 
 .btn-danger:hover {
-  background: #b91c1c;
-  border-color: #b91c1c;
+  background: var(--error) !important;
+  color: var(--white) !important;
+  border-color: var(--error) !important;
   transform: translateY(-1px);
 }
 

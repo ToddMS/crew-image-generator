@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
+import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
