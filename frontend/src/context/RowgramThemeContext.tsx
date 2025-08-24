@@ -39,6 +39,18 @@ export const CustomThemeProvider: React.FC<CustomThemeProviderProps> = ({ childr
     }
   }, []);
 
+  // Apply theme class to document root
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark-theme');
+      root.classList.remove('light-theme');
+    } else {
+      root.classList.add('light-theme');
+      root.classList.remove('dark-theme');
+    }
+  }, [isDarkMode]);
+
   const toggleTheme = () => {
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);

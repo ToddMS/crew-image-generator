@@ -19,7 +19,7 @@
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .nav-container {
@@ -351,7 +351,7 @@
 }
 
 .preview-btn {
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.95);
   color: var(--primary);
   border: none;
   padding: 0.75rem 1.5rem;

@@ -1,11 +1,13 @@
 import { ApiResponse } from '../types/api.types';
 import { Crew } from '../types/crew.types';
+import { ClubPreset } from '../types/club.types';
 import { SavedImageResponse } from '../types/image.types';
 
 const API_CONFIG = {
   baseUrl: `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api`,
   endpoints: {
     crews: '/crews',
+    clubPresets: '/club-presets',
   },
 };
 
@@ -328,5 +330,30 @@ export class ApiService {
 
   static async getRecentActivity(): Promise<ApiResponse<any[]>> {
     return this.request<any[]>('/dashboard/recent-activity');
+  }
+
+  // Club Preset methods
+  static async getClubPresets(): Promise<ApiResponse<ClubPreset[]>> {
+    return this.request<ClubPreset[]>(API_CONFIG.endpoints.clubPresets);
+  }
+
+  static async createClubPreset(preset: Omit<ClubPreset, 'id'>): Promise<ApiResponse<ClubPreset>> {
+    return this.request<ClubPreset>(API_CONFIG.endpoints.clubPresets, {
+      method: 'POST',
+      body: JSON.stringify(preset),
+    });
+  }
+
+  static async updateClubPreset(id: number, preset: Partial<ClubPreset>): Promise<ApiResponse<ClubPreset>> {
+    return this.request<ClubPreset>(`${API_CONFIG.endpoints.clubPresets}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(preset),
+    });
+  }
+
+  static async deleteClubPreset(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`${API_CONFIG.endpoints.clubPresets}/${id}`, {
+      method: 'DELETE',
+    });
   }
 }

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AuthModal from '../components/Auth/AuthModal';
-import { useAuth } from '../context/AuthContext';
-import { useThemeMode } from '../context/RowgramThemeContext';
-import { useNotification } from '../context/NotificationContext';
-import { ApiService } from '../services/api.service';
-import { Crew } from '../types/crew.types';
+import AuthModal from '../../components/Auth/AuthModal';
+import Navigation from '../../components/Navigation/Navigation';
+import { useAuth } from '../../context/AuthContext';
+import { useThemeMode } from '../../context/RowgramThemeContext';
+import { useNotification } from '../../context/NotificationContext';
+import { ApiService } from '../../services/api.service';
+import { Crew } from '../../types/crew.types';
 import './Generate.css';
 
 interface TemplateConfig {
@@ -219,77 +220,10 @@ const GeneratePage: React.FC = () => {
   if (!user) {
     return (
       <div className="generate-container">
-        <nav className="main-nav">
-          <div className="nav-container">
-            <button className="logo" onClick={() => handleNavClick('/')}>
-              <div className="logo-icon">⚓</div>
-              <span>RowGram</span>
-            </button>
-            
-            <div className="nav-links">
-              <button 
-                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/crews')}
-              >
-                My Crews
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/crews/create')}
-              >
-                Create Crew
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates')}
-              >
-                Templates
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/generate')}
-              >
-                Generate
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/gallery')}
-              >
-                Gallery
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/settings')}
-              >
-                Settings
-              </button>
-            </div>
-            
-            <div className="nav-actions">
-              <button 
-                className="theme-toggle"
-                onClick={toggleTheme}
-                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-              
-              <button 
-                className="login-btn"
-                onClick={() => setShowAuthModal(true)}
-              >
-                Sign In
-              </button>
-            </div>
-          </div>
-        </nav>
-
+      <Navigation 
+        currentPage={currentPage} 
+        onAuthModalOpen={() => setShowAuthModal(true)}
+      />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">🎨</div>
@@ -316,89 +250,10 @@ const GeneratePage: React.FC = () => {
   if (loading) {
     return (
       <div className="generate-container">
-        <nav className="main-nav">
-          <div className="nav-container">
-            <button className="logo" onClick={() => handleNavClick('/')}>
-              <div className="logo-icon">⚓</div>
-              <span>RowGram</span>
-            </button>
-            
-            <div className="nav-links">
-              <button 
-                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/crews')}
-              >
-                My Crews
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/crews/create')}
-              >
-                Create Crew
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates')}
-              >
-                Templates
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/generate')}
-              >
-                Generate
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/gallery')}
-              >
-                Gallery
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/settings')}
-              >
-                Settings
-              </button>
-            </div>
-            
-            <div className="nav-actions">
-              <button 
-                className="theme-toggle"
-                onClick={toggleTheme}
-                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-              
-              {user ? (
-                <div className="user-menu">
-                  <span className="user-name">{user.club_name || user.name}</span>
-                  <div className="user-avatar">
-                    {user.name?.[0] || 'U'}
-                  </div>
-                  <button className="logout-btn" onClick={logout} title="Logout">
-                    ↗️
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  className="login-btn"
-                  onClick={() => setShowAuthModal(true)}
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          </div>
-        </nav>
-
+      <Navigation 
+        currentPage={currentPage} 
+        onAuthModalOpen={() => setShowAuthModal(true)}
+      />
         <div className="container">
           <div className="loading-state">
             <div className="loading-spinner"></div>
@@ -411,114 +266,16 @@ const GeneratePage: React.FC = () => {
 
   return (
     <div className="generate-container">
-      <nav className="main-nav">
-        <div className="nav-container">
-          <button className="logo" onClick={() => handleNavClick('/')}>
-            <div className="logo-icon">⚓</div>
-            <span>RowGram</span>
-          </button>
-          
-          <div className="nav-links">
-            <button 
-              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/')}
-            >
-              Dashboard
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/crews')}
-            >
-              My Crews
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/crews/create')}
-            >
-              Create Crew
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/templates')}
-            >
-              Templates
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/generate')}
-            >
-              Generate
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/gallery')}
-            >
-              Gallery
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/settings')}
-            >
-              Settings
-            </button>
-          </div>
-          
-          <div className="nav-actions">
-            <button 
-              className="theme-toggle"
-              onClick={toggleTheme}
-              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDarkMode ? '☀️' : '🌙'}
-            </button>
-            
-            {user ? (
-              <div className="user-menu">
-                <span className="user-name">{user.club_name || user.name}</span>
-                <div className="user-avatar">
-                  {user.name?.[0] || 'U'}
-                </div>
-                <button className="logout-btn" onClick={logout} title="Logout">
-                  ↗️
-                </button>
-              </div>
-            ) : (
-              <button 
-                className="login-btn"
-                onClick={() => setShowAuthModal(true)}
-              >
-                Sign In
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
-
+      <Navigation 
+        currentPage={currentPage} 
+        onAuthModalOpen={() => setShowAuthModal(true)}
+      />
       <div className="container">
         <div className="generate-header">
           <h1>Generate Images</h1>
           <p>Create beautiful crew images by selecting a crew and template, then generate your custom image</p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="quick-actions">
-          <div className="quick-actions-grid">
-            <button 
-              className="quick-action-btn"
-              onClick={() => navigate('/crews/create')}
-            >
-              <span className="quick-action-icon">👥</span>
-              Create New Crew
-            </button>
-            <button 
-              className="quick-action-btn"
-              onClick={() => navigate('/templates/create')}
-            >
-              <span className="quick-action-icon">🎨</span>
-              Create New Template
-            </button>
-          </div>
-        </div>
 
         {/* Selection Grid */}
         <div className="selection-grid">

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AuthModal from '../components/Auth/AuthModal';
-import { useAuth } from '../context/AuthContext';
-import { useThemeMode } from '../context/RowgramThemeContext';
-import { useNotification } from '../context/NotificationContext';
-import { ApiService } from '../services/api.service';
-import { ClubPreset } from '../types/club.types';
-import ClubPresetsComponent from '../components/ClubPresets/ClubPresetsComponent';
+import AuthModal from '../../components/Auth/AuthModal';
+import { useAuth } from '../../context/AuthContext';
+import { useThemeMode } from '../../context/RowgramThemeContext';
+import { useNotification } from '../../context/NotificationContext';
+import { ApiService } from '../../services/api.service';
+import { ClubPreset } from '../../types/club.types';
+import ClubPresetsComponent from '../../components/ClubPresets/ClubPresetsComponent';
 import './Settings.css';
 
 interface ClubSettings {
@@ -276,77 +276,10 @@ const NewSettingsPage: React.FC = () => {
   if (!user) {
     return (
       <div className="settings-container">
-        <nav className="main-nav">
-          <div className="nav-container">
-            <button className="logo" onClick={() => handleNavClick('/')}>
-              <div className="logo-icon">⚓</div>
-              <span>RowGram</span>
-            </button>
-            
-            <div className="nav-links">
-              <button 
-                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/')}
-              >
-                Dashboard
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/crews')}
-              >
-                My Crews
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/crews/create')}
-              >
-                Create Crew
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/templates')}
-              >
-                Templates
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/generate')}
-              >
-                Generate
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/gallery')}
-              >
-                Gallery
-              </button>
-              <button 
-                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-                onClick={() => handleNavClick('/settings')}
-              >
-                Settings
-              </button>
-            </div>
-            
-            <div className="nav-actions">
-              <button 
-                className="theme-toggle"
-                onClick={toggleTheme}
-                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-              
-              <button 
-                className="login-btn"
-                onClick={() => setShowAuthModal(true)}
-              >
-                Sign In
-              </button>
-            </div>
-          </div>
-        </nav>
-
+      <Navigation 
+        currentPage={currentPage} 
+        onAuthModalOpen={() => setShowAuthModal(true)}
+      />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">⚙️</div>
@@ -372,89 +305,10 @@ const NewSettingsPage: React.FC = () => {
 
   return (
     <div className="settings-container">
-      <nav className="main-nav">
-        <div className="nav-container">
-          <button className="logo" onClick={() => handleNavClick('/')}>
-            <div className="logo-icon">⚓</div>
-            <span>RowGram</span>
-          </button>
-          
-          <div className="nav-links">
-            <button 
-              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/')}
-            >
-              Dashboard
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/crews')}
-            >
-              My Crews
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/crews/create')}
-            >
-              Create Crew
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/templates')}
-            >
-              Templates
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/generate')}
-            >
-              Generate
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/gallery')}
-            >
-              Gallery
-            </button>
-            <button 
-              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-              onClick={() => handleNavClick('/settings')}
-            >
-              Settings
-            </button>
-          </div>
-          
-          <div className="nav-actions">
-            <button 
-              className="theme-toggle"
-              onClick={toggleTheme}
-              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {isDarkMode ? '☀️' : '🌙'}
-            </button>
-            
-            {user ? (
-              <div className="user-menu">
-                <span className="user-name">{user.club_name || user.name}</span>
-                <div className="user-avatar">
-                  {user.name?.[0] || 'U'}
-                </div>
-                <button className="logout-btn" onClick={logout} title="Logout">
-                  ↗️
-                </button>
-              </div>
-            ) : (
-              <button 
-                className="login-btn"
-                onClick={() => setShowAuthModal(true)}
-              >
-                Sign In
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
-
+      <Navigation 
+        currentPage={currentPage} 
+        onAuthModalOpen={() => setShowAuthModal(true)}
+      />
       <div className="container">
         <div className="settings-header">
           <h1>Settings</h1>

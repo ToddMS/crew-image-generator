@@ -9,23 +9,29 @@ import { ClubPreset } from '../../types/club.types';
 import { ApiService } from '../../services/api.service';
 import './Templates.css';
 
-const TemplatesPage: React.FC = () => {
+interface Template {
+  id: string;
+  name: string;
+  type: string;
+  icon: string;
+  isCustom: boolean;
+  author?: string;
+  description?: string;
+}
+
+const ViewTemplatesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useThemeMode();
-  const { showSuccess } = useNotification();
+  const { user } = useAuth();
+  const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('classic-lineup');
   const [selectedColor, setSelectedColor] = useState('#2563eb');
+  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   
   // Club presets
   const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
   const [showClubPresets, setShowClubPresets] = useState(false);
-
-  const handleNavClick = (path: string) => {
-    navigate(path);
-  };
 
   const getCurrentPage = () => {
     const path = window.location.pathname;
@@ -89,13 +95,17 @@ const TemplatesPage: React.FC = () => {
     setShowClubPresets(!showClubPresets);
   };
 
-  const templates = [
-    { id: 'classic-lineup', name: 'Classic Lineup', type: 'Traditional • Portrait', icon: '📋' },
-    { id: 'modern-grid', name: 'Modern Grid', type: 'Contemporary • Square', icon: '🎨' },
-    { id: 'action-shot', name: 'Action Shot', type: 'Dynamic • Landscape', icon: '🌊' },
-    { id: 'race-day', name: 'Race Day', type: 'Event • Portrait', icon: '🏆' },
-    { id: 'minimal', name: 'Minimal', type: 'Clean • Square', icon: '⚡' },
-    { id: 'premium', name: 'Premium', type: 'Elegant • Portrait', icon: '✨' }
+  // Mock templates data with custom templates
+  const templates: Template[] = [
+    { id: 'classic-lineup', name: 'Classic Lineup', type: 'Traditional • Portrait', icon: '📋', isCustom: false },
+    { id: 'modern-grid', name: 'Modern Grid', type: 'Contemporary • Square', icon: '🎨', isCustom: false },
+    { id: 'action-shot', name: 'Action Shot', type: 'Dynamic • Landscape', icon: '🌊', isCustom: false },
+    { id: 'race-day', name: 'Race Day', type: 'Event • Portrait', icon: '🏆', isCustom: false },
+    { id: 'minimal', name: 'Minimal', type: 'Clean • Square', icon: '⚡', isCustom: false },
+    { id: 'premium', name: 'Premium', type: 'Elegant • Portrait', icon: '✨', isCustom: false },
+    // Custom templates (user created)
+    { id: 'custom-1', name: 'My Club Style', type: 'Custom • Portrait', icon: '🎯', isCustom: true, author: user?.name },
+    { id: 'custom-2', name: 'Championship 2024', type: 'Custom • Landscape', icon: '🏅', isCustom: true, author: user?.name },
   ];
 
   const colors = [
@@ -110,8 +120,32 @@ const TemplatesPage: React.FC = () => {
     setSelectedColor(color);
   };
 
-  const handleSaveTemplate = () => {
-    showSuccess('Template saved successfully!');
+  const handleDeleteTemplate = async (templateId: string) => {
+    try {
+      // Call API to delete template
+      // await ApiService.deleteTemplate(templateId);
+      showSuccess('Template deleted successfully!');
+      setShowDeleteModal(null);
+    } catch (error) {
+      showError('Failed to delete template. Please try again.');
+    }
+  };
+
+  const handleUseTemplate = () => {
+    navigate('/generate', { 
+      state: { 
+        selectedTemplate: templates.find(t => t.id === selectedTemplate),
+        selectedColor 
+      }
+    });
+  };
+
+  const handleEditTemplate = (templateId: string) => {
+    navigate('/templates/create', { 
+      state: { 
+        editingTemplate: templates.find(t => t.id === templateId) 
+      }
+    });
   };
 
   const currentPage = getCurrentPage();
@@ -122,26 +156,77 @@ const TemplatesPage: React.FC = () => {
         currentPage={currentPage} 
         onAuthModalOpen={() => setShowAuthModal(true)}
       />
+
       <div className="container">
         <section className="hero">
-          <h1>Template Gallery</h1>
-          <p>Choose and customize templates for your crew images</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div>
+              <h1>Template Gallery</h1>
+              <p>View, customize, and manage your templates</p>
+            </div>
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/templates/create')}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <span>🎨</span>
+              Create New Template
+            </button>
+          </div>
         </section>
 
-        <div className="template-grid">
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-              onClick={() => handleTemplateSelect(template.id)}
-            >
-              <div className="template-preview">{template.icon}</div>
-              <div className="template-name">{template.name}</div>
-              <div className="template-type">{template.type}</div>
-            </div>
-          ))}
+        {/* Template Categories */}
+        <div className="template-categories">
+          <h2>All Templates</h2>
+          <div className="template-grid">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
+                onClick={() => handleTemplateSelect(template.id)}
+              >
+                <div className="template-preview">
+                  {template.icon}
+                  {template.isCustom && (
+                    <div className="template-actions">
+                      <button 
+                        className="template-action-btn edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditTemplate(template.id);
+                        }}
+                        title="Edit Template"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        className="template-action-btn delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteModal(template.id);
+                        }}
+                        title="Delete Template"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="template-info">
+                  <div className="template-name">{template.name}</div>
+                  <div className="template-type">
+                    {template.type}
+                    {template.isCustom && template.author && (
+                      <span className="template-author"> • by {template.author}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
+        {/* Template Customization */}
         <div className="customization-panel">
           <h2>Customize Template</h2>
           
@@ -221,12 +306,36 @@ const TemplatesPage: React.FC = () => {
             >
               Reset Colors
             </button>
-            <button className="btn btn-primary" onClick={handleSaveTemplate}>
-              Save Template
+            <button className="btn btn-primary" onClick={handleUseTemplate}>
+              Use Template in Generate
             </button>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Template</h3>
+            <p>Are you sure you want to delete this template? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setShowDeleteModal(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-danger"
+                onClick={() => handleDeleteTemplate(showDeleteModal)}
+              >
+                Delete Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <AuthModal 
         open={showAuthModal} 
@@ -236,4 +345,4 @@ const TemplatesPage: React.FC = () => {
   );
 };
 
-export default TemplatesPage;
+export default ViewTemplatesPage;
