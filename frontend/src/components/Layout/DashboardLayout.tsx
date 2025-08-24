@@ -10,9 +10,7 @@ interface DashboardLayoutProps {
   subtitle?: string;
 }
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ 
-  children
-}) => {
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useThemeMode();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -44,76 +42,71 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <div className="logo-icon">⚓</div>
             <span>RowGram</span>
           </button>
-          
+
           <div className="nav-links">
-            <button 
+            <button
               className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
               onClick={() => handleNavClick('/')}
             >
               Dashboard
             </button>
-            <button 
+            <button
               className={`nav-link ${currentPage === 'crews' ? 'active' : ''}`}
               onClick={() => handleNavClick('/crews')}
             >
               My Crews
             </button>
-            <button 
+            <button
               className={`nav-link ${currentPage === 'templates' ? 'active' : ''}`}
               onClick={() => handleNavClick('/templates/create')}
             >
               Templates
             </button>
-            <button 
+            <button
               className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
               onClick={() => handleNavClick('/generate')}
             >
               Generate
             </button>
-            <button 
+            <button
               className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
               onClick={() => handleNavClick('/gallery')}
             >
               Gallery
             </button>
-            <button 
+            <button
               className={`nav-link ${currentPage === 'analytics' ? 'active' : ''}`}
               onClick={() => handleNavClick('/analytics')}
             >
               Analytics
             </button>
-            <button 
+            <button
               className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
               onClick={() => handleNavClick('/settings')}
             >
               Settings
             </button>
           </div>
-          
+
           <div className="nav-actions">
-            <button 
+            <button
               className="theme-toggle"
               onClick={toggleTheme}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDarkMode ? '☀️' : '🌙'}
             </button>
-            
+
             {user ? (
               <div className="user-menu">
                 <span className="user-name">{user.club_name || user.name}</span>
-                <div className="user-avatar">
-                  {user.name?.[0] || 'U'}
-                </div>
+                <div className="user-avatar">{user.name?.[0] || 'U'}</div>
                 <button className="logout-btn" onClick={logout} title="Logout">
                   ↗️
                 </button>
               </div>
             ) : (
-              <button 
-                className="login-btn"
-                onClick={() => setShowAuthModal(true)}
-              >
+              <button className="login-btn" onClick={() => setShowAuthModal(true)}>
                 Sign In
               </button>
             )}
@@ -122,15 +115,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </nav>
 
       {/* Main Content */}
-      <main className="main-content">
-        {children}
-      </main>
-      
+      <main className="main-content">{children}</main>
+
       {/* Auth Modal */}
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

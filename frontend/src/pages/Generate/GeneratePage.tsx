@@ -48,8 +48,8 @@ const presetTemplates: Template[] = [
       textLayout: 'header-left',
       logo: 'bottom-right',
       dimensions: { width: 1080, height: 1350 },
-      colors: { primary: '#1e3a5f', secondary: '#6ba3d0' }
-    }
+      colors: { primary: '#1e3a5f', secondary: '#6ba3d0' },
+    },
   },
   {
     id: 'modern-racing',
@@ -63,8 +63,8 @@ const presetTemplates: Template[] = [
       textLayout: 'header-center',
       logo: 'top-left',
       dimensions: { width: 1080, height: 1350 },
-      colors: { primary: '#2ecc71', secondary: '#16a085' }
-    }
+      colors: { primary: '#2ecc71', secondary: '#16a085' },
+    },
   },
   {
     id: 'championship',
@@ -78,9 +78,9 @@ const presetTemplates: Template[] = [
       textLayout: 'header-split',
       logo: 'center-top',
       dimensions: { width: 1080, height: 1350 },
-      colors: { primary: '#e74c3c', secondary: '#f39c12' }
-    }
-  }
+      colors: { primary: '#e74c3c', secondary: '#f39c12' },
+    },
+  },
 ];
 
 const GeneratePage: React.FC = () => {
@@ -123,19 +123,19 @@ const GeneratePage: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    const state = location.state as { 
-      selectedCrewIds?: string[]; 
+    const state = location.state as {
+      selectedCrewIds?: string[];
       selectedTemplate?: Template;
       templateConfig?: TemplateConfig;
     } | null;
-    
+
     if (state?.selectedTemplate) {
       setSelectedTemplate(state.selectedTemplate);
     }
-    
+
     if (state?.selectedCrewIds && state.selectedCrewIds.length > 0) {
       const crewId = state.selectedCrewIds[0];
-      const crew = crews.find(c => c.id === crewId);
+      const crew = crews.find((c) => c.id === crewId);
       if (crew) {
         setSelectedCrew(crew);
       }
@@ -175,7 +175,7 @@ const GeneratePage: React.FC = () => {
 
     try {
       const progressInterval = setInterval(() => {
-        setGenerationProgress(prev => {
+        setGenerationProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
@@ -186,7 +186,7 @@ const GeneratePage: React.FC = () => {
 
       const response = await ApiService.generateImage(selectedCrew.id, {
         templateId: selectedTemplate.id,
-        templateConfig: selectedTemplate.config
+        templateConfig: selectedTemplate.config,
       });
 
       clearInterval(progressInterval);
@@ -220,26 +220,20 @@ const GeneratePage: React.FC = () => {
   if (!user) {
     return (
       <div className="generate-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">🎨</div>
             <h2>Generate Crew Images</h2>
             <p>Sign in to create beautiful crew images with custom templates</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowAuthModal(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
               Sign In to Generate Images
             </button>
           </div>
         </div>
-        
-        <AuthModal 
-          open={showAuthModal} 
+
+        <AuthModal
+          open={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           onSuccess={handleAuthSuccess}
         />
@@ -250,10 +244,7 @@ const GeneratePage: React.FC = () => {
   if (loading) {
     return (
       <div className="generate-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="loading-state">
             <div className="loading-spinner"></div>
@@ -266,16 +257,15 @@ const GeneratePage: React.FC = () => {
 
   return (
     <div className="generate-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
       <div className="container">
         <div className="generate-header">
           <h1>Generate Images</h1>
-          <p>Create beautiful crew images by selecting a crew and template, then generate your custom image</p>
+          <p>
+            Create beautiful crew images by selecting a crew and template, then generate your custom
+            image
+          </p>
         </div>
-
 
         {/* Selection Grid */}
         <div className="selection-grid">
@@ -296,22 +286,21 @@ const GeneratePage: React.FC = () => {
                   <div className="selection-empty-icon">🚣</div>
                   <h3>No Crews Yet</h3>
                   <p>Create your first crew to get started</p>
-                  <button 
-                    className="selection-empty-btn"
-                    onClick={() => navigate('/crews/create')}
-                  >
+                  <button className="selection-empty-btn" onClick={() => navigate('/crews/create')}>
                     Create First Crew
                   </button>
                 </div>
               ) : (
                 crews.map((crew) => (
-                  <div 
-                    key={crew.id} 
+                  <div
+                    key={crew.id}
                     className={`selection-item ${selectedCrew?.id === crew.id ? 'selected' : ''}`}
                     onClick={() => setSelectedCrew(crew)}
                   >
                     <div className="selection-item-title">{crew.boatName}</div>
-                    <div className="selection-item-subtitle">{crew.boatClub} • {crew.raceName}</div>
+                    <div className="selection-item-subtitle">
+                      {crew.boatClub} • {crew.raceName}
+                    </div>
                     <div className="selection-item-tags">
                       <span className="selection-item-tag primary">{crew.boatClass}</span>
                       <span className="selection-item-tag">{crew.crewNames.length} members</span>
@@ -342,17 +331,14 @@ const GeneratePage: React.FC = () => {
                   <div className="selection-empty-icon">🎨</div>
                   <h3>No Templates Yet</h3>
                   <p>Create or select a template to get started</p>
-                  <button 
-                    className="selection-empty-btn"
-                    onClick={() => navigate('/templates')}
-                  >
+                  <button className="selection-empty-btn" onClick={() => navigate('/templates')}>
                     Browse Templates
                   </button>
                 </div>
               ) : (
                 templates.map((template) => (
-                  <div 
-                    key={template.id} 
+                  <div
+                    key={template.id}
                     className={`selection-item ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
                     onClick={() => setSelectedTemplate(template)}
                   >
@@ -364,12 +350,12 @@ const GeneratePage: React.FC = () => {
                       <span className="selection-item-tag">{template.config.nameDisplay}</span>
                     </div>
                     <div className="template-colors">
-                      <div 
-                        className="template-color-dot" 
+                      <div
+                        className="template-color-dot"
                         style={{ backgroundColor: template.config.colors.primary }}
                       ></div>
-                      <div 
-                        className="template-color-dot" 
+                      <div
+                        className="template-color-dot"
                         style={{ backgroundColor: template.config.colors.secondary }}
                       ></div>
                     </div>
@@ -386,12 +372,12 @@ const GeneratePage: React.FC = () => {
             <div className="generation-icon">⚡</div>
             Generate Image
           </h2>
-          
+
           {selectedCrew && selectedTemplate ? (
             <div className="generation-status ready">
               <h3>Ready to Generate!</h3>
               <p>Your selection is complete. Click the button below to generate your crew image.</p>
-              
+
               <div className="generation-summary">
                 <div className="generation-summary-item">
                   <span className="generation-summary-label">Crew:</span>
@@ -410,37 +396,28 @@ const GeneratePage: React.FC = () => {
                   <span className="generation-summary-value">{selectedCrew.crewNames.length}</span>
                 </div>
               </div>
-              
+
               {generating && (
                 <div className="progress-indicator">
                   <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
+                    <div
+                      className="progress-fill"
                       style={{ width: `${generationProgress}%` }}
                     ></div>
                   </div>
-                  <div className="progress-text">
-                    Generating image... {generationProgress}%
-                  </div>
+                  <div className="progress-text">Generating image... {generationProgress}%</div>
                 </div>
               )}
-              
+
               <div className="generation-actions">
                 <button
                   className={`btn btn-primary ${generating ? 'btn-loading' : ''}`}
                   onClick={handleGenerateImage}
                   disabled={generating}
                 >
-                  {generating ? (
-                    <>Generating Image...</>
-                  ) : (
-                    <>⚡ Generate Image</>
-                  )}
+                  {generating ? <>Generating Image...</> : <>⚡ Generate Image</>}
                 </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => navigate('/gallery')}
-                >
+                <button className="btn btn-secondary" onClick={() => navigate('/gallery')}>
                   🖼️ View Gallery
                 </button>
               </div>
@@ -449,7 +426,7 @@ const GeneratePage: React.FC = () => {
             <div className="generation-status incomplete">
               <h3>Select Crew and Template</h3>
               <p>Please select both a crew and a template to generate your image.</p>
-              
+
               <div className="generation-summary">
                 <div className="generation-summary-item">
                   <span className="generation-summary-label">Crew:</span>
@@ -464,18 +441,12 @@ const GeneratePage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="generation-actions">
-                <button
-                  className="btn btn-primary"
-                  disabled
-                >
+                <button className="btn btn-primary" disabled>
                   ⚡ Generate Image
                 </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => navigate('/gallery')}
-                >
+                <button className="btn btn-secondary" onClick={() => navigate('/gallery')}>
                   🖼️ View Gallery
                 </button>
               </div>
@@ -483,9 +454,9 @@ const GeneratePage: React.FC = () => {
           )}
         </div>
       </div>
-      
-      <AuthModal 
-        open={showAuthModal} 
+
+      <AuthModal
+        open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />

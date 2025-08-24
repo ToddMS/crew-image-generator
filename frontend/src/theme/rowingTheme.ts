@@ -62,9 +62,10 @@ const baseTheme = {
           margin: 0,
           padding: 0,
           backgroundColor: theme.palette.background.default,
-          background: theme.palette.mode === 'dark'
-            ? 'linear-gradient(135deg, #0f1419 0%, #1a2332 100%)'
-            : 'linear-gradient(135deg, #fafbfc 0%, #e8f4f8 100%)',
+          background:
+            theme.palette.mode === 'dark'
+              ? 'linear-gradient(135deg, #0f1419 0%, #1a2332 100%)'
+              : 'linear-gradient(135deg, #fafbfc 0%, #e8f4f8 100%)',
           backgroundAttachment: 'fixed',
           minHeight: '100vh',
         },
@@ -75,7 +76,7 @@ const baseTheme = {
         },
         '#root': {
           minHeight: '100vh',
-        }
+        },
       }),
     },
     MuiCard: {
@@ -105,7 +106,7 @@ export const lightTheme = createTheme({
     primary: {
       main: '#4a90e2', // Bright Blue
       light: '#6ba3d0', // Water Blue
-      dark: '#1e3a5f',  // Deep Navy
+      dark: '#1e3a5f', // Deep Navy
     },
     secondary: {
       main: '#2ecc71', // Emerald Green
@@ -138,7 +139,7 @@ export const darkTheme = createTheme({
     mode: 'dark',
     primary: {
       main: '#6ba3d0', // Water Blue
-      light: '#87b8d9', 
+      light: '#87b8d9',
       dark: '#4a90e2', // Bright Blue
     },
     secondary: {

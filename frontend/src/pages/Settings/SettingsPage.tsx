@@ -47,7 +47,7 @@ const NewSettingsPage: React.FC = () => {
     club_name: '',
     primary_color: '#2563eb',
     secondary_color: '#10b981',
-    is_default: false
+    is_default: false,
   });
   const [editingPresetId, setEditingPresetId] = useState<number | null>(null);
 
@@ -56,7 +56,7 @@ const NewSettingsPage: React.FC = () => {
     clubName: user?.club_name || '',
     primaryColor: '#2563eb',
     secondaryColor: '#10b981',
-    description: ''
+    description: '',
   });
 
   // User preferences
@@ -64,7 +64,7 @@ const NewSettingsPage: React.FC = () => {
     darkMode: isDarkMode,
     emailNotifications: true,
     pushNotifications: false,
-    autoSaveInterval: 30
+    autoSaveInterval: 30,
   });
 
   const handleNavClick = (path: string) => {
@@ -120,15 +120,15 @@ const NewSettingsPage: React.FC = () => {
           club_name: 'Thames Rowing Club',
           primary_color: '#1e40af',
           secondary_color: '#3b82f6',
-          is_default: true
+          is_default: true,
         },
         {
           id: 2,
           club_name: 'Oxford University BC',
           primary_color: '#1e3a8a',
           secondary_color: '#60a5fa',
-          is_default: false
-        }
+          is_default: false,
+        },
       ]);
       setSelectedPresetId(1);
     }
@@ -144,12 +144,12 @@ const NewSettingsPage: React.FC = () => {
     try {
       const response = await ApiService.createClubPreset(newPreset as Omit<ClubPreset, 'id'>);
       if (response.success && response.data) {
-        setClubPresets(prev => [...prev, response.data]);
+        setClubPresets((prev) => [...prev, response.data]);
         setNewPreset({
           club_name: '',
           primary_color: '#2563eb',
           secondary_color: '#10b981',
-          is_default: false
+          is_default: false,
         });
         showSuccess('Club preset saved successfully!');
       }
@@ -166,8 +166,8 @@ const NewSettingsPage: React.FC = () => {
     try {
       const response = await ApiService.updateClubPreset(presetId, updatedPreset);
       if (response.success && response.data) {
-        setClubPresets(prev => 
-          prev.map(preset => preset.id === presetId ? { ...preset, ...updatedPreset } : preset)
+        setClubPresets((prev) =>
+          prev.map((preset) => (preset.id === presetId ? { ...preset, ...updatedPreset } : preset)),
         );
         setEditingPresetId(null);
         showSuccess('Club preset updated successfully!');
@@ -187,7 +187,7 @@ const NewSettingsPage: React.FC = () => {
     try {
       const response = await ApiService.deleteClubPreset(presetId);
       if (response.success) {
-        setClubPresets(prev => prev.filter(preset => preset.id !== presetId));
+        setClubPresets((prev) => prev.filter((preset) => preset.id !== presetId));
         if (selectedPresetId === presetId) {
           setSelectedPresetId(null);
         }
@@ -215,7 +215,7 @@ const NewSettingsPage: React.FC = () => {
     setSaving('profile');
     try {
       // API call to save profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       showSuccess('Profile settings saved successfully!');
     } catch (error) {
       showError('Failed to save profile settings. Please try again.');
@@ -228,7 +228,7 @@ const NewSettingsPage: React.FC = () => {
     setSaving('club');
     try {
       // API call to save club settings
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       showSuccess('Club settings saved successfully!');
     } catch (error) {
       showError('Failed to save club settings. Please try again.');
@@ -241,7 +241,7 @@ const NewSettingsPage: React.FC = () => {
     setSaving('preferences');
     try {
       // API call to save preferences
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       showSuccess('Preferences saved successfully!');
     } catch (error) {
       showError('Failed to save preferences. Please try again.');
@@ -277,26 +277,20 @@ const NewSettingsPage: React.FC = () => {
   if (!user) {
     return (
       <div className="settings-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">⚙️</div>
             <h2>Settings</h2>
             <p>Sign in to manage your account settings and preferences</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowAuthModal(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
               Sign In to Access Settings
             </button>
           </div>
         </div>
-        
-        <AuthModal 
-          open={showAuthModal} 
+
+        <AuthModal
+          open={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           onSuccess={handleAuthSuccess}
         />
@@ -306,10 +300,7 @@ const NewSettingsPage: React.FC = () => {
 
   return (
     <div className="settings-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
       <div className="container">
         <div className="settings-header">
           <h1>Settings</h1>
@@ -319,7 +310,7 @@ const NewSettingsPage: React.FC = () => {
         <div className="settings-sections">
           {/* Profile Settings */}
           <div className="settings-section">
-            <div 
+            <div
               className={`section-header ${expandedSections.has('profile') ? 'expanded' : ''}`}
               onClick={() => toggleSection('profile')}
             >
@@ -356,7 +347,7 @@ const NewSettingsPage: React.FC = () => {
                 </div>
               </div>
               <div className="form-actions">
-                <button 
+                <button
                   className={`btn btn-primary ${saving === 'profile' ? 'loading' : ''}`}
                   onClick={handleSaveProfile}
                   disabled={saving === 'profile'}
@@ -369,7 +360,7 @@ const NewSettingsPage: React.FC = () => {
 
           {/* Club Presets */}
           <div className="settings-section">
-            <div 
+            <div
               className={`section-header ${expandedSections.has('club') ? 'expanded' : ''}`}
               onClick={() => toggleSection('club')}
             >
@@ -388,7 +379,7 @@ const NewSettingsPage: React.FC = () => {
 
           {/* App Preferences */}
           <div className="settings-section">
-            <div 
+            <div
               className={`section-header ${expandedSections.has('preferences') ? 'expanded' : ''}`}
               onClick={() => toggleSection('preferences')}
             >
@@ -400,39 +391,45 @@ const NewSettingsPage: React.FC = () => {
                 <span className="expand-icon">▼</span>
               </div>
             </div>
-            <div className={`section-content ${expandedSections.has('preferences') ? 'expanded' : ''}`}>
+            <div
+              className={`section-content ${expandedSections.has('preferences') ? 'expanded' : ''}`}
+            >
               <div className="toggle-group">
                 <div className="toggle-item">
                   <div className="toggle-info">
                     <div className="toggle-label">Dark Mode</div>
                     <div className="toggle-description">Switch between light and dark themes</div>
                   </div>
-                  <button 
+                  <button
                     className={`toggle-switch ${preferences.darkMode ? 'active' : ''}`}
                     onClick={() => {
                       toggleTheme();
-                      setPreferences(prev => ({ ...prev, darkMode: !prev.darkMode }));
+                      setPreferences((prev) => ({ ...prev, darkMode: !prev.darkMode }));
                     }}
                   ></button>
                 </div>
-                
+
                 <div className="toggle-item">
                   <div className="toggle-info">
                     <div className="toggle-label">Email Notifications</div>
-                    <div className="toggle-description">Receive notifications about crew updates</div>
+                    <div className="toggle-description">
+                      Receive notifications about crew updates
+                    </div>
                   </div>
-                  <button 
+                  <button
                     className={`toggle-switch ${preferences.emailNotifications ? 'active' : ''} disabled`}
                     disabled
                   ></button>
                 </div>
-                
+
                 <div className="toggle-item">
                   <div className="toggle-info">
                     <div className="toggle-label">Push Notifications</div>
-                    <div className="toggle-description">Get real-time notifications in your browser</div>
+                    <div className="toggle-description">
+                      Get real-time notifications in your browser
+                    </div>
                   </div>
-                  <button 
+                  <button
                     className={`toggle-switch ${preferences.pushNotifications ? 'active' : ''} disabled`}
                     disabled
                   ></button>
@@ -440,11 +437,12 @@ const NewSettingsPage: React.FC = () => {
               </div>
 
               <div className="alert info">
-                ℹ️ Some notification features are coming soon and will be available in future updates.
+                ℹ️ Some notification features are coming soon and will be available in future
+                updates.
               </div>
 
               <div className="form-actions">
-                <button 
+                <button
                   className={`btn btn-primary ${saving === 'preferences' ? 'loading' : ''}`}
                   onClick={handleSavePreferences}
                   disabled={saving === 'preferences'}
@@ -457,7 +455,7 @@ const NewSettingsPage: React.FC = () => {
 
           {/* Account Actions */}
           <div className="settings-section">
-            <div 
+            <div
               className={`section-header ${expandedSections.has('account') ? 'expanded' : ''}`}
               onClick={() => toggleSection('account')}
             >
@@ -473,7 +471,7 @@ const NewSettingsPage: React.FC = () => {
               <div className="alert warning">
                 ⚠️ These actions are permanent and cannot be undone. Please proceed with caution.
               </div>
-              
+
               <div className="account-actions-grid">
                 <div className="action-card">
                   <div className="action-title">Export Data</div>
@@ -484,7 +482,7 @@ const NewSettingsPage: React.FC = () => {
                     📤 Export My Data
                   </button>
                 </div>
-                
+
                 <div className="action-card danger">
                   <div className="action-title">Delete Account</div>
                   <div className="action-description">
@@ -495,17 +493,18 @@ const NewSettingsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="alert info">
-                ℹ️ For additional support or account assistance, please contact us at support@rowgram.com
+                ℹ️ For additional support or account assistance, please contact us at
+                support@rowgram.com
               </div>
             </div>
           </div>
         </div>
       </div>
-      
-      <AuthModal 
-        open={showAuthModal} 
+
+      <AuthModal
+        open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />

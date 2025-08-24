@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
 import { Crew } from '../../types/crew.types';
@@ -106,7 +105,6 @@ const MyCrewsPage: React.FC = () => {
           };
         });
         setSavedCrews(transformedCrews);
-
       } else if (result.error) {
         setError('Failed to load crews. Please try again.');
         setSavedCrews([]);
@@ -119,7 +117,6 @@ const MyCrewsPage: React.FC = () => {
       setLoading(false);
     }
   }, [user]);
-
 
   const getSortedCrews = () => {
     const crewsCopy = [...savedCrews];
@@ -148,26 +145,26 @@ const MyCrewsPage: React.FC = () => {
 
   const distributeCrewsIntoColumns = (crews: SavedCrew[], columnCount: number = 3) => {
     const columns: SavedCrew[][] = Array.from({ length: columnCount }, () => []);
-    
+
     crews.forEach((crew, index) => {
       const columnIndex = index % columnCount;
       columns[columnIndex].push(crew);
     });
-    
+
     return columns;
   };
 
   const handleDeleteCrew = async (index: number) => {
     const crew = savedCrews[index];
-    
+
     const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${crew.boatName}"?\n\nThis action cannot be undone.`
+      `Are you sure you want to delete "${crew.boatName}"?\n\nThis action cannot be undone.`,
     );
-    
+
     if (!isConfirmed) {
       return;
     }
-    
+
     try {
       await ApiService.deleteCrew(crew.id);
       setSavedCrews((prev) => prev.filter((_, idx) => idx !== index));
@@ -222,11 +219,11 @@ const MyCrewsPage: React.FC = () => {
 
     if (crewsToDelete.length === 0) return;
 
-    const crewNames = crewsToDelete.map(crew => crew.boatName).join(', ');
+    const crewNames = crewsToDelete.map((crew) => crew.boatName).join(', ');
     const isConfirmed = window.confirm(
-      `Are you sure you want to delete ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}?\n\nCrews: ${crewNames}\n\nThis action cannot be undone.`
+      `Are you sure you want to delete ${crewsToDelete.length} crew${crewsToDelete.length > 1 ? 's' : ''}?\n\nCrews: ${crewNames}\n\nThis action cannot be undone.`,
     );
-    
+
     if (!isConfirmed) {
       return;
     }
@@ -262,28 +259,19 @@ const MyCrewsPage: React.FC = () => {
   if (!user) {
     return (
       <div className="my-crews-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">👥</div>
             <h2>My Crews</h2>
             <p>Sign in to view and manage your saved crew lineups</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowAuthModal(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
               Sign In to View Crews
             </button>
           </div>
         </div>
-        
-        <AuthModal 
-          open={showAuthModal} 
-          onClose={() => setShowAuthModal(false)} 
-        />
+
+        <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </div>
     );
   }
@@ -291,10 +279,7 @@ const MyCrewsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="my-crews-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="loading-state">
             <div className="loading-spinner"></div>
@@ -308,14 +293,13 @@ const MyCrewsPage: React.FC = () => {
   if (error && !loading) {
     return (
       <div className="my-crews-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="alert error">
             ⚠️ {error}
-            <button className="alert-close" onClick={() => setError(null)}>×</button>
+            <button className="alert-close" onClick={() => setError(null)}>
+              ×
+            </button>
           </div>
           <div style={{ textAlign: 'center' }}>
             <button className="btn btn-primary" onClick={loadCrews}>
@@ -330,19 +314,15 @@ const MyCrewsPage: React.FC = () => {
   if (savedCrews.length === 0 && !loading) {
     return (
       <div className="my-crews-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">🚣</div>
             <h2>No Crews Yet</h2>
-            <p>Create your first crew lineup to get started with generating beautiful rowing images</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => navigate('/crews/create')}
-            >
+            <p>
+              Create your first crew lineup to get started with generating beautiful rowing images
+            </p>
+            <button className="btn btn-primary" onClick={() => navigate('/crews/create')}>
               👥 Create Your First Crew
             </button>
           </div>
@@ -353,22 +333,23 @@ const MyCrewsPage: React.FC = () => {
 
   return (
     <div className="my-crews-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
       <div className="container">
         {successMessage && (
           <div className="alert success">
             ✅ {successMessage}
-            <button className="alert-close" onClick={() => setSuccessMessage(null)}>×</button>
+            <button className="alert-close" onClick={() => setSuccessMessage(null)}>
+              ×
+            </button>
           </div>
         )}
 
         {error && (
           <div className="alert error">
             ⚠️ {error}
-            <button className="alert-close" onClick={() => setError(null)}>×</button>
+            <button className="alert-close" onClick={() => setError(null)}>
+              ×
+            </button>
           </div>
         )}
 
@@ -396,10 +377,7 @@ const MyCrewsPage: React.FC = () => {
                   >
                     Clear ({selectedCrews.size})
                   </button>
-                  <button
-                    className="btn btn-outline-danger-small"
-                    onClick={handleBulkDelete}
-                  >
+                  <button className="btn btn-outline-danger-small" onClick={handleBulkDelete}>
                     Delete
                   </button>
                   <button
@@ -416,159 +394,160 @@ const MyCrewsPage: React.FC = () => {
                   </button>
                 </div>
               )}
-              
-              <div className='crew-dropdown'>
-              {savedCrews.length > 0 && (
-                <div className="sort-dropdown">
-                  <select 
-                    value={sortBy} 
-                    onChange={(e) => setSortBy(e.target.value)}
-                    aria-label="Sort crews by"
-                  >
-                    <option value="recent">Recently Created</option>
-                    <option value="club">Club Name</option>
-                    <option value="race">Race Name</option>
-                    <option value="boat_class">Boat Class</option>
-                  </select>
-                </div>
-              )}
+
+              <div className="crew-dropdown">
+                {savedCrews.length > 0 && (
+                  <div className="sort-dropdown">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      aria-label="Sort crews by"
+                    >
+                      <option value="recent">Recently Created</option>
+                      <option value="club">Club Name</option>
+                      <option value="race">Race Name</option>
+                      <option value="boat_class">Boat Class</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-          
+
           <div className="crews-grid">
             {distributeCrewsIntoColumns(getSortedCrews()).map((column, columnIndex) => (
               <div key={columnIndex} className="crew-column">
                 {column.map((crew) => (
-                  <div 
-                    key={crew.id} 
+                  <div
+                    key={crew.id}
                     className={`crew-card ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
                     onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
                   >
-                <div className="crew-card-header">
-                  <div className="crew-card-title">
-                    <h3>{crew.boatName}</h3>
-                    <div className="crew-card-subtitle">
-                      <span>{crew.boatClub}</span>
-                      <span>•</span>
-                      <span>{crew.boatClass}</span>
+                    <div className="crew-card-header">
+                      <div className="crew-card-title">
+                        <h3>{crew.boatName}</h3>
+                        <div className="crew-card-subtitle">
+                          <span>{crew.boatClub}</span>
+                          <span>•</span>
+                          <span>{crew.boatClass}</span>
+                        </div>
+                      </div>
+                      <div
+                        className={`crew-card-checkbox ${selectedCrews.has(crew.id) ? 'checked' : ''}`}
+                        onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
+                      ></div>
                     </div>
-                  </div>
-                  <div 
-                    className={`crew-card-checkbox ${selectedCrews.has(crew.id) ? 'checked' : ''}`}
-                    onClick={() => handleCrewSelection(crew.id, !selectedCrews.has(crew.id))}
-                  ></div>
-                </div>
 
-                <div className="crew-compact-info">
-                  <div className="crew-compact-row">
-                    <span className="crew-compact-label">Race:</span>
-                    <span className="crew-compact-value">{crew.raceName}</span>
-                  </div>
-                </div>
-
-                <div className="crew-members">
-                  <div 
-                    className="crew-members-header" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleCrewMembersExpansion(crew.id);
-                    }}
-                  >
-                    <span className="crew-members-title">
-                      {crew.crewMembers.length} Crew Members
-                    </span>
-                    <span className={`crew-members-toggle ${expandedCrewMembers.has(crew.id) ? 'expanded' : ''}`}>
-                      ▼
-                    </span>
-                  </div>
-                  
-                  
-                  {expandedCrewMembers.has(crew.id) && (
-                    <div 
-                      className="crew-boat-layout"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleCrewMembersExpansion(crew.id);
-                      }}
-                    >
-                      {/* Coach floated left */}
-                      {crew.coachName && (
-                        <div className="coach-position">
-                          <div className="crew-member-seat coach">Coach</div>
-                          <div className="crew-member-name">{crew.coachName}</div>
-                        </div>
-                      )}
-                      
-                      {/* Cox at top center if exists */}
-                      {crew.crewMembers.some(member => member.seat === 'C') && (
-                        <div className="cox-position">
-                          {crew.crewMembers
-                            .filter(member => member.seat === 'C')
-                            .map((member, idx) => (
-                              <div key={idx} className="crew-member-boat">
-                                <div className="crew-member-seat">{member.seat}</div>
-                                <div className="crew-member-name">{member.name}</div>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                      
-                      {/* Rowers in single column */}
-                      <div className="rowers-layout">
-                        {crew.crewMembers
-                          .filter(member => member.seat !== 'C')
-                          .map((member, idx) => (
-                            <div key={idx} className="rower-position">
-                              <div className="crew-member-boat">
-                                <div className="crew-member-seat">{member.seat}</div>
-                                <div className="crew-member-name">{member.name}</div>
-                              </div>
-                            </div>
-                          ))}
+                    <div className="crew-compact-info">
+                      <div className="crew-compact-row">
+                        <span className="crew-compact-label">Race:</span>
+                        <span className="crew-compact-value">{crew.raceName}</span>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                <div className="crew-actions">
-                  <div className="crew-actions-left">
-                    <button 
-                      className="crew-action-btn primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-                        handleEditCrew(originalIndex);
-                      }}
-                    >
-                      Edit
-                    </button>
+                    <div className="crew-members">
+                      <div
+                        className="crew-members-header"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCrewMembersExpansion(crew.id);
+                        }}
+                      >
+                        <span className="crew-members-title">
+                          {crew.crewMembers.length} Crew Members
+                        </span>
+                        <span
+                          className={`crew-members-toggle ${expandedCrewMembers.has(crew.id) ? 'expanded' : ''}`}
+                        >
+                          ▼
+                        </span>
+                      </div>
+
+                      {expandedCrewMembers.has(crew.id) && (
+                        <div
+                          className="crew-boat-layout"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCrewMembersExpansion(crew.id);
+                          }}
+                        >
+                          {/* Coach floated left */}
+                          {crew.coachName && (
+                            <div className="coach-position">
+                              <div className="crew-member-seat coach">Coach</div>
+                              <div className="crew-member-name">{crew.coachName}</div>
+                            </div>
+                          )}
+
+                          {/* Cox at top center if exists */}
+                          {crew.crewMembers.some((member) => member.seat === 'C') && (
+                            <div className="cox-position">
+                              {crew.crewMembers
+                                .filter((member) => member.seat === 'C')
+                                .map((member, idx) => (
+                                  <div key={idx} className="crew-member-boat">
+                                    <div className="crew-member-seat">{member.seat}</div>
+                                    <div className="crew-member-name">{member.name}</div>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+
+                          {/* Rowers in single column */}
+                          <div className="rowers-layout">
+                            {crew.crewMembers
+                              .filter((member) => member.seat !== 'C')
+                              .map((member, idx) => (
+                                <div key={idx} className="rower-position">
+                                  <div className="crew-member-boat">
+                                    <div className="crew-member-seat">{member.seat}</div>
+                                    <div className="crew-member-name">{member.name}</div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="crew-actions">
+                      <div className="crew-actions-left">
+                        <button
+                          className="crew-action-btn primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                            handleEditCrew(originalIndex);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                      <div className="crew-actions-right">
+                        <button
+                          className="crew-action-btn secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/generate', {
+                              state: { selectedCrewIds: [crew.id] },
+                            });
+                          }}
+                        >
+                          Generate
+                        </button>
+                        <button
+                          className="crew-action-btn danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
+                            handleDeleteCrew(originalIndex);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="crew-actions-right">
-                    <button 
-                      className="crew-action-btn secondary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate('/generate', {
-                          state: { selectedCrewIds: [crew.id] }
-                        });
-                      }}
-                    >
-                      Generate
-                    </button>
-                    <button 
-                      className="crew-action-btn danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
-                        handleDeleteCrew(originalIndex);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
                 ))}
               </div>
             ))}
@@ -576,11 +555,7 @@ const MyCrewsPage: React.FC = () => {
         </div>
       </div>
 
-      
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

@@ -17,7 +17,7 @@ const TemplatesPage: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('classic-lineup');
   const [selectedColor, setSelectedColor] = useState('#2563eb');
-  
+
   // Club presets
   const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
@@ -58,22 +58,22 @@ const TemplatesPage: React.FC = () => {
           club_name: 'Thames Rowing Club',
           primary_color: '#1e40af',
           secondary_color: '#3b82f6',
-          is_default: true
+          is_default: true,
         },
         {
           id: 2,
           club_name: 'Oxford University BC',
           primary_color: '#1e3a8a',
           secondary_color: '#60a5fa',
-          is_default: false
+          is_default: false,
         },
         {
           id: 3,
           club_name: 'Cambridge University BC',
           primary_color: '#0f766e',
           secondary_color: '#14b8a6',
-          is_default: false
-        }
+          is_default: false,
+        },
       ]);
     }
   };
@@ -95,12 +95,10 @@ const TemplatesPage: React.FC = () => {
     { id: 'action-shot', name: 'Action Shot', type: 'Dynamic • Landscape', icon: '🌊' },
     { id: 'race-day', name: 'Race Day', type: 'Event • Portrait', icon: '🏆' },
     { id: 'minimal', name: 'Minimal', type: 'Clean • Square', icon: '⚡' },
-    { id: 'premium', name: 'Premium', type: 'Elegant • Portrait', icon: '✨' }
+    { id: 'premium', name: 'Premium', type: 'Elegant • Portrait', icon: '✨' },
   ];
 
-  const colors = [
-    '#2563eb', '#dc2626', '#16a34a', '#7c3aed', '#ea580c', '#0891b2'
-  ];
+  const colors = ['#2563eb', '#dc2626', '#16a34a', '#7c3aed', '#ea580c', '#0891b2'];
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -118,10 +116,7 @@ const TemplatesPage: React.FC = () => {
 
   return (
     <div className="templates-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
       <div className="container">
         <section className="hero">
           <h1>Template Gallery</h1>
@@ -144,17 +139,17 @@ const TemplatesPage: React.FC = () => {
 
         <div className="customization-panel">
           <h2>Customize Template</h2>
-          
+
           {/* Club Presets Section */}
           <div className="form-section">
             <label className="form-label">Club Presets</label>
-            <button 
+            <button
               className="btn btn-secondary club-presets-toggle"
               onClick={handleToggleClubPresets}
             >
               🏛️ {showClubPresets ? 'Hide' : 'Use'} Club Presets
             </button>
-            
+
             {showClubPresets && (
               <div className="club-presets-dropdown">
                 <div className="club-presets-list">
@@ -170,13 +165,13 @@ const TemplatesPage: React.FC = () => {
                           {preset.is_default && <span className="default-badge">Default</span>}
                         </span>
                         <div className="preset-colors">
-                          <div 
-                            className="color-dot" 
+                          <div
+                            className="color-dot"
                             style={{ backgroundColor: preset.primary_color }}
                             title={`Primary: ${preset.primary_color}`}
                           ></div>
-                          <div 
-                            className="color-dot" 
+                          <div
+                            className="color-dot"
                             style={{ backgroundColor: preset.secondary_color }}
                             title={`Secondary: ${preset.secondary_color}`}
                           ></div>
@@ -204,14 +199,14 @@ const TemplatesPage: React.FC = () => {
             {selectedPresetId && (
               <div className="selected-preset-info">
                 <span>
-                  Using colors from: {clubPresets.find(p => p.id === selectedPresetId)?.club_name}
+                  Using colors from: {clubPresets.find((p) => p.id === selectedPresetId)?.club_name}
                 </span>
               </div>
             )}
           </div>
-          
+
           <div className="btn-group">
-            <button 
+            <button
               className="btn btn-secondary"
               onClick={() => {
                 setSelectedPresetId(null);
@@ -227,11 +222,8 @@ const TemplatesPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-      />
+
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

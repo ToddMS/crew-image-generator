@@ -38,7 +38,11 @@ const NewGalleryPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; image: SavedImage } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    image: SavedImage;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleNavClick = (path: string) => {
@@ -100,7 +104,7 @@ const NewGalleryPage: React.FC = () => {
 
   const applyFilter = () => {
     let filtered = [...images];
-    
+
     switch (filter) {
       case 'recent':
         filtered = filtered
@@ -112,10 +116,12 @@ const NewGalleryPage: React.FC = () => {
         break;
       case 'all':
       default:
-        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filtered = filtered.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
         break;
     }
-    
+
     setFilteredImages(filtered);
   };
 
@@ -143,7 +149,7 @@ const NewGalleryPage: React.FC = () => {
     try {
       const response = await ApiService.deleteSavedImage(parseInt(image.id));
       if (response.success) {
-        setImages(prev => prev.filter(img => img.id !== image.id));
+        setImages((prev) => prev.filter((img) => img.id !== image.id));
         showSuccess('Image deleted successfully!');
       } else {
         throw new Error(response.error || 'Delete failed');
@@ -163,7 +169,7 @@ const NewGalleryPage: React.FC = () => {
     setContextMenu({
       x: event.clientX,
       y: event.clientY,
-      image
+      image,
     });
   };
 
@@ -178,7 +184,7 @@ const NewGalleryPage: React.FC = () => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -191,26 +197,20 @@ const NewGalleryPage: React.FC = () => {
   if (!user) {
     return (
       <div className="gallery-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">🖼️</div>
             <h2>Image Gallery</h2>
             <p>Sign in to view and manage your generated crew images</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowAuthModal(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
               Sign In to View Gallery
             </button>
           </div>
         </div>
-        
-        <AuthModal 
-          open={showAuthModal} 
+
+        <AuthModal
+          open={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           onSuccess={handleAuthSuccess}
         />
@@ -221,10 +221,7 @@ const NewGalleryPage: React.FC = () => {
   if (loading) {
     return (
       <div className="gallery-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="loading-state">
             <div className="loading-spinner"></div>
@@ -237,43 +234,42 @@ const NewGalleryPage: React.FC = () => {
 
   return (
     <div className="gallery-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
       <div className="container">
         <div className="gallery-header">
           <h1>Gallery</h1>
-          <p>View, manage, and download your generated crew images ({filteredImages.length} images)</p>
+          <p>
+            View, manage, and download your generated crew images ({filteredImages.length} images)
+          </p>
         </div>
 
         {/* Gallery Controls */}
         <div className="gallery-controls">
           <div className="gallery-filters">
-            <button 
+            <button
               className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
               onClick={() => setFilter('all')}
             >
               All Images ({images.length})
             </button>
-            <button 
+            <button
               className={`filter-btn ${filter === 'recent' ? 'active' : ''}`}
               onClick={() => setFilter('recent')}
             >
               Recent
             </button>
           </div>
-          
+
           <div className="gallery-actions">
             <div className="view-toggle">
-              <button 
+              <button
                 className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
                 onClick={() => setViewMode('grid')}
                 title="Grid View"
               >
                 ⊞
               </button>
-              <button 
+              <button
                 className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
                 onClick={() => setViewMode('list')}
                 title="List View"
@@ -281,10 +277,7 @@ const NewGalleryPage: React.FC = () => {
                 ☰
               </button>
             </div>
-            <button 
-              className="generate-btn"
-              onClick={() => navigate('/generate')}
-            >
+            <button className="generate-btn" onClick={() => navigate('/generate')}>
               ➕ Generate New Image
             </button>
           </div>
@@ -296,18 +289,15 @@ const NewGalleryPage: React.FC = () => {
             <div className="empty-state-icon">🎨</div>
             <h2>No Images Yet</h2>
             <p>Start creating beautiful crew images by generating your first image</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => navigate('/generate')}
-            >
+            <button className="btn btn-primary" onClick={() => navigate('/generate')}>
               🎨 Generate Your First Image
             </button>
           </div>
         ) : (
           <div className={`gallery-grid ${viewMode}-view`}>
             {filteredImages.map((image) => (
-              <div 
-                key={image.id} 
+              <div
+                key={image.id}
                 className={`image-card ${viewMode}-view`}
                 onContextMenu={(e) => handleContextMenu(e, image)}
               >
@@ -318,14 +308,14 @@ const NewGalleryPage: React.FC = () => {
                     onClick={() => setFullscreenImage(image)}
                   />
                   <div className="image-overlay">
-                    <button 
+                    <button
                       className="overlay-btn"
                       onClick={() => setFullscreenImage(image)}
                       title="View Fullscreen"
                     >
                       🔍
                     </button>
-                    <button 
+                    <button
                       className="overlay-btn"
                       onClick={() => handleDownload(image)}
                       title="Download"
@@ -338,10 +328,7 @@ const NewGalleryPage: React.FC = () => {
                 <div className={`image-info ${viewMode}-view`}>
                   <div className="image-title">
                     {image.crewName}
-                    <button 
-                      className="image-menu-btn"
-                      onClick={(e) => handleContextMenu(e, image)}
-                    >
+                    <button className="image-menu-btn" onClick={(e) => handleContextMenu(e, image)}>
                       ⋮
                     </button>
                   </div>
@@ -351,18 +338,20 @@ const NewGalleryPage: React.FC = () => {
                     {formatDate(image.createdAt)}
                   </div>
                   <div className="image-tags">
-                    <span className="image-tag">{image.dimensions.width}×{image.dimensions.height}</span>
+                    <span className="image-tag">
+                      {image.dimensions.width}×{image.dimensions.height}
+                    </span>
                     <span className="image-tag">{formatFileSize(image.fileSize)}</span>
                     <span className="image-tag">{image.format.toUpperCase()}</span>
                   </div>
                   <div className="image-actions">
-                    <button 
+                    <button
                       className="image-action-btn primary"
                       onClick={() => handleDownload(image)}
                     >
                       ⬇️ Download
                     </button>
-                    <button 
+                    <button
                       className="image-action-btn secondary icon-only"
                       onClick={() => setFullscreenImage(image)}
                       title="View Fullscreen"
@@ -378,29 +367,26 @@ const NewGalleryPage: React.FC = () => {
 
         {/* Context Menu */}
         {contextMenu && (
-          <div 
+          <div
             className="context-menu"
-            style={{ 
-              left: contextMenu.x, 
+            style={{
+              left: contextMenu.x,
               top: contextMenu.y,
-              position: 'fixed'
+              position: 'fixed',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div 
+            <div
               className="context-menu-item"
               onClick={() => setFullscreenImage(contextMenu.image)}
             >
               🔍 View Fullscreen
             </div>
-            <div 
-              className="context-menu-item"
-              onClick={() => handleDownload(contextMenu.image)}
-            >
+            <div className="context-menu-item" onClick={() => handleDownload(contextMenu.image)}>
               ⬇️ Download
             </div>
             <div className="context-menu-divider"></div>
-            <div 
+            <div
               className="context-menu-item danger"
               onClick={() => {
                 setSelectedImage(contextMenu.image);
@@ -421,10 +407,7 @@ const NewGalleryPage: React.FC = () => {
                 <div className="modal-title">
                   {fullscreenImage.crewName} - {fullscreenImage.templateName}
                 </div>
-                <button 
-                  className="modal-close"
-                  onClick={() => setFullscreenImage(null)}
-                >
+                <button className="modal-close" onClick={() => setFullscreenImage(null)}>
                   ×
                 </button>
               </div>
@@ -435,7 +418,9 @@ const NewGalleryPage: React.FC = () => {
                   className="fullscreen-image"
                 />
                 <div className="image-details">
-                  <span className="detail-chip">{fullscreenImage.dimensions.width} × {fullscreenImage.dimensions.height}</span>
+                  <span className="detail-chip">
+                    {fullscreenImage.dimensions.width} × {fullscreenImage.dimensions.height}
+                  </span>
                   <span className="detail-chip">{formatFileSize(fullscreenImage.fileSize)}</span>
                   <span className="detail-chip">{fullscreenImage.format.toUpperCase()}</span>
                   <span className="detail-chip">{formatDate(fullscreenImage.createdAt)}</span>
@@ -454,20 +439,14 @@ const NewGalleryPage: React.FC = () => {
                 <div className="dialog-title">Delete Image</div>
               </div>
               <div className="dialog-content">
-                Are you sure you want to delete "{selectedImage.crewName} - {selectedImage.templateName}"? 
-                This action cannot be undone.
+                Are you sure you want to delete "{selectedImage.crewName} -{' '}
+                {selectedImage.templateName}"? This action cannot be undone.
               </div>
               <div className="dialog-actions">
-                <button 
-                  className="dialog-btn cancel"
-                  onClick={() => setShowDeleteDialog(false)}
-                >
+                <button className="dialog-btn cancel" onClick={() => setShowDeleteDialog(false)}>
                   Cancel
                 </button>
-                <button 
-                  className="dialog-btn confirm"
-                  onClick={() => handleDelete(selectedImage)}
-                >
+                <button className="dialog-btn confirm" onClick={() => handleDelete(selectedImage)}>
                   Delete
                 </button>
               </div>
@@ -475,9 +454,9 @@ const NewGalleryPage: React.FC = () => {
           </>
         )}
       </div>
-      
-      <AuthModal 
-        open={showAuthModal} 
+
+      <AuthModal
+        open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />

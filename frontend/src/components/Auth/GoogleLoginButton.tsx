@@ -26,15 +26,18 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess, onErro
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = React.useState(false);
 
-  const handleCredentialResponse = useCallback(async (response: { credential: string }) => {
-    try {
-      await login(response.credential);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Login failed:', error);
-      onError?.(error);
-    }
-  }, [login, onSuccess, onError]);
+  const handleCredentialResponse = useCallback(
+    async (response: { credential: string }) => {
+      try {
+        await login(response.credential);
+        onSuccess?.();
+      } catch (error) {
+        console.error('Login failed:', error);
+        onError?.(error);
+      }
+    },
+    [login, onSuccess, onError],
+  );
 
   const initializeGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;

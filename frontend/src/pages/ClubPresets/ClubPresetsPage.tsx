@@ -22,10 +22,12 @@ const ClubPresetsPage: React.FC = () => {
   const [newPresetForm, setNewPresetForm] = useState({
     club_name: '',
     primary_color: '#2563eb',
-    secondary_color: '#1e40af'
+    secondary_color: '#1e40af',
   });
   const [editingPresetId, setEditingPresetId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<{[key: number]: {club_name: string, primary_color: string, secondary_color: string}}>({});
+  const [editForm, setEditForm] = useState<{
+    [key: number]: { club_name: string; primary_color: string; secondary_color: string };
+  }>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -34,7 +36,7 @@ const ClubPresetsPage: React.FC = () => {
     club_name: '',
     primary_color: '#2563eb',
     secondary_color: '#1e40af',
-    is_default: false
+    is_default: false,
   });
 
   const handleNavClick = (path: string) => {
@@ -75,211 +77,211 @@ const ClubPresetsPage: React.FC = () => {
             club_name: 'Thames Rowing Club',
             primary_color: '#2563eb',
             secondary_color: '#1e40af',
-            is_default: true
+            is_default: true,
           },
           {
             id: 2,
             club_name: 'London Rowing Club',
             primary_color: '#dc2626',
             secondary_color: '#1f2937',
-            is_default: false
+            is_default: false,
           },
           {
             id: 3,
             club_name: 'Leander Club',
             primary_color: '#be185d',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 4,
             club_name: 'Tideway Scullers School',
             primary_color: '#16a34a',
             secondary_color: '#1f2937',
-            is_default: false
+            is_default: false,
           },
           {
             id: 5,
             club_name: 'Putney Town RC',
             primary_color: '#0891b2',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 6,
             club_name: 'Imperial College BC',
             primary_color: '#1e40af',
             secondary_color: '#ef4444',
-            is_default: false
+            is_default: false,
           },
           {
             id: 7,
             club_name: 'Kings College London BC',
             primary_color: '#7c3aed',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 8,
             club_name: 'University College London BC',
             primary_color: '#1f2937',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 9,
             club_name: 'London School of Economics BC',
             primary_color: '#dc2626',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 10,
             club_name: 'Fulham Reach BC',
             primary_color: '#059669',
             secondary_color: '#065f46',
-            is_default: false
+            is_default: false,
           },
           {
             id: 11,
             club_name: 'Barn Elms BC',
             primary_color: '#7c2d12',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 12,
             club_name: 'Kingston RC',
             primary_color: '#1e40af',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 13,
             club_name: 'Mortlake Anglian & Alpha BC',
             primary_color: '#0891b2',
             secondary_color: '#0f172a',
-            is_default: false
+            is_default: false,
           },
           {
             id: 14,
             club_name: 'Vesta RC',
             primary_color: '#be123c',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 15,
             club_name: 'Thames RC',
             primary_color: '#1e3a8a',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 16,
             club_name: 'Quintin BC',
             primary_color: '#7c3aed',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 17,
             club_name: 'Westminster School BC',
             primary_color: '#be185d',
             secondary_color: '#1f2937',
-            is_default: false
+            is_default: false,
           },
           {
             id: 18,
             club_name: 'Westminster School Ladies BC',
             primary_color: '#be185d',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 19,
             club_name: 'Hammersmith RC',
             primary_color: '#dc2626',
             secondary_color: '#1f2937',
-            is_default: false
+            is_default: false,
           },
           {
             id: 20,
             club_name: 'Wandsworth RC',
             primary_color: '#1e40af',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 21,
             club_name: 'Auriol Kensington RC',
             primary_color: '#084f29',
             secondary_color: '#efc0d4',
-            is_default: false
+            is_default: false,
           },
           {
             id: 22,
             club_name: 'Star & Arrow Club',
             primary_color: '#1f2937',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 23,
             club_name: 'Crabtree RC',
             primary_color: '#16a34a',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 24,
             club_name: 'City of London School BC',
             primary_color: '#1e40af',
             secondary_color: '#dc2626',
-            is_default: false
+            is_default: false,
           },
           {
             id: 25,
             club_name: 'Dulwich College BC',
             primary_color: '#7c2d12',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 26,
-            club_name: 'Guy\'s, King\'s & St Thomas\' BC',
+            club_name: "Guy's, King's & St Thomas' BC",
             primary_color: '#1e40af',
             secondary_color: '#dc2626',
-            is_default: false
+            is_default: false,
           },
           {
             id: 27,
             club_name: 'Molesey BC',
             primary_color: '#be123c',
             secondary_color: '#f8fafc',
-            is_default: false
+            is_default: false,
           },
           {
             id: 28,
             club_name: 'Walton RC',
             primary_color: '#dc2626',
             secondary_color: '#1f2937',
-            is_default: false
+            is_default: false,
           },
           {
             id: 29,
             club_name: 'Twickenham RC',
             primary_color: '#059669',
             secondary_color: '#fbbf24',
-            is_default: false
+            is_default: false,
           },
           {
             id: 30,
             club_name: 'Richmond RC',
             primary_color: '#7c3aed',
             secondary_color: '#f8fafc',
-            is_default: false
-          }
+            is_default: false,
+          },
         ]);
       }
     } catch (error) {
@@ -291,22 +293,22 @@ const ClubPresetsPage: React.FC = () => {
           club_name: 'Thames Rowing Club',
           primary_color: '#2563eb',
           secondary_color: '#1e40af',
-          is_default: true
+          is_default: true,
         },
         {
           id: 2,
           club_name: 'London Rowing Club',
           primary_color: '#dc2626',
           secondary_color: '#1f2937',
-          is_default: false
+          is_default: false,
         },
         {
           id: 3,
           club_name: 'Leander Club',
           primary_color: '#be185d',
           secondary_color: '#f8fafc',
-          is_default: false
-        }
+          is_default: false,
+        },
       ]);
     } finally {
       setLoading(false);
@@ -315,9 +317,9 @@ const ClubPresetsPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -337,13 +339,13 @@ const ClubPresetsPage: React.FC = () => {
       } else {
         showError(response.error || 'Failed to create club preset');
       }
-      
+
       // Reset form
       setFormData({
         club_name: '',
         primary_color: '#2563eb',
         secondary_color: '#1e40af',
-        is_default: false
+        is_default: false,
       });
       setShowCreateModal(false);
     } catch (error) {
@@ -359,8 +361,8 @@ const ClubPresetsPage: React.FC = () => {
       [preset.id]: {
         club_name: preset.club_name,
         primary_color: preset.primary_color,
-        secondary_color: preset.secondary_color
-      }
+        secondary_color: preset.secondary_color,
+      },
     });
   };
 
@@ -398,8 +400,8 @@ const ClubPresetsPage: React.FC = () => {
       ...editForm,
       [presetId]: {
         ...editForm[presetId],
-        [field]: value
-      }
+        [field]: value,
+      },
     });
   };
 
@@ -442,15 +444,15 @@ const ClubPresetsPage: React.FC = () => {
         presetColors: {
           primary: preset.primary_color,
           secondary: preset.secondary_color,
-          clubName: preset.club_name
-        }
-      }
+          clubName: preset.club_name,
+        },
+      },
     });
     showSuccess(`Applied ${preset.club_name} colors`);
   };
 
-  const filteredPresets = clubPresets.filter(preset =>
-    preset.club_name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPresets = clubPresets.filter((preset) =>
+    preset.club_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const openAddPresetModal = () => {
@@ -459,7 +461,7 @@ const ClubPresetsPage: React.FC = () => {
       club_name: '',
       primary_color: '#2563eb',
       secondary_color: '#1e40af',
-      is_default: false
+      is_default: false,
     });
     setShowCreateModal(true);
   };
@@ -470,7 +472,7 @@ const ClubPresetsPage: React.FC = () => {
     setNewPresetForm({
       club_name: '',
       primary_color: '#2563eb',
-      secondary_color: '#1e40af'
+      secondary_color: '#1e40af',
     });
   };
 
@@ -479,7 +481,7 @@ const ClubPresetsPage: React.FC = () => {
     setNewPresetForm({
       club_name: '',
       primary_color: '#2563eb',
-      secondary_color: '#1e40af'
+      secondary_color: '#1e40af',
     });
   };
 
@@ -492,7 +494,7 @@ const ClubPresetsPage: React.FC = () => {
     try {
       const response = await ApiService.createClubPreset({
         ...newPresetForm,
-        is_default: false
+        is_default: false,
       });
       if (response.data && !response.error) {
         showSuccess('Club preset created successfully!');
@@ -510,7 +512,7 @@ const ClubPresetsPage: React.FC = () => {
   const handleNewPresetChange = (field: string, value: string) => {
     setNewPresetForm({
       ...newPresetForm,
-      [field]: value
+      [field]: value,
     });
   };
 
@@ -520,7 +522,7 @@ const ClubPresetsPage: React.FC = () => {
       club_name: '',
       primary_color: '#2563eb',
       secondary_color: '#1e40af',
-      is_default: false
+      is_default: false,
     });
   };
 
@@ -529,39 +531,27 @@ const ClubPresetsPage: React.FC = () => {
   if (!user) {
     return (
       <div className="club-presets-container">
-        <Navigation 
-          currentPage={currentPage} 
-          onAuthModalOpen={() => setShowAuthModal(true)}
-        />
+        <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
             <div className="empty-state-icon">🏛️</div>
             <h2>Club Presets</h2>
             <p>Sign in to manage your club color presets</p>
-            <button 
-              className="btn btn-primary"
-              onClick={() => setShowAuthModal(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
               Sign In to Manage Presets
             </button>
           </div>
         </div>
-        
-        <AuthModal 
-          open={showAuthModal} 
-          onClose={() => setShowAuthModal(false)}
-        />
+
+        <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </div>
     );
   }
 
   return (
     <div className="club-presets-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
-      
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
+
       <div className="container">
         <div className="section-header">
           <div className="section-header-left">
@@ -570,18 +560,14 @@ const ClubPresetsPage: React.FC = () => {
           </div>
           <div className="section-header-right">
             <div className="search-bar">
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="Search club presets..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-              <button 
-                className="btn btn-primary" 
-                onClick={startNewPreset}
-                disabled={isCreatingNew}
-              >
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search club presets..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button className="btn btn-primary" onClick={startNewPreset} disabled={isCreatingNew}>
                 + Add New
               </button>
             </div>
@@ -600,10 +586,7 @@ const ClubPresetsPage: React.FC = () => {
                 <>
                   <h3>No presets found</h3>
                   <p>No club presets match "{searchTerm}"</p>
-                  <button 
-                    className="btn btn-secondary"
-                    onClick={() => setSearchTerm('')}
-                  >
+                  <button className="btn btn-secondary" onClick={() => setSearchTerm('')}>
                     Clear Search
                   </button>
                 </>
@@ -611,10 +594,7 @@ const ClubPresetsPage: React.FC = () => {
                 <>
                   <h3>No Club Presets Yet</h3>
                   <p>Create your first club preset to get started</p>
-                  <button 
-                    className="btn btn-primary"
-                    onClick={openAddPresetModal}
-                  >
+                  <button className="btn btn-primary" onClick={openAddPresetModal}>
                     Create First Preset
                   </button>
                 </>
@@ -625,7 +605,7 @@ const ClubPresetsPage: React.FC = () => {
               {isCreatingNew && (
                 <div className="preset-card editing new-preset">
                   <div className="preset-header">
-                    <input 
+                    <input
                       type="text"
                       className="preset-name-input"
                       placeholder="Enter club name"
@@ -636,13 +616,13 @@ const ClubPresetsPage: React.FC = () => {
                   <div className="preset-colors">
                     <div className="preset-color-group">
                       <div className="preset-color-label">Primary</div>
-                      <input 
-                        type="color" 
+                      <input
+                        type="color"
                         className="preset-color-picker"
                         value={newPresetForm.primary_color}
                         onChange={(e) => handleNewPresetChange('primary_color', e.target.value)}
                       />
-                      <input 
+                      <input
                         type="text"
                         className="preset-color-hex-input"
                         value={newPresetForm.primary_color}
@@ -651,13 +631,13 @@ const ClubPresetsPage: React.FC = () => {
                     </div>
                     <div className="preset-color-group">
                       <div className="preset-color-label">Secondary</div>
-                      <input 
-                        type="color" 
+                      <input
+                        type="color"
                         className="preset-color-picker"
                         value={newPresetForm.secondary_color}
                         onChange={(e) => handleNewPresetChange('secondary_color', e.target.value)}
                       />
-                      <input 
+                      <input
                         type="text"
                         className="preset-color-hex-input"
                         value={newPresetForm.secondary_color}
@@ -666,139 +646,143 @@ const ClubPresetsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="preset-actions">
-                    <button 
-                      className="preset-btn" 
-                      onClick={cancelNewPreset}
-                    >
+                    <button className="preset-btn" onClick={cancelNewPreset}>
                       Cancel
                     </button>
-                    <button 
-                      className="preset-btn primary" 
-                      onClick={saveNewPreset}
-                    >
+                    <button className="preset-btn primary" onClick={saveNewPreset}>
                       Save
                     </button>
                   </div>
                 </div>
               )}
               {filteredPresets.map((preset) => {
-              const isEditing = editingPresetId === preset.id;
-              const editData = editForm[preset.id] || preset;
-              
-              return (
-                <div key={preset.id} className={`preset-card ${preset.is_default ? 'favorite' : ''} ${isEditing ? 'editing' : ''}`}>
-                  <div className="preset-header">
-                    {isEditing ? (
-                      <input 
-                        type="text"
-                        className="preset-name-input"
-                        value={editData.club_name}
-                        onChange={(e) => handleEditFormChange(preset.id, 'club_name', e.target.value)}
-                      />
-                    ) : (
-                      <h3 className="preset-name">{preset.club_name}</h3>
-                    )}
-                    {!isEditing && (
-                      <span 
-                        className={`favorite-star ${preset.is_default ? 'active' : ''}`}
-                        onClick={() => handleToggleFavorite(preset)}
-                        title={preset.is_default ? 'Remove from favorites' : 'Set as favorite'}
-                      >
-                        {preset.is_default ? '★' : '☆'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="preset-colors">
-                    <div className="preset-color-group">
-                      <div className="preset-color-label">Primary</div>
+                const isEditing = editingPresetId === preset.id;
+                const editData = editForm[preset.id] || preset;
+
+                return (
+                  <div
+                    key={preset.id}
+                    className={`preset-card ${preset.is_default ? 'favorite' : ''} ${isEditing ? 'editing' : ''}`}
+                  >
+                    <div className="preset-header">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          className="preset-name-input"
+                          value={editData.club_name}
+                          onChange={(e) =>
+                            handleEditFormChange(preset.id, 'club_name', e.target.value)
+                          }
+                        />
+                      ) : (
+                        <h3 className="preset-name">{preset.club_name}</h3>
+                      )}
+                      {!isEditing && (
+                        <span
+                          className={`favorite-star ${preset.is_default ? 'active' : ''}`}
+                          onClick={() => handleToggleFavorite(preset)}
+                          title={preset.is_default ? 'Remove from favorites' : 'Set as favorite'}
+                        >
+                          {preset.is_default ? '★' : '☆'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="preset-colors">
+                      <div className="preset-color-group">
+                        <div className="preset-color-label">Primary</div>
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="color"
+                              className="preset-color-picker"
+                              value={editData.primary_color}
+                              onChange={(e) =>
+                                handleEditFormChange(preset.id, 'primary_color', e.target.value)
+                              }
+                            />
+                            <input
+                              type="text"
+                              className="preset-color-hex-input"
+                              value={editData.primary_color}
+                              onChange={(e) =>
+                                handleEditFormChange(preset.id, 'primary_color', e.target.value)
+                              }
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="preset-color-swatch"
+                              style={{ background: preset.primary_color }}
+                            ></div>
+                            <div className="preset-color-hex">{preset.primary_color}</div>
+                          </>
+                        )}
+                      </div>
+                      <div className="preset-color-group">
+                        <div className="preset-color-label">Secondary</div>
+                        {isEditing ? (
+                          <>
+                            <input
+                              type="color"
+                              className="preset-color-picker"
+                              value={editData.secondary_color}
+                              onChange={(e) =>
+                                handleEditFormChange(preset.id, 'secondary_color', e.target.value)
+                              }
+                            />
+                            <input
+                              type="text"
+                              className="preset-color-hex-input"
+                              value={editData.secondary_color}
+                              onChange={(e) =>
+                                handleEditFormChange(preset.id, 'secondary_color', e.target.value)
+                              }
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="preset-color-swatch"
+                              style={{ background: preset.secondary_color }}
+                            ></div>
+                            <div className="preset-color-hex">{preset.secondary_color}</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="preset-actions">
                       {isEditing ? (
                         <>
-                          <input 
-                            type="color" 
-                            className="preset-color-picker"
-                            value={editData.primary_color}
-                            onChange={(e) => handleEditFormChange(preset.id, 'primary_color', e.target.value)}
-                          />
-                          <input 
-                            type="text"
-                            className="preset-color-hex-input"
-                            value={editData.primary_color}
-                            onChange={(e) => handleEditFormChange(preset.id, 'primary_color', e.target.value)}
-                          />
+                          <button
+                            className="preset-btn"
+                            onClick={() => handleCancelEdit(preset.id)}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="preset-btn primary"
+                            onClick={() => handleSaveEdit(preset)}
+                          >
+                            Save
+                          </button>
                         </>
                       ) : (
                         <>
-                          <div 
-                            className="preset-color-swatch" 
-                            style={{ background: preset.primary_color }}
-                          ></div>
-                          <div className="preset-color-hex">{preset.primary_color}</div>
-                        </>
-                      )}
-                    </div>
-                    <div className="preset-color-group">
-                      <div className="preset-color-label">Secondary</div>
-                      {isEditing ? (
-                        <>
-                          <input 
-                            type="color" 
-                            className="preset-color-picker"
-                            value={editData.secondary_color}
-                            onChange={(e) => handleEditFormChange(preset.id, 'secondary_color', e.target.value)}
-                          />
-                          <input 
-                            type="text"
-                            className="preset-color-hex-input"
-                            value={editData.secondary_color}
-                            onChange={(e) => handleEditFormChange(preset.id, 'secondary_color', e.target.value)}
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <div 
-                            className="preset-color-swatch" 
-                            style={{ background: preset.secondary_color }}
-                          ></div>
-                          <div className="preset-color-hex">{preset.secondary_color}</div>
+                          <button className="preset-btn" onClick={() => handleEdit(preset)}>
+                            Edit
+                          </button>
+                          <button
+                            className="preset-btn danger"
+                            onClick={() => setShowDeleteConfirm(preset.id)}
+                          >
+                            Delete
+                          </button>
                         </>
                       )}
                     </div>
                   </div>
-                  <div className="preset-actions">
-                    {isEditing ? (
-                      <>
-                        <button 
-                          className="preset-btn" 
-                          onClick={() => handleCancelEdit(preset.id)}
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          className="preset-btn primary" 
-                          onClick={() => handleSaveEdit(preset)}
-                        >
-                          Save
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button 
-                          className="preset-btn" 
-                          onClick={() => handleEdit(preset)}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          className="preset-btn danger" 
-                          onClick={() => setShowDeleteConfirm(preset.id)}
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
+                );
               })}
             </>
           )}
@@ -810,71 +794,75 @@ const ClubPresetsPage: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3 className="modal-title">
-                Add New Club Preset
-              </h3>
-              <button className="modal-close" onClick={closeAddPresetModal}>×</button>
+              <h3 className="modal-title">Add New Club Preset</h3>
+              <button className="modal-close" onClick={closeAddPresetModal}>
+                ×
+              </button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group">
                   <label className="form-label">Club Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="club_name"
                     name="club_name"
-                    className="form-input" 
+                    className="form-input"
                     placeholder="Enter club name"
                     value={formData.club_name}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
-                
+
                 <div className="form-group">
                   <label className="form-label">Primary Color</label>
                   <div className="color-input-group">
-                    <input 
-                      type="color" 
+                    <input
+                      type="color"
                       id="primary_color"
                       name="primary_color"
-                      className="color-input" 
+                      className="color-input"
                       value={formData.primary_color}
                       onChange={handleInputChange}
                     />
-                    <input 
-                      type="text" 
-                      className="color-hex-input" 
-                      value={formData.primary_color} 
-                      onChange={(e) => setFormData(prev => ({ ...prev, primary_color: e.target.value }))}
+                    <input
+                      type="text"
+                      className="color-hex-input"
+                      value={formData.primary_color}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, primary_color: e.target.value }))
+                      }
                       placeholder="#000000"
                     />
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label className="form-label">Secondary Color</label>
                   <div className="color-input-group">
-                    <input 
-                      type="color" 
+                    <input
+                      type="color"
                       id="secondary_color"
                       name="secondary_color"
-                      className="color-input" 
+                      className="color-input"
                       value={formData.secondary_color}
                       onChange={handleInputChange}
                     />
-                    <input 
-                      type="text" 
-                      className="color-hex-input" 
-                      value={formData.secondary_color} 
-                      onChange={(e) => setFormData(prev => ({ ...prev, secondary_color: e.target.value }))}
+                    <input
+                      type="text"
+                      className="color-hex-input"
+                      value={formData.secondary_color}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, secondary_color: e.target.value }))
+                      }
                       placeholder="#000000"
                     />
                   </div>
                 </div>
               </div>
-              
+
               <div className="btn-group">
                 <button type="button" className="btn btn-secondary" onClick={closeAddPresetModal}>
                   Cancel
@@ -895,27 +883,18 @@ const ClubPresetsPage: React.FC = () => {
             <h3>Delete Club Preset</h3>
             <p>Are you sure you want to delete this club preset? This action cannot be undone.</p>
             <div className="modal-actions">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => setShowDeleteConfirm(null)}
-              >
+              <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(null)}>
                 Cancel
               </button>
-              <button 
-                className="btn btn-danger"
-                onClick={() => handleDelete(showDeleteConfirm)}
-              >
+              <button className="btn btn-danger" onClick={() => handleDelete(showDeleteConfirm)}>
                 Delete
               </button>
             </div>
           </div>
         </div>
       )}
-      
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-      />
+
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

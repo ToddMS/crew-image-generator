@@ -32,7 +32,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
     setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
   };
 
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,22 +48,20 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
   }, [activeDropdown]);
 
   const crewDropdownItems: DropdownItem[] = [
-    { label: 'Create Crew', path: '/crews/create'},
-    { label: 'My Crews', path: '/crews'},
+    { label: 'Create Crew', path: '/crews/create' },
+    { label: 'My Crews', path: '/crews' },
   ];
 
   const templatesDropdownItems: DropdownItem[] = [
-    { label: 'Create Template', path: '/templates/create'},
-    { label: 'View Templates', path: '/templates'},
-    { label: 'Club Presets', path: '/club-presets'},
+    { label: 'Create Template', path: '/templates/create' },
+    { label: 'View Templates', path: '/templates' },
+    { label: 'Club Presets', path: '/club-presets' },
   ];
 
-  const isCrewsActive = currentPage === 'crews' || currentPage === 'create' ;
+  const isCrewsActive = currentPage === 'crews' || currentPage === 'create';
   const isTemplatesActive = currentPage === 'templates' || currentPage === 'club-presets';
 
-  const profileDropdownItems: DropdownItem[] = [
-    { label: 'Settings', path: '/settings'}
-  ];
+  const profileDropdownItems: DropdownItem[] = [{ label: 'Settings', path: '/settings' }];
 
   return (
     <nav className="main-nav">
@@ -73,9 +70,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
           <img src={RowGramLogo} alt="RowGram Logo" className="logo-icon" />
           <span>RowGram</span>
         </button>
-        
+
         <div className="nav-links">
-          <button 
+          <button
             className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
             onClick={() => handleNavClick('/')}
           >
@@ -84,15 +81,17 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
 
           {/* Crews Dropdown */}
           <div className="nav-dropdown">
-            <button 
+            <button
               className={`nav-link dropdown-trigger ${isCrewsActive ? 'active' : ''}`}
               onClick={() => toggleDropdown('crews')}
             >
               Crews
-              <span className={`dropdown-arrow ${activeDropdown === 'crews' ? 'open' : ''}`}>▼</span>
+              <span className={`dropdown-arrow ${activeDropdown === 'crews' ? 'open' : ''}`}>
+                ▼
+              </span>
             </button>
             {activeDropdown === 'crews' && (
-              <div className="dropdown-menu" ref={el => dropdownRefs.current['crews'] = el}>
+              <div className="dropdown-menu" ref={(el) => (dropdownRefs.current['crews'] = el)}>
                 {crewDropdownItems.map((item) => (
                   <button
                     key={item.path}
@@ -109,15 +108,17 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
 
           {/* Templates Dropdown */}
           <div className="nav-dropdown">
-            <button 
+            <button
               className={`nav-link dropdown-trigger ${isTemplatesActive ? 'active' : ''}`}
               onClick={() => toggleDropdown('templates')}
             >
               Templates
-              <span className={`dropdown-arrow ${activeDropdown === 'templates' ? 'open' : ''}`}>▼</span>
+              <span className={`dropdown-arrow ${activeDropdown === 'templates' ? 'open' : ''}`}>
+                ▼
+              </span>
             </button>
             {activeDropdown === 'templates' && (
-              <div className="dropdown-menu" ref={el => dropdownRefs.current['templates'] = el}>
+              <div className="dropdown-menu" ref={(el) => (dropdownRefs.current['templates'] = el)}>
                 {templatesDropdownItems.map((item) => (
                   <button
                     key={item.path}
@@ -132,13 +133,13 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
             )}
           </div>
 
-          <button 
+          <button
             className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
             onClick={() => handleNavClick('/generate')}
           >
             Generate
           </button>
-          <button 
+          <button
             className={`nav-link ${currentPage === 'gallery' ? 'active' : ''}`}
             onClick={() => handleNavClick('/gallery')}
           >
@@ -149,18 +150,18 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
         <div className="nav-actions">
           {user ? (
             <div className="nav-dropdown">
-              <button 
-                className="user-profile-btn"
-                onClick={() => toggleDropdown('profile')}
-              >
-                <div className="user-avatar">
-                  {user.name?.[0] || 'U'}
-                </div>
+              <button className="user-profile-btn" onClick={() => toggleDropdown('profile')}>
+                <div className="user-avatar">{user.name?.[0] || 'U'}</div>
                 <span className="user-name">{user.club_name || user.name}</span>
-                <span className={`dropdown-arrow ${activeDropdown === 'profile' ? 'open' : ''}`}>▼</span>
+                <span className={`dropdown-arrow ${activeDropdown === 'profile' ? 'open' : ''}`}>
+                  ▼
+                </span>
               </button>
               {activeDropdown === 'profile' && (
-                <div className="dropdown-menu profile-dropdown" ref={el => dropdownRefs.current['profile'] = el}>
+                <div
+                  className="dropdown-menu profile-dropdown"
+                  ref={(el) => (dropdownRefs.current['profile'] = el)}
+                >
                   {profileDropdownItems.map((item) => (
                     <button
                       key={item.path}
@@ -195,10 +196,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
               )}
             </div>
           ) : (
-            <button 
-              className="login-btn"
-              onClick={onAuthModalOpen}
-            >
+            <button className="login-btn" onClick={onAuthModalOpen}>
               Sign In
             </button>
           )}

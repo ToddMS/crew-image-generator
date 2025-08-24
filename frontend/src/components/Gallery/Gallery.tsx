@@ -277,7 +277,8 @@ const Gallery: React.FC<GalleryProps> = ({ crewId, refreshTrigger }) => {
                   </Typography>
                   <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 1 }}>
                     {selectedImage.template_id && `Template ${selectedImage.template_id} • `}
-                    {selectedImage.created_at && `Created ${new Date(selectedImage.created_at).toLocaleDateString()}`}
+                    {selectedImage.created_at &&
+                      `Created ${new Date(selectedImage.created_at).toLocaleDateString()}`}
                   </Typography>
                   {selectedImage.primary_color && (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>

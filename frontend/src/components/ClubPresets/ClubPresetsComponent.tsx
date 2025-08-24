@@ -13,16 +13,16 @@ interface ClubPresetsComponentProps {
 const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
   onPresetSelect,
   selectedPresetId,
-  showManagement = true
+  showManagement = true,
 }) => {
   const { showSuccess, showError } = useNotification();
-  
+
   const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
   const [newPreset, setNewPreset] = useState<Partial<ClubPreset>>({
     club_name: '',
     primary_color: '#2563eb',
     secondary_color: '#10b981',
-    is_default: false
+    is_default: false,
   });
   const [editingPresetId, setEditingPresetId] = useState<number | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
@@ -46,22 +46,22 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
           club_name: 'Thames Rowing Club',
           primary_color: '#1e40af',
           secondary_color: '#3b82f6',
-          is_default: true
+          is_default: true,
         },
         {
           id: 2,
           club_name: 'Oxford University BC',
           primary_color: '#1e3a8a',
           secondary_color: '#60a5fa',
-          is_default: false
+          is_default: false,
         },
         {
           id: 3,
           club_name: 'Cambridge University BC',
           primary_color: '#0f766e',
           secondary_color: '#14b8a6',
-          is_default: false
-        }
+          is_default: false,
+        },
       ]);
     }
   };
@@ -76,12 +76,12 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
     try {
       const response = await ApiService.createClubPreset(newPreset as Omit<ClubPreset, 'id'>);
       if (response.success && response.data) {
-        setClubPresets(prev => [...prev, response.data]);
+        setClubPresets((prev) => [...prev, response.data]);
         setNewPreset({
           club_name: '',
           primary_color: '#2563eb',
           secondary_color: '#10b981',
-          is_default: false
+          is_default: false,
         });
         showSuccess('Club preset saved successfully!');
       }
@@ -93,14 +93,14 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
         club_name: newPreset.club_name!,
         primary_color: newPreset.primary_color!,
         secondary_color: newPreset.secondary_color!,
-        is_default: newPreset.is_default || false
+        is_default: newPreset.is_default || false,
       };
-      setClubPresets(prev => [...prev, mockPreset]);
+      setClubPresets((prev) => [...prev, mockPreset]);
       setNewPreset({
         club_name: '',
         primary_color: '#2563eb',
         secondary_color: '#10b981',
-        is_default: false
+        is_default: false,
       });
       showSuccess('Club preset saved successfully!');
     } finally {
@@ -113,8 +113,8 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
     try {
       const response = await ApiService.updateClubPreset(presetId, updatedPreset);
       if (response.success && response.data) {
-        setClubPresets(prev => 
-          prev.map(preset => preset.id === presetId ? { ...preset, ...updatedPreset } : preset)
+        setClubPresets((prev) =>
+          prev.map((preset) => (preset.id === presetId ? { ...preset, ...updatedPreset } : preset)),
         );
         setEditingPresetId(null);
         showSuccess('Club preset updated successfully!');
@@ -122,8 +122,8 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
     } catch (error) {
       console.error('Error updating club preset:', error);
       // Mock success for development
-      setClubPresets(prev => 
-        prev.map(preset => preset.id === presetId ? { ...preset, ...updatedPreset } : preset)
+      setClubPresets((prev) =>
+        prev.map((preset) => (preset.id === presetId ? { ...preset, ...updatedPreset } : preset)),
       );
       setEditingPresetId(null);
       showSuccess('Club preset updated successfully!');
@@ -139,13 +139,13 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
     try {
       const response = await ApiService.deleteClubPreset(presetId);
       if (response.success) {
-        setClubPresets(prev => prev.filter(preset => preset.id !== presetId));
+        setClubPresets((prev) => prev.filter((preset) => preset.id !== presetId));
         showSuccess('Club preset deleted successfully!');
       }
     } catch (error) {
       console.error('Error deleting club preset:', error);
       // Mock success for development
-      setClubPresets(prev => prev.filter(preset => preset.id !== presetId));
+      setClubPresets((prev) => prev.filter((preset) => preset.id !== presetId));
       showSuccess('Club preset deleted successfully!');
     } finally {
       setSaving(null);
@@ -172,45 +172,46 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
                   type="text"
                   className="form-input"
                   value={newPreset.club_name || ''}
-                  onChange={(e) => setNewPreset(prev => ({ ...prev, club_name: e.target.value }))}
+                  onChange={(e) => setNewPreset((prev) => ({ ...prev, club_name: e.target.value }))}
                   placeholder="e.g., Thames Rowing Club"
                 />
               </div>
             </div>
-            
+
             <div className="color-picker-group">
               <div className="color-picker-item">
                 <label className="color-label">Primary Color *</label>
-                <div 
-                  className="color-preview" 
-                  style={{ backgroundColor: newPreset.primary_color }}
-                >
+                <div className="color-preview" style={{ backgroundColor: newPreset.primary_color }}>
                   <input
                     type="color"
                     className="color-input"
                     value={newPreset.primary_color}
-                    onChange={(e) => setNewPreset(prev => ({ ...prev, primary_color: e.target.value }))}
+                    onChange={(e) =>
+                      setNewPreset((prev) => ({ ...prev, primary_color: e.target.value }))
+                    }
                   />
                 </div>
               </div>
               <div className="color-picker-item">
                 <label className="color-label">Secondary Color *</label>
-                <div 
-                  className="color-preview" 
+                <div
+                  className="color-preview"
                   style={{ backgroundColor: newPreset.secondary_color }}
                 >
                   <input
                     type="color"
                     className="color-input"
                     value={newPreset.secondary_color}
-                    onChange={(e) => setNewPreset(prev => ({ ...prev, secondary_color: e.target.value }))}
+                    onChange={(e) =>
+                      setNewPreset((prev) => ({ ...prev, secondary_color: e.target.value }))
+                    }
                   />
                 </div>
               </div>
             </div>
-            
+
             <div className="form-actions">
-              <button 
+              <button
                 className={`btn btn-primary ${saving === 'new-preset' ? 'loading' : ''}`}
                 onClick={handleSaveNewPreset}
                 disabled={saving === 'new-preset'}
@@ -225,12 +226,10 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
       {/* Existing Presets */}
       {clubPresets.length > 0 && (
         <div className="club-presets-list">
-          <h3>
-            {showManagement ? 'Your Club Presets' : 'Select Club Preset'}
-          </h3>
+          <h3>{showManagement ? 'Your Club Presets' : 'Select Club Preset'}</h3>
           {clubPresets.map((preset) => (
-            <div 
-              key={preset.id} 
+            <div
+              key={preset.id}
               className={`club-preset-item ${selectedPresetId === preset.id ? 'selected' : ''}`}
               onClick={() => handlePresetClick(preset)}
             >
@@ -261,13 +260,13 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
                     {preset.is_default && <span className="default-badge">Default</span>}
                   </div>
                   <div className="preset-colors">
-                    <div 
-                      className="color-dot" 
+                    <div
+                      className="color-dot"
                       style={{ backgroundColor: preset.primary_color }}
                       title={`Primary: ${preset.primary_color}`}
                     ></div>
-                    <div 
-                      className="color-dot" 
+                    <div
+                      className="color-dot"
                       style={{ backgroundColor: preset.secondary_color }}
                       title={`Secondary: ${preset.secondary_color}`}
                     ></div>
@@ -275,7 +274,7 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
                 </div>
                 {showManagement && (
                   <div className="preset-actions">
-                    <button 
+                    <button
                       className="btn btn-text"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -284,7 +283,7 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
                     >
                       {editingPresetId === preset.id ? 'Cancel' : 'Edit'}
                     </button>
-                    <button 
+                    <button
                       className="btn btn-danger"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -297,35 +296,39 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
                   </div>
                 )}
               </div>
-              
+
               {editingPresetId === preset.id && showManagement && (
                 <div className="preset-edit-section" onClick={(e) => e.stopPropagation()}>
                   <div className="color-picker-group">
                     <div className="color-picker-item">
                       <label className="color-label">Primary Color</label>
-                      <div 
-                        className="color-preview" 
+                      <div
+                        className="color-preview"
                         style={{ backgroundColor: preset.primary_color }}
                       >
                         <input
                           type="color"
                           className="color-input"
                           defaultValue={preset.primary_color}
-                          onChange={(e) => handleUpdatePreset(preset.id, { primary_color: e.target.value })}
+                          onChange={(e) =>
+                            handleUpdatePreset(preset.id, { primary_color: e.target.value })
+                          }
                         />
                       </div>
                     </div>
                     <div className="color-picker-item">
                       <label className="color-label">Secondary Color</label>
-                      <div 
-                        className="color-preview" 
+                      <div
+                        className="color-preview"
                         style={{ backgroundColor: preset.secondary_color }}
                       >
                         <input
                           type="color"
                           className="color-input"
                           defaultValue={preset.secondary_color}
-                          onChange={(e) => handleUpdatePreset(preset.id, { secondary_color: e.target.value })}
+                          onChange={(e) =>
+                            handleUpdatePreset(preset.id, { secondary_color: e.target.value })
+                          }
                         />
                       </div>
                     </div>

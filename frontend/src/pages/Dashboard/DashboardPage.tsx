@@ -25,7 +25,7 @@ const DashboardPage: React.FC = () => {
     totalCrews: 0,
     totalTemplates: 0,
     totalImages: 0,
-    lastGenerated: 'Never'
+    lastGenerated: 'Never',
   });
   const [loading, setLoading] = useState(true);
 
@@ -38,11 +38,11 @@ const DashboardPage: React.FC = () => {
   const loadDashboardStats = async () => {
     try {
       setLoading(true);
-      
+
       // Load crews
       const crewsResponse = await ApiService.getCrews();
       const totalCrews = crewsResponse.data?.length || 0;
-      
+
       // Mock other stats for now - you can add these API calls when ready
       const totalTemplates = 5;
       const totalImages = Math.floor(totalCrews * 2.5); // Estimate based on crews
@@ -52,7 +52,7 @@ const DashboardPage: React.FC = () => {
         totalCrews,
         totalTemplates,
         totalImages,
-        lastGenerated
+        lastGenerated,
       });
     } catch (error) {
       showError('Failed to load dashboard data');
@@ -67,7 +67,7 @@ const DashboardPage: React.FC = () => {
       setShowAuthModal(true);
       return;
     }
-    
+
     switch (action) {
       case 'create':
         navigate('/crews/create');
@@ -105,15 +105,16 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="dashboard-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
 
       <div className="container">
         <section className="hero">
           <h1>{user ? 'Welcome back to RowGram' : 'Welcome to RowGram'}</h1>
-          <p>{user ? 'Create professional rowing crew images for Instagram in just a few clicks' : 'Create professional rowing crew images for Instagram - Sign in to get started'}</p>
+          <p>
+            {user
+              ? 'Create professional rowing crew images for Instagram in just a few clicks'
+              : 'Create professional rowing crew images for Instagram - Sign in to get started'}
+          </p>
         </section>
 
         <div className="action-cards">
@@ -124,7 +125,7 @@ const DashboardPage: React.FC = () => {
               Get started <span>→</span>
             </div>
           </div>
-          
+
           <div className="action-card" onClick={() => handleActionClick('generate')}>
             <h3>Generate Images</h3>
             <p>Turn your crews into beautiful Instagram-ready images</p>
@@ -132,7 +133,7 @@ const DashboardPage: React.FC = () => {
               Create now <span>→</span>
             </div>
           </div>
-          
+
           <div className="action-card" onClick={() => handleActionClick('gallery')}>
             <h3>View Gallery</h3>
             <p>Browse and download all your generated crew images</p>
@@ -145,10 +146,7 @@ const DashboardPage: React.FC = () => {
         <div className="stats-section">
           <div className="stats-header">
             <h2>Your Activity</h2>
-            <button 
-              className="view-all-btn"
-              onClick={() => navigate('/crews')}
-            >
+            <button className="view-all-btn" onClick={() => navigate('/crews')}>
               View all crews →
             </button>
           </div>
@@ -156,9 +154,7 @@ const DashboardPage: React.FC = () => {
             <div className="stat-card">
               <div className="stat-icon">👥</div>
               <div className="stat-content">
-                <div className="stat-value">
-                  {loading ? '...' : user ? stats.totalCrews : '—'}
-                </div>
+                <div className="stat-value">{loading ? '...' : user ? stats.totalCrews : '—'}</div>
                 <div className="stat-label">Active Crews</div>
               </div>
             </div>
@@ -174,21 +170,16 @@ const DashboardPage: React.FC = () => {
             <div className="stat-card">
               <div className="stat-icon">📸</div>
               <div className="stat-content">
-                <div className="stat-value">
-                  {loading ? '...' : user ? stats.totalImages : '—'}
-                </div>
+                <div className="stat-value">{loading ? '...' : user ? stats.totalImages : '—'}</div>
                 <div className="stat-label">Images Created</div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Auth Modal */}
-      <AuthModal 
-        open={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </div>
   );
 };

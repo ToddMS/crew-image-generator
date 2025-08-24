@@ -79,7 +79,7 @@ export class ApiService {
       imageName?: string;
       colors?: { primary: string; secondary: string };
       clubIcon?: { type: string; file?: File; [key: string]: unknown };
-    }
+    },
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       const { templateId, templateConfig, imageName, colors, clubIcon } = options || {};
@@ -154,9 +154,9 @@ export class ApiService {
       }
     } catch (error) {
       console.error('Error generating image:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An error occurred' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'An error occurred',
       };
     }
   }
@@ -220,9 +220,9 @@ export class ApiService {
       }
       return { success: true, data: response.data || [] };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to load images' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to load images',
       };
     }
   }
@@ -237,9 +237,9 @@ export class ApiService {
       }
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to delete image' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete image',
       };
     }
   }
@@ -344,7 +344,10 @@ export class ApiService {
     });
   }
 
-  static async updateClubPreset(id: number, preset: Partial<ClubPreset>): Promise<ApiResponse<ClubPreset>> {
+  static async updateClubPreset(
+    id: number,
+    preset: Partial<ClubPreset>,
+  ): Promise<ApiResponse<ClubPreset>> {
     return this.request<ClubPreset>(`${API_CONFIG.endpoints.clubPresets}/${id}`, {
       method: 'PUT',
       body: JSON.stringify(preset),

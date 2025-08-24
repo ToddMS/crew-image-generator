@@ -63,7 +63,7 @@ const CreateCrewPage: React.FC = () => {
       console.log('Loading club presets for user:', user);
       const response = await ApiService.getClubPresets();
       console.log('Club presets API response:', response);
-      
+
       if (response.data && Array.isArray(response.data)) {
         console.log('Successfully loaded', response.data.length, 'club presets');
         setClubPresets(response.data);
@@ -79,7 +79,7 @@ const CreateCrewPage: React.FC = () => {
 
   const handleClubPresetSelect = (presetId: number) => {
     setSelectedPresetId(presetId);
-    const preset = clubPresets.find(p => p.id === presetId);
+    const preset = clubPresets.find((p) => p.id === presetId);
     if (preset) {
       setClubName(preset.club_name);
       setShowClubPresets(false);
@@ -132,7 +132,7 @@ const CreateCrewPage: React.FC = () => {
   const [showStep1Validation, setShowStep1Validation] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [preserveStateAfterLogin, setPreserveStateAfterLogin] = useState(false);
-  
+
   // Club presets
   const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
@@ -341,10 +341,10 @@ const CreateCrewPage: React.FC = () => {
   const focusNextInput = (currentElement: HTMLElement) => {
     const form = currentElement.closest('form') || currentElement.closest('.form-container');
     if (!form) return;
-    
+
     const inputs = Array.from(form.querySelectorAll('input, select')) as HTMLElement[];
     const currentIndex = inputs.indexOf(currentElement);
-    
+
     if (currentIndex < inputs.length - 1) {
       inputs[currentIndex + 1].focus();
     } else if (activeStep === 0 && canProceedFromStep(0)) {
@@ -424,7 +424,6 @@ const CreateCrewPage: React.FC = () => {
       if (result.data) {
         clearDraft();
 
-
         const crewId = String(editingCrewId || result.data?.id);
         if (user && crewId && crewId !== 'undefined') {
           const recentKey = `recently_saved_crews_${user.id}`;
@@ -463,12 +462,14 @@ const CreateCrewPage: React.FC = () => {
       case 0:
         return (
           <div className="form-container">
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              if (canProceedFromStep(0)) {
-                proceedToNextStep();
-              }
-            }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (canProceedFromStep(0)) {
+                  proceedToNextStep();
+                }
+              }}
+            >
               <div className="form-grid">
                 <div className="form-group">
                   <label htmlFor="boatClass">
@@ -535,65 +536,79 @@ const CreateCrewPage: React.FC = () => {
                       autoComplete="off"
                     />
                   </div>
-                  
+
                   {/* Club presets autocomplete dropdown */}
                   {showClubPresets && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      zIndex: 1000,
-                      background: 'var(--white)',
-                      border: '1px solid var(--gray-300)',
-                      borderRadius: 'var(--radius)',
-                      marginTop: '0.25rem',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      boxShadow: 'var(--shadow-lg)',
-                      width: '100%'
-                    }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 1000,
+                        background: 'var(--white)',
+                        border: '1px solid var(--gray-300)',
+                        borderRadius: 'var(--radius)',
+                        marginTop: '0.25rem',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        boxShadow: 'var(--shadow-lg)',
+                        width: '100%',
+                      }}
+                    >
                       <div>
                         {clubPresets.length > 0 ? (
-                          clubPresets.filter(preset => 
-                            clubName.length === 0 || preset.club_name.toLowerCase().includes(clubName.toLowerCase())
-                          ).map((preset, index) => (
-                          <div
-                            key={preset.id}
-                            onClick={() => handleClubPresetSelect(preset.id)}
-                            style={{
-                              padding: '0.5rem 0.75rem',
-                              cursor: 'pointer',
-                              backgroundColor: selectedPresetId === preset.id 
-                                ? 'var(--primary-light)' 
-                                : index % 2 === 0 
-                                  ? 'var(--white)' 
-                                  : '#f8f9fa',
-                              borderLeft: selectedPresetId === preset.id ? '3px solid var(--primary)' : '3px solid transparent',
-                              transition: 'all 0.15s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              if (selectedPresetId !== preset.id) {
-                                e.currentTarget.style.backgroundColor = 'var(--gray-100)';
-                                e.currentTarget.style.borderLeft = '3px solid var(--primary-light)';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (selectedPresetId !== preset.id) {
-                                e.currentTarget.style.backgroundColor = index % 2 === 0 ? 'var(--white)' : '#f8f9fa';
-                                e.currentTarget.style.borderLeft = '3px solid transparent';
-                              }
-                            }}
-                          >
-                            <span style={{ 
-                              fontSize: '0.9rem',
-                              fontWeight: '400', 
-                              color: 'var(--gray-900)' 
-                            }}>
-                              {preset.club_name}
-                            </span>
-                          </div>
-                          ))
+                          clubPresets
+                            .filter(
+                              (preset) =>
+                                clubName.length === 0 ||
+                                preset.club_name.toLowerCase().includes(clubName.toLowerCase()),
+                            )
+                            .map((preset, index) => (
+                              <div
+                                key={preset.id}
+                                onClick={() => handleClubPresetSelect(preset.id)}
+                                style={{
+                                  padding: '0.5rem 0.75rem',
+                                  cursor: 'pointer',
+                                  backgroundColor:
+                                    selectedPresetId === preset.id
+                                      ? 'var(--primary-light)'
+                                      : index % 2 === 0
+                                        ? 'var(--white)'
+                                        : '#f8f9fa',
+                                  borderLeft:
+                                    selectedPresetId === preset.id
+                                      ? '3px solid var(--primary)'
+                                      : '3px solid transparent',
+                                  transition: 'all 0.15s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (selectedPresetId !== preset.id) {
+                                    e.currentTarget.style.backgroundColor = 'var(--gray-100)';
+                                    e.currentTarget.style.borderLeft =
+                                      '3px solid var(--primary-light)';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (selectedPresetId !== preset.id) {
+                                    e.currentTarget.style.backgroundColor =
+                                      index % 2 === 0 ? 'var(--white)' : '#f8f9fa';
+                                    e.currentTarget.style.borderLeft = '3px solid transparent';
+                                  }
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: '0.9rem',
+                                    fontWeight: '400',
+                                    color: 'var(--gray-900)',
+                                  }}
+                                >
+                                  {preset.club_name}
+                                </span>
+                              </div>
+                            ))
                         ) : (
                           <div
                             onClick={() => {
@@ -608,7 +623,7 @@ const CreateCrewPage: React.FC = () => {
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'center',
-                              transition: 'all 0.15s ease'
+                              transition: 'all 0.15s ease',
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.backgroundColor = 'var(--gray-100)';
@@ -619,18 +634,22 @@ const CreateCrewPage: React.FC = () => {
                               e.currentTarget.style.borderLeft = '3px solid transparent';
                             }}
                           >
-                            <span style={{ 
-                              fontSize: '0.9rem',
-                              fontWeight: '400', 
-                              color: 'var(--gray-900)' 
-                            }}>
+                            <span
+                              style={{
+                                fontSize: '0.9rem',
+                                fontWeight: '400',
+                                color: 'var(--gray-900)',
+                              }}
+                            >
                               Add Club Preset
                             </span>
-                            <span style={{ 
-                              fontSize: '1rem',
-                              fontWeight: '500', 
-                              color: 'var(--primary)' 
-                            }}>
+                            <span
+                              style={{
+                                fontSize: '1rem',
+                                fontWeight: '500',
+                                color: 'var(--primary)',
+                              }}
+                            >
                               +
                             </span>
                           </div>
@@ -638,8 +657,7 @@ const CreateCrewPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
-                  
+
                   {showValidation && !clubName && (
                     <div className="error-message">Please enter club name</div>
                   )}
@@ -716,11 +734,12 @@ const CreateCrewPage: React.FC = () => {
         return (
           <div className="form-container">
             <div className="crew-names-section">
-
               {boatClassHasCox(boatClass) && (
                 <div className="cox-input">
                   <div className="crew-name-input">
-                    <div className="seat-label">Coxswain <span className="required">*</span></div>
+                    <div className="seat-label">
+                      Coxswain <span className="required">*</span>
+                    </div>
                     <input
                       type="text"
                       value={coxName}
@@ -746,10 +765,12 @@ const CreateCrewPage: React.FC = () => {
                       : seatNumber === boatClassToSeats[boatClass]
                         ? 'Stroke Seat'
                         : `${seatNumber} Seat`;
-                  
+
                   return (
                     <div key={index} className="crew-name-input">
-                      <div className="seat-label">{seatName} <span className="required">*</span></div>
+                      <div className="seat-label">
+                        {seatName} <span className="required">*</span>
+                      </div>
                       <input
                         type="text"
                         value={name}
@@ -818,7 +839,7 @@ const CreateCrewPage: React.FC = () => {
                       : seatNumber === boatClassToSeats[boatClass]
                         ? 'Stroke Seat'
                         : `${seatNumber} Seat`;
-                  
+
                   return (
                     <div key={index} className="review-item">
                       <span className="review-label">{seatName}:</span>
@@ -840,25 +861,23 @@ const CreateCrewPage: React.FC = () => {
 
   return (
     <div className="create-crew-container">
-      <Navigation 
-        currentPage={currentPage} 
-        onAuthModalOpen={() => setShowAuthModal(true)}
-      />
+      <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
 
       <div className="container">
         {/* Stepper */}
         <div className="stepper">
           {steps.map((step, index) => (
-            <div 
-              key={step.label} 
+            <div
+              key={step.label}
               className={`step ${
-                completedSteps.has(index) ? 'completed' : 
-                activeStep === index ? 'active' : 'inactive'
+                completedSteps.has(index)
+                  ? 'completed'
+                  : activeStep === index
+                    ? 'active'
+                    : 'inactive'
               }`}
             >
-              <div className="step-icon">
-                {completedSteps.has(index) ? '✓' : (index + 1)}
-              </div>
+              <div className="step-icon">{completedSteps.has(index) ? '✓' : index + 1}</div>
               <div className="step-content">
                 <div className="step-label">{step.label}</div>
                 <div className="step-description">{step.description}</div>
@@ -872,10 +891,7 @@ const CreateCrewPage: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button 
-            className="btn btn-secondary" 
-            onClick={handleBack}
-          >
+          <button className="btn btn-secondary" onClick={handleBack}>
             ← {activeStep === 0 ? 'Dashboard' : 'Back'}
           </button>
 
@@ -908,10 +924,10 @@ const CreateCrewPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Auth Modal */}
-      <AuthModal 
-        open={showAuthModal} 
+      <AuthModal
+        open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
       />
