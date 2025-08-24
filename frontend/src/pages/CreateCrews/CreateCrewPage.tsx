@@ -50,40 +50,30 @@ const CreateCrewPage: React.FC = () => {
 
   useEffect(() => {
     loadClubPresets();
-  }, []);
+  }, [user]); // Load when user changes (login/logout)
 
   const loadClubPresets = async () => {
+    if (!user) {
+      console.log('No user logged in, skipping club presets load');
+      setClubPresets([]);
+      return;
+    }
+
     try {
+      console.log('Loading club presets for user:', user);
       const response = await ApiService.getClubPresets();
-      if (response.success && response.data) {
+      console.log('Club presets API response:', response);
+      
+      if (response.data && Array.isArray(response.data)) {
+        console.log('Successfully loaded', response.data.length, 'club presets');
         setClubPresets(response.data);
+      } else {
+        console.log('API response was successful but no valid data:', response);
+        setClubPresets([]);
       }
     } catch (error) {
       console.error('Error loading club presets:', error);
-      // Set some mock data for development
-      setClubPresets([
-        {
-          id: 1,
-          club_name: 'Thames Rowing Club',
-          primary_color: '#1e40af',
-          secondary_color: '#3b82f6',
-          is_default: true
-        },
-        {
-          id: 2,
-          club_name: 'Oxford University BC',
-          primary_color: '#1e3a8a',
-          secondary_color: '#60a5fa',
-          is_default: false
-        },
-        {
-          id: 3,
-          club_name: 'Cambridge University BC',
-          primary_color: '#0f766e',
-          secondary_color: '#14b8a6',
-          is_default: false
-        }
-      ]);
+      setClubPresets([]);
     }
   };
 
@@ -513,135 +503,138 @@ const CreateCrewPage: React.FC = () => {
 
                 <div className="form-group" data-club-presets>
                   <label htmlFor="clubName">
-                    Club <span className="required">*</span>
+                    Club Name <span className="required">*</span>
                   </label>
-                  <div style={{ position: 'relative', paddingRight: '110px' }}>
+                  <div style={{ position: 'relative' }}>
                     <input
                       type="text"
                       id="clubName"
                       value={clubName}
                       onChange={(e) => {
                         setClubName(e.target.value);
-                        setSelectedPresetId(null); // Clear preset selection when typing
+                        setSelectedPresetId(null);
+                        setShowClubPresets(true); // Always show dropdown when typing
                       }}
-                      onKeyDown={handleKeyDown}
+                      onFocus={() => {
+                        setShowClubPresets(true);
+                      }}
+                      onBlur={() => {
+                        // Delay hiding to allow for clicks
+                        setTimeout(() => setShowClubPresets(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        handleKeyDown(e);
+                        if (e.key === 'ArrowDown' && clubPresets.length > 0) {
+                          e.preventDefault();
+                          setShowClubPresets(true);
+                        }
+                      }}
                       className={showValidation && !clubName ? 'error' : ''}
-                      placeholder="Enter club name"
+                      placeholder="Type club name..."
                       required
+                      autoComplete="off"
                     />
-                    <button
-                      type="button"
-                      onClick={handleToggleClubPresets}
-                      style={{
-                        position: 'absolute',
-                        right: '8px',
-                        top: '2px',
-                        bottom: '2px',
-                        background: 'var(--gray-100)',
-                        border: '1px solid var(--gray-300)',
-                        cursor: 'pointer',
-                        padding: '0 12px',
-                        borderRadius: '6px',
-                        color: 'var(--gray-700)',
-                        fontSize: '12px',
-                        fontWeight: '600'
-                      }}
-                      title="Choose from saved club presets"
-                    >
-                      Club Presets
-                    </button>
                   </div>
                   
-                  {/* Club presets dropdown */}
+                  {/* Club presets autocomplete dropdown */}
                   {showClubPresets && (
                     <div style={{
                       position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
                       zIndex: 1000,
                       background: 'var(--white)',
                       border: '1px solid var(--gray-300)',
                       borderRadius: 'var(--radius)',
-                      marginTop: '0.5rem',
+                      marginTop: '0.25rem',
                       maxHeight: '200px',
                       overflowY: 'auto',
-                      boxShadow: 'var(--shadow)',
+                      boxShadow: 'var(--shadow-lg)',
                       width: '100%'
                     }}>
-                      <div style={{ padding: '0.5rem' }}>
-                        {clubPresets.map((preset) => (
+                      <div>
+                        {clubPresets.length > 0 ? (
+                          clubPresets.filter(preset => 
+                            clubName.length === 0 || preset.club_name.toLowerCase().includes(clubName.toLowerCase())
+                          ).map((preset, index) => (
                           <div
                             key={preset.id}
                             onClick={() => handleClubPresetSelect(preset.id)}
                             style={{
-                              padding: '0.75rem',
-                              borderRadius: 'var(--radius)',
+                              padding: '0.5rem 0.75rem',
                               cursor: 'pointer',
-                              marginBottom: '0.5rem',
-                              border: '2px solid transparent',
-                              backgroundColor: selectedPresetId === preset.id ? 'var(--primary-light)' : 'transparent',
-                              borderColor: selectedPresetId === preset.id ? 'var(--primary)' : 'transparent'
+                              backgroundColor: selectedPresetId === preset.id 
+                                ? 'var(--primary-light)' 
+                                : index % 2 === 0 
+                                  ? 'var(--white)' 
+                                  : '#f8f9fa',
+                              borderLeft: selectedPresetId === preset.id ? '3px solid var(--primary)' : '3px solid transparent',
+                              transition: 'all 0.15s ease'
                             }}
                             onMouseEnter={(e) => {
                               if (selectedPresetId !== preset.id) {
-                                e.currentTarget.style.backgroundColor = 'var(--gray-50)';
-                                e.currentTarget.style.borderColor = 'var(--primary-light)';
+                                e.currentTarget.style.backgroundColor = 'var(--gray-100)';
+                                e.currentTarget.style.borderLeft = '3px solid var(--primary-light)';
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (selectedPresetId !== preset.id) {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                e.currentTarget.style.borderColor = 'transparent';
+                                e.currentTarget.style.backgroundColor = index % 2 === 0 ? 'var(--white)' : '#f8f9fa';
+                                e.currentTarget.style.borderLeft = '3px solid transparent';
                               }
                             }}
                           >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '0.5rem', 
-                                fontWeight: 600, 
-                                color: 'var(--gray-900)' 
-                              }}>
-                                {preset.club_name}
-                                {preset.is_default && (
-                                  <span style={{
-                                    background: 'var(--primary)',
-                                    color: 'var(--white)',
-                                    padding: '0.125rem 0.5rem',
-                                    borderRadius: '0.75rem',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500
-                                  }}>
-                                    Default
-                                  </span>
-                                )}
-                              </span>
-                              <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-                                <div 
-                                  style={{ 
-                                    width: '20px', 
-                                    height: '20px', 
-                                    borderRadius: '50%', 
-                                    backgroundColor: preset.primary_color,
-                                    border: '2px solid var(--white)',
-                                    boxShadow: 'var(--shadow-sm)'
-                                  }}
-                                  title={`Primary: ${preset.primary_color}`}
-                                ></div>
-                                <div 
-                                  style={{ 
-                                    width: '20px', 
-                                    height: '20px', 
-                                    borderRadius: '50%', 
-                                    backgroundColor: preset.secondary_color,
-                                    border: '2px solid var(--white)',
-                                    boxShadow: 'var(--shadow-sm)'
-                                  }}
-                                  title={`Secondary: ${preset.secondary_color}`}
-                                ></div>
-                              </div>
-                            </div>
+                            <span style={{ 
+                              fontSize: '0.9rem',
+                              fontWeight: '400', 
+                              color: 'var(--gray-900)' 
+                            }}>
+                              {preset.club_name}
+                            </span>
                           </div>
-                        ))}
+                          ))
+                        ) : (
+                          <div
+                            onClick={() => {
+                              setShowClubPresets(false);
+                              navigate('/club-presets');
+                            }}
+                            style={{
+                              padding: '0.5rem 0.75rem',
+                              cursor: 'pointer',
+                              backgroundColor: 'var(--gray-50)',
+                              borderLeft: '3px solid transparent',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--gray-100)';
+                              e.currentTarget.style.borderLeft = '3px solid var(--primary-light)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                              e.currentTarget.style.borderLeft = '3px solid transparent';
+                            }}
+                          >
+                            <span style={{ 
+                              fontSize: '0.9rem',
+                              fontWeight: '400', 
+                              color: 'var(--gray-900)' 
+                            }}>
+                              Add Club Preset
+                            </span>
+                            <span style={{ 
+                              fontSize: '1rem',
+                              fontWeight: '500', 
+                              color: 'var(--primary)' 
+                            }}>
+                              +
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
