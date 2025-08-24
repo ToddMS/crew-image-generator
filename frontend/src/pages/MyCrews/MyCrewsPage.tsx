@@ -21,8 +21,7 @@ interface SavedCrew extends Crew {
 const MyCrewsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useThemeMode();
+  const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -34,10 +33,6 @@ const MyCrewsPage: React.FC = () => {
   const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
   const [showGeneratePanel, setShowGeneratePanel] = useState<boolean>(false);
   const [expandedCrewMembers, setExpandedCrewMembers] = useState<Set<string>>(new Set());
-
-  const handleNavClick = (path: string) => {
-    navigate(path);
-  };
 
   const getCurrentPage = () => {
     const path = window.location.pathname;
