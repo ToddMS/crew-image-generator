@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation/Navigation';
 import AuthModal from '../../components/Auth/AuthModal';
 import { useAuth } from '../../context/AuthContext';
@@ -56,6 +56,7 @@ interface GenerationStatus {
 
 const GenerateImagesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
 
@@ -92,6 +93,35 @@ const GenerateImagesPage: React.FC = () => {
     }
   }, [user]);
 
+  // Handle selected crews from location state
+  useEffect(() => {
+    console.log('🔄 Generate Images page useEffect triggered');
+    console.log('📍 location.state:', location.state);
+    console.log('👥 crews.length:', crews.length);
+    console.log('🚣 crews:', crews.map(c => ({ id: c.id, name: c.name })));
+    
+    const state = location.state as {
+      selectedCrewIds?: string[];
+    } | null;
+
+    if (state?.selectedCrewIds && state.selectedCrewIds.length > 0 && crews.length > 0) {
+      console.log('✅ Found selectedCrewIds from MyCrews:', state.selectedCrewIds);
+      
+      const selectedCrewsFromState = crews.filter(crew => 
+        state.selectedCrewIds!.includes(crew.id)
+      );
+      
+      console.log('🎯 Filtered crews from state:', selectedCrewsFromState.map(c => ({ id: c.id, name: c.name })));
+      
+      if (selectedCrewsFromState.length > 0) {
+        console.log('✅ Setting selected crews to:', selectedCrewsFromState.map(c => c.name));
+        setSelectedCrews(selectedCrewsFromState);
+      }
+    } else {
+      console.log('⏭️ No selectedCrewIds in location state, keeping auto-selected crews');
+    }
+  }, [location.state, crews]);
+
   const loadInitialData = async () => {
     setLoading(true);
     
@@ -104,16 +134,29 @@ const GenerateImagesPage: React.FC = () => {
 
       // Handle crews response
       if (crewsResponse.success && crewsResponse.data) {
+        console.log('✅ Crews loaded successfully:', crewsResponse.data.map(c => ({ id: c.id, name: c.name })));
         setCrews(crewsResponse.data);
-        // Auto-select first crew if available
-        if (crewsResponse.data.length > 0) {
+        
+        // Only auto-select first crew if no selectedCrewIds in location state
+        const state = location.state as { selectedCrewIds?: string[] } | null;
+        if (!state?.selectedCrewIds && crewsResponse.data.length > 0) {
+          console.log('🎯 Auto-selecting first crew:', crewsResponse.data[0].name);
           setSelectedCrews([crewsResponse.data[0]]);
+        } else {
+          console.log('⏭️ Skipping auto-select, will wait for location state handling');
         }
       } else if (crewsResponse.data && !crewsResponse.success) {
         // Handle case where API returns data but no explicit success flag
+        console.log('✅ Crews loaded (no success flag):', crewsResponse.data.map(c => ({ id: c.id, name: c.name })));
         setCrews(crewsResponse.data);
-        if (crewsResponse.data.length > 0) {
+        
+        // Only auto-select first crew if no selectedCrewIds in location state
+        const state = location.state as { selectedCrewIds?: string[] } | null;
+        if (!state?.selectedCrewIds && crewsResponse.data.length > 0) {
+          console.log('🎯 Auto-selecting first crew:', crewsResponse.data[0].name);
           setSelectedCrews([crewsResponse.data[0]]);
+        } else {
+          console.log('⏭️ Skipping auto-select, will wait for location state handling');
         }
       }
 
