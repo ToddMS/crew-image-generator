@@ -19,7 +19,6 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { showError } = useNotification();
-  const { isDarkMode, toggleTheme } = useThemeMode();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     totalCrews: 0,
@@ -119,24 +118,24 @@ const DashboardPage: React.FC = () => {
 
         <div className="action-cards">
           <div className="action-card" onClick={() => handleActionClick('create')}>
-            <h3>Create Crew</h3>
-            <p>Set up a new crew with members, cox, and coach details</p>
+            <h3 className="action-title">Create Crew</h3>
+            <p className="action-description">Set up a new crew with members, cox, and coach details</p>
             <div className="action-arrow">
               Get started <span>→</span>
             </div>
           </div>
 
           <div className="action-card" onClick={() => handleActionClick('generate')}>
-            <h3>Generate Images</h3>
-            <p>Turn your crews into beautiful Instagram-ready images</p>
+            <h3 className="action-title">Generate Images</h3>
+            <p className="action-description">Turn your crews into beautiful Instagram-ready images</p>
             <div className="action-arrow">
               Create now <span>→</span>
             </div>
           </div>
 
           <div className="action-card" onClick={() => handleActionClick('gallery')}>
-            <h3>View Gallery</h3>
-            <p>Browse and download all your generated crew images</p>
+            <h3 className="action-title">View Gallery</h3>
+            <p className="action-description">Browse and download all your generated crew images</p>
             <div className="action-arrow">
               Browse <span>→</span>
             </div>

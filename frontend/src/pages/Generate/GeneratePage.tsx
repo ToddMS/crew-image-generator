@@ -94,6 +94,7 @@ const GeneratePage: React.FC = () => {
   const [crews, setCrews] = useState<SavedCrew[]>([]);
   const [templates, setTemplates] = useState<Template[]>(presetTemplates);
   const [selectedCrew, setSelectedCrew] = useState<SavedCrew | null>(null);
+  const [selectedCrews, setSelectedCrews] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -133,7 +134,11 @@ const GeneratePage: React.FC = () => {
       setSelectedTemplate(state.selectedTemplate);
     }
 
-    if (state?.selectedCrewIds && state.selectedCrewIds.length > 0) {
+    if (state?.selectedCrewIds && state.selectedCrewIds.length > 0 && crews.length > 0) {
+      // Set multiple selected crews
+      setSelectedCrews(new Set(state.selectedCrewIds));
+      
+      // Also set the first one as the primary selected crew for backwards compatibility
       const crewId = state.selectedCrewIds[0];
       const crew = crews.find((c) => c.id === crewId);
       if (crew) {
@@ -277,7 +282,7 @@ const GeneratePage: React.FC = () => {
                 Select Crew
               </div>
               <div className="selection-card-count">
-                {crews.length} crew{crews.length !== 1 ? 's' : ''} available
+                {selectedCrews.size > 0 ? `${selectedCrews.size} selected of ` : ''}{crews.length} crew{crews.length !== 1 ? 's' : ''} available
               </div>
             </div>
             <div className="selection-card-content">
@@ -294,8 +299,20 @@ const GeneratePage: React.FC = () => {
                 crews.map((crew) => (
                   <div
                     key={crew.id}
-                    className={`selection-item ${selectedCrew?.id === crew.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedCrew(crew)}
+                    className={`selection-item ${selectedCrews.has(crew.id) ? 'selected' : ''}`}
+                    onClick={() => {
+                      const newSelected = new Set(selectedCrews);
+                      if (newSelected.has(crew.id)) {
+                        newSelected.delete(crew.id);
+                      } else {
+                        newSelected.add(crew.id);
+                      }
+                      setSelectedCrews(newSelected);
+                      // Also update the primary selected crew
+                      if (!selectedCrew || selectedCrew.id !== crew.id) {
+                        setSelectedCrew(crew);
+                      }
+                    }}
                   >
                     <div className="selection-item-title">{crew.boatName}</div>
                     <div className="selection-item-subtitle">

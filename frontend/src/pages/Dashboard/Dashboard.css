@@ -224,11 +224,12 @@
   background-clip: text;
 }
 
-.hero p {
+.dashboard-container .hero p {
   font-size: 1.125rem;
   color: var(--gray-600);
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0 auto !important;
+  text-align: center;
 }
 
 /* Action Cards Grid */
@@ -249,6 +250,11 @@
   position: relative;
   overflow: hidden;
   border: 2px solid transparent;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
 }
 
 .action-card::before {
@@ -285,31 +291,33 @@
   font-size: 1.5rem;
 }
 
-.action-card h3 {
+.action-title {
   font-size: 1.25rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem 0 !important;
   color: var(--gray-900);
-  text-align: center;
-  margin-top: 0;
+  text-align: center !important;
+  width: 100%;
 }
 
-.action-card p {
+.action-description {
   color: var(--gray-600);
-  margin-bottom: 1.5rem;
-  text-align: center;
+  margin: 0 0 1.5rem 0 !important;
+  text-align: center !important;
   line-height: 1.5;
+  width: 100%;
 }
 
 .action-arrow {
-  display: inline-flex;
+  display: flex !important;
   align-items: center;
-  justify-content: center;
+  justify-content: center !important;
   gap: 0.5rem;
   color: var(--primary);
   font-weight: 600;
   transition: var(--transition);
   width: 100%;
+  text-align: center !important;
 }
 
 .action-card:hover .action-arrow {

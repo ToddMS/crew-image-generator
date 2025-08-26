@@ -33,16 +33,9 @@ const NewGalleryPage: React.FC = () => {
   const [images, setImages] = useState<SavedImage[]>([]);
   const [filteredImages, setFilteredImages] = useState<SavedImage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'recent' | 'favorites'>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'masonry' | 'list'>('grid');
-  const [selectedImage, setSelectedImage] = useState<SavedImage | null>(null);
+  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    image: SavedImage;
-  } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleNavClick = (path: string) => {
@@ -69,18 +62,8 @@ const NewGalleryPage: React.FC = () => {
 
   useEffect(() => {
     applyFilter();
-  }, [images, filter]);
+  }, [images, searchQuery]);
 
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setContextMenu(null);
-    };
-
-    if (contextMenu) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [contextMenu]);
 
   const loadImages = async () => {
     setLoading(true);
@@ -105,22 +88,20 @@ const NewGalleryPage: React.FC = () => {
   const applyFilter = () => {
     let filtered = [...images];
 
-    switch (filter) {
-      case 'recent':
-        filtered = filtered
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 20);
-        break;
-      case 'favorites':
-        // Filter favorites if we had that data
-        break;
-      case 'all':
-      default:
-        filtered = filtered.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
-        break;
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(image => 
+        image.crewName.toLowerCase().includes(query) ||
+        image.templateName.toLowerCase().includes(query) ||
+        (image.crewId && image.crewId.toLowerCase().includes(query))
+      );
     }
+
+    // Sort by most recent first
+    filtered = filtered.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
     setFilteredImages(filtered);
   };
@@ -142,10 +123,46 @@ const NewGalleryPage: React.FC = () => {
       console.error('Error downloading image:', error);
       showError('Failed to download image. Please try again.');
     }
-    setContextMenu(null);
   };
 
-  const handleDelete = async (image: SavedImage) => {
+
+  const handleImageSelect = (imageId: string) => {
+    const newSelected = new Set(selectedImages);
+    if (newSelected.has(imageId)) {
+      newSelected.delete(imageId);
+    } else {
+      newSelected.add(imageId);
+    }
+    setSelectedImages(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedImages.size === filteredImages.length) {
+      setSelectedImages(new Set());
+    } else {
+      setSelectedImages(new Set(filteredImages.map(img => img.id)));
+    }
+  };
+
+  const handleBatchDownload = async () => {
+    const selectedImagesList = images.filter(img => selectedImages.has(img.id));
+    for (const image of selectedImagesList) {
+      await handleDownload(image);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between downloads
+    }
+    setSelectedImages(new Set());
+    showSuccess(`Downloaded ${selectedImagesList.length} images!`);
+  };
+
+  const handleDeleteImage = async (image: SavedImage) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete "${image.crewName}"?\n\nThis action cannot be undone.`
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
     try {
       const response = await ApiService.deleteSavedImage(parseInt(image.id));
       if (response.success) {
@@ -157,21 +174,29 @@ const NewGalleryPage: React.FC = () => {
     } catch (error) {
       console.error('Error deleting image:', error);
       showError('Failed to delete image. Please try again.');
-    } finally {
-      setShowDeleteDialog(false);
-      setSelectedImage(null);
-      setContextMenu(null);
     }
   };
 
-  const handleContextMenu = (event: React.MouseEvent, image: SavedImage) => {
-    event.preventDefault();
-    setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      image,
-    });
+  const handleBatchDelete = () => {
+    if (selectedImages.size === 0) return;
+    const selectedImagesList = images.filter(img => selectedImages.has(img.id));
+    if (selectedImagesList.length > 0) {
+      const confirmMessage = `Are you sure you want to delete ${selectedImagesList.length} images? This action cannot be undone.`;
+      if (window.confirm(confirmMessage)) {
+        selectedImagesList.forEach(async (image) => {
+          try {
+            await ApiService.deleteSavedImage(parseInt(image.id));
+          } catch (error) {
+            console.error('Error deleting image:', error);
+          }
+        });
+        setImages(prev => prev.filter(img => !selectedImages.has(img.id)));
+        setSelectedImages(new Set());
+        showSuccess(`Deleted ${selectedImagesList.length} images!`);
+      }
+    }
   };
+
 
   const formatFileSize = (bytes: number) => {
     const mb = bytes / (1024 * 1024);
@@ -236,52 +261,56 @@ const NewGalleryPage: React.FC = () => {
     <div className="gallery-container">
       <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
       <div className="container">
-        <div className="gallery-header">
-          <h1>Gallery</h1>
-          <p>
-            View, manage, and download your generated crew images ({filteredImages.length} images)
-          </p>
-        </div>
-
         {/* Gallery Controls */}
         <div className="gallery-controls">
-          <div className="gallery-filters">
-            <button
-              className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              All Images ({images.length})
-            </button>
-            <button
-              className={`filter-btn ${filter === 'recent' ? 'active' : ''}`}
-              onClick={() => setFilter('recent')}
-            >
-              Recent
-            </button>
+          <div className="gallery-search">
+            <input
+              type="text"
+              placeholder="Search by crew name, template, or ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
           </div>
 
           <div className="gallery-actions">
-            <div className="view-toggle">
-              <button
-                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="Grid View"
-              >
-                ⊞
-              </button>
-              <button
-                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
-                title="List View"
-              >
-                ☰
-              </button>
-            </div>
-            <button className="generate-btn" onClick={() => navigate('/generate')}>
-              ➕ Generate New Image
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={handleSelectAll}
+            >
+              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
+            </button>
+            
+            {selectedImages.size > 0 && (
+              <>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={handleBatchDownload}
+                >
+                  Download Selected ({selectedImages.size})
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={handleBatchDelete}
+                >
+                  Delete Selected ({selectedImages.size})
+                </button>
+              </>
+            )}
+
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate('/generate')}
+            >
+              Generate New Image
             </button>
           </div>
         </div>
+
+        <div className="gallery-status">
+          {filteredImages.length} of {images.length} images
+        </div>
+
 
         {/* Gallery Content */}
         {filteredImages.length === 0 ? (
@@ -294,45 +323,51 @@ const NewGalleryPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className={`gallery-grid ${viewMode}-view`}>
+          <div className="gallery-grid">
             {filteredImages.map((image) => (
               <div
                 key={image.id}
-                className={`image-card ${viewMode}-view`}
-                onContextMenu={(e) => handleContextMenu(e, image)}
+                className={`image-card ${selectedImages.has(image.id) ? 'selected' : ''}`}
               >
-                <div className={`image-preview ${viewMode}-view`}>
+                {/* Image Selection Checkbox */}
+                <div className="image-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedImages.has(image.id)}
+                    onChange={() => handleImageSelect(image.id)}
+                  />
+                </div>
+
+                <div className="image-preview">
                   <img
                     src={image.imageUrl}
-                    alt={`${image.crewName} - ${image.templateName}`}
+                    alt={`${image.crewName}`}
                     onClick={() => setFullscreenImage(image)}
                   />
                 </div>
 
-                <div className={`image-info ${viewMode}-view`}>
+                <div className="image-info">
                   <div className="image-title">
                     {image.crewName}
-                  </div>
-                  <div className="image-tags">
-                    <span className="image-tag">
-                      {image.dimensions?.width || 1080}×{image.dimensions?.height || 1080}
-                    </span>
-                    <span className="image-tag">{formatFileSize(image.fileSize)}</span>
-                    <span className="image-tag">{image.format?.toUpperCase() || 'PNG'}</span>
                   </div>
                   <div className="image-actions">
                     <button
                       className="image-action-btn primary"
-                      onClick={() => handleDownload(image)}
+                      onClick={() => setFullscreenImage(image)}
                     >
-                      ⬇️ Download
+                      Preview
                     </button>
                     <button
-                      className="image-action-btn secondary icon-only"
-                      onClick={() => setFullscreenImage(image)}
-                      title="View Fullscreen"
+                      className="image-action-btn secondary"
+                      onClick={() => handleDownload(image)}
                     >
-                      🔍
+                      Download
+                    </button>
+                    <button
+                      className="image-action-btn danger"
+                      onClick={() => handleDeleteImage(image)}
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -341,39 +376,6 @@ const NewGalleryPage: React.FC = () => {
           </div>
         )}
 
-        {/* Context Menu */}
-        {contextMenu && (
-          <div
-            className="context-menu"
-            style={{
-              left: contextMenu.x,
-              top: contextMenu.y,
-              position: 'fixed',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="context-menu-item"
-              onClick={() => setFullscreenImage(contextMenu.image)}
-            >
-              🔍 View Fullscreen
-            </div>
-            <div className="context-menu-item" onClick={() => handleDownload(contextMenu.image)}>
-              ⬇️ Download
-            </div>
-            <div className="context-menu-divider"></div>
-            <div
-              className="context-menu-item danger"
-              onClick={() => {
-                setSelectedImage(contextMenu.image);
-                setShowDeleteDialog(true);
-                setContextMenu(null);
-              }}
-            >
-              🗑️ Delete
-            </div>
-          </div>
-        )}
 
         {/* Fullscreen Modal */}
         {fullscreenImage && (
@@ -381,7 +383,7 @@ const NewGalleryPage: React.FC = () => {
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <div className="modal-title">
-                  {fullscreenImage.crewName} - {fullscreenImage.templateName}
+                  {fullscreenImage.crewName}
                 </div>
                 <button className="modal-close" onClick={() => setFullscreenImage(null)}>
                   ×
@@ -393,42 +395,11 @@ const NewGalleryPage: React.FC = () => {
                   alt={`${fullscreenImage.crewName} - ${fullscreenImage.templateName}`}
                   className="fullscreen-image"
                 />
-                <div className="image-details">
-                  <span className="detail-chip">
-                    {fullscreenImage.dimensions?.width || 1080} × {fullscreenImage.dimensions?.height || 1080}
-                  </span>
-                  <span className="detail-chip">{formatFileSize(fullscreenImage.fileSize)}</span>
-                  <span className="detail-chip">{fullscreenImage.format?.toUpperCase() || 'PNG'}</span>
-                  <span className="detail-chip">{formatDate(fullscreenImage.createdAt)}</span>
-                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Delete Confirmation Dialog */}
-        {showDeleteDialog && selectedImage && (
-          <>
-            <div className="modal-overlay" onClick={() => setShowDeleteDialog(false)}></div>
-            <div className="confirmation-dialog">
-              <div className="dialog-header">
-                <div className="dialog-title">Delete Image</div>
-              </div>
-              <div className="dialog-content">
-                Are you sure you want to delete "{selectedImage.crewName} -{' '}
-                {selectedImage.templateName}"? This action cannot be undone.
-              </div>
-              <div className="dialog-actions">
-                <button className="dialog-btn cancel" onClick={() => setShowDeleteDialog(false)}>
-                  Cancel
-                </button>
-                <button className="dialog-btn confirm" onClick={() => handleDelete(selectedImage)}>
-                  Delete
-                </button>
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       <AuthModal
