@@ -143,39 +143,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="stats-section">
-          <div className="stats-header">
-            <h2>Your Activity</h2>
-            <button className="view-all-btn" onClick={() => navigate('/crews')}>
-              View all crews →
-            </button>
-          </div>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-content">
-                <div className="stat-value">{loading ? '...' : user ? stats.totalCrews : '—'}</div>
-                <div className="stat-label">Active Crews</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🎨</div>
-              <div className="stat-content">
-                <div className="stat-value">
-                  {loading ? '...' : user ? stats.totalTemplates : '5'}
-                </div>
-                <div className="stat-label">Templates</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📸</div>
-              <div className="stat-content">
-                <div className="stat-value">{loading ? '...' : user ? stats.totalImages : '—'}</div>
-                <div className="stat-label">Images Created</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Auth Modal */}

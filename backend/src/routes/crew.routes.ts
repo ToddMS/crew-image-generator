@@ -1,5 +1,5 @@
 import express from "express";
-import { getAllCrews, createCrew, updateCrewHandler, removeCrew, generateCrewImageHandler, generateCustomCrewImageHandler, getTemplateComponents, getSavedTemplates, saveCrewImage, getSavedImages, deleteSavedImage, upload, uploadClubIcon } from "../controllers/crew.controller.js";
+import { getAllCrews, createCrew, updateCrewHandler, removeCrew, generateCrewImageHandler, generateCustomCrewImageHandler, getTemplateComponents, getSavedTemplates, saveCrewImage, getSavedImages, getAllSavedImages, deleteSavedImage, upload, uploadClubIcon } from "../controllers/crew.controller.js";
 import { authenticateUser } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -21,6 +21,7 @@ router.delete("/:id", authenticateUser, asyncHandler(removeCrew));
 
 // Saved images routes
 router.post("/save-image", authenticateUser, upload.single('image'), asyncHandler(saveCrewImage));
+router.get("/saved-images", authenticateUser, asyncHandler(getAllSavedImages));
 router.get("/:crewId/saved-images", authenticateUser, asyncHandler(getSavedImages));
 router.delete("/saved-images/:imageId", authenticateUser, asyncHandler(deleteSavedImage));
 

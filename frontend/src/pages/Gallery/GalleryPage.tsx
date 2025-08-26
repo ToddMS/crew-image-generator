@@ -15,9 +15,9 @@ interface SavedImage {
   imageUrl: string;
   thumbnailUrl?: string;
   createdAt: string;
-  dimensions: { width: number; height: number };
+  dimensions?: { width: number; height: number };
   fileSize: number;
-  format: string;
+  format?: string;
   crewId?: string;
   templateId?: string;
 }
@@ -54,7 +54,7 @@ const NewGalleryPage: React.FC = () => {
     if (path === '/') return 'dashboard';
     if (path.includes('/crews/create') || path.includes('/create')) return 'create';
     if (path.includes('/crews')) return 'crews';
-    if (path.includes('/templates')) return 'templates';
+    if (path.includes('/club-presets')) return 'club-presets';
     if (path.includes('/generate')) return 'generate';
     if (path.includes('/gallery')) return 'gallery';
     if (path.includes('/settings')) return 'settings';
@@ -89,6 +89,7 @@ const NewGalleryPage: React.FC = () => {
     try {
       const response = await ApiService.getSavedImages();
       if (response.success && response.data) {
+        console.log('Frontend received images:', response.data.map(img => ({ id: img.id, imageUrl: img.imageUrl, thumbnailUrl: img.thumbnailUrl })));
         setImages(response.data);
       } else {
         // Mock data for demonstration
@@ -303,7 +304,7 @@ const NewGalleryPage: React.FC = () => {
               >
                 <div className={`image-preview ${viewMode}-view`}>
                   <img
-                    src={image.thumbnailUrl || image.imageUrl}
+                    src={image.imageUrl}
                     alt={`${image.crewName} - ${image.templateName}`}
                     onClick={() => setFullscreenImage(image)}
                   />
@@ -339,10 +340,10 @@ const NewGalleryPage: React.FC = () => {
                   </div>
                   <div className="image-tags">
                     <span className="image-tag">
-                      {image.dimensions.width}×{image.dimensions.height}
+                      {image.dimensions?.width || 1080}×{image.dimensions?.height || 1080}
                     </span>
                     <span className="image-tag">{formatFileSize(image.fileSize)}</span>
-                    <span className="image-tag">{image.format.toUpperCase()}</span>
+                    <span className="image-tag">{image.format?.toUpperCase() || 'PNG'}</span>
                   </div>
                   <div className="image-actions">
                     <button
@@ -419,10 +420,10 @@ const NewGalleryPage: React.FC = () => {
                 />
                 <div className="image-details">
                   <span className="detail-chip">
-                    {fullscreenImage.dimensions.width} × {fullscreenImage.dimensions.height}
+                    {fullscreenImage.dimensions?.width || 1080} × {fullscreenImage.dimensions?.height || 1080}
                   </span>
                   <span className="detail-chip">{formatFileSize(fullscreenImage.fileSize)}</span>
-                  <span className="detail-chip">{fullscreenImage.format.toUpperCase()}</span>
+                  <span className="detail-chip">{fullscreenImage.format?.toUpperCase() || 'PNG'}</span>
                   <span className="detail-chip">{formatDate(fullscreenImage.createdAt)}</span>
                 </div>
               </div>

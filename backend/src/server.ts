@@ -54,6 +54,9 @@ app.options('*', cors());
 // Static file serving for saved images
 app.use('/api/saved-images', (req, res, next) => {
   res.setHeader('Content-Disposition', 'inline');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   next();
 }, express.static(path.join(process.cwd(), 'src', 'assets', 'saved-images')));
 

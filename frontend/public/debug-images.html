@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Images</title>
+    <style>
+        img { max-width: 300px; border: 2px solid #ccc; margin: 10px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Debug Image Loading</h1>
+    
+    <h2>Test 1: Direct img tag</h2>
+    <img id="img1" src="http://localhost:8080/api/saved-images/crew-14-1756217367234.png" alt="Test Image">
+    <div id="status1">Loading...</div>
+    
+    <h2>Test 2: Fetch + Blob URL</h2>
+    <div id="img2-container"></div>
+    <div id="status2">Loading...</div>
+    
+    <h2>Test 3: New Image</h2>
+    <img id="img3" src="http://localhost:8080/api/saved-images/crew-7-1756217864713.png" alt="New Test Image">
+    <div id="status3">Loading...</div>
+
+    <script>
+        // Test direct img load
+        const img1 = document.getElementById('img1');
+        const status1 = document.getElementById('status1');
+        
+        img1.onload = () => {
+            status1.textContent = '✅ Direct img tag loaded successfully';
+            status1.className = 'success';
+        };
+        
+        img1.onerror = (e) => {
+            status1.textContent = '❌ Direct img tag failed to load';
+            status1.className = 'error';
+            console.error('Image 1 error:', e);
+        };
+
+        // Test fetch approach
+        const status2 = document.getElementById('status2');
+        const img2Container = document.getElementById('img2-container');
+        
+        fetch('http://localhost:8080/api/saved-images/crew-14-1756217367234.png')
+            .then(response => {
+                console.log('Fetch response:', response.status, response.statusText);
+                console.log('Headers:', [...response.headers.entries()]);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                console.log('Blob:', blob.type, blob.size);
+                const url = URL.createObjectURL(blob);
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '300px';
+                img2Container.appendChild(img);
+                status2.textContent = '✅ Fetch + Blob URL loaded successfully';
+                status2.className = 'success';
+            })
+            .catch(err => {
+                console.error('Fetch error:', err);
+                status2.textContent = `❌ Fetch failed: ${err.message}`;
+                status2.className = 'error';
+            });
+
+        // Test newer image
+        const img3 = document.getElementById('img3');
+        const status3 = document.getElementById('status3');
+        
+        img3.onload = () => {
+            status3.textContent = '✅ New image loaded successfully';
+            status3.className = 'success';
+        };
+        
+        img3.onerror = (e) => {
+            status3.textContent = '❌ New image failed to load';
+            status3.className = 'error';
+            console.error('Image 3 error:', e);
+        };
+    </script>
+</body>
+</html>

@@ -76,7 +76,7 @@ const NewSettingsPage: React.FC = () => {
     if (path === '/') return 'dashboard';
     if (path.includes('/crews/create') || path.includes('/create')) return 'create';
     if (path.includes('/crews')) return 'crews';
-    if (path.includes('/templates')) return 'templates';
+    if (path.includes('/club-presets')) return 'club-presets';
     if (path.includes('/generate')) return 'generate';
     if (path.includes('/gallery')) return 'gallery';
     if (path.includes('/settings')) return 'settings';

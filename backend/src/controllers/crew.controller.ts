@@ -37,6 +37,34 @@ export const generateCrewImageHandler = async (req: Request, res: Response) => {
         const { outputPath } = await generateCrewImage(crew, imageName, templateId, colors, clubIconData);
         const buffer = await fs.promises.readFile(outputPath);
 
+        // Also save the image to the database for gallery display
+        try {
+            const savedImageName = imageName || `crew-${crewId}-${Date.now()}`;
+            const fileName = outputPath.split('/').pop() || `${savedImageName}.png`;
+            const stats = await fs.promises.stat(outputPath);
+            
+            const imageData = {
+                crewId: parseInt(crewId),
+                userId: (crew as any).userId,
+                imageName: savedImageName,
+                templateId: templateId || 'classic-lineup',
+                primaryColor: colors?.primary || null,
+                secondaryColor: colors?.secondary || null,
+                imageFilename: fileName,
+                imageUrl: `http://localhost:8080/api/saved-images/${fileName}`,
+                fileSize: stats.size,
+                mimeType: 'image/png',
+                width: 1080,
+                height: 1080,
+                format: 'png'
+            };
+            
+            await CrewService.saveCrewImage(imageData);
+        } catch (saveError) {
+            console.error("Error saving image to database:", saveError);
+            // Don't fail the request if saving to database fails
+        }
+
         res.setHeader("Content-Type", "image/png");
         res.setHeader("Content-Disposition", "inline");
         res.send(buffer);
@@ -413,6 +441,56 @@ export const getSavedImages = async (req: Request, res: Response): Promise<void>
         res.json(savedImages);
     } catch (error) {
         console.error("Error fetching saved images:", error);
+        res.status(500).json({ error: "Failed to fetch saved images" });
+    }
+};
+
+export const getAllSavedImages = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).userId;
+        
+        // Get all crews for this user first
+        const crews = await CrewService.getCrewsByUserId(userId);
+        
+        // Get saved images for all crews
+        const allSavedImages = [];
+        for (const crew of crews) {
+            const crewImages = await CrewService.getSavedImagesByCrewId((crew as any).id);
+            // Transform database rows to frontend format
+            const transformedImages = crewImages.map(image => {
+                // Map template IDs to friendly names
+                const templateNameMap: { [key: string]: string } = {
+                    'classic-lineup': 'Classic Lineup',
+                    'modern-grid': 'Modern Grid', 
+                    'race-day': 'Race Day',
+                    'minimal': 'Minimal',
+                    'championship': 'Championship'
+                };
+                
+                return {
+                    id: image.id?.toString() || image.id,
+                    crewName: (crew as any).name,
+                    templateName: templateNameMap[image.template_id] || image.template_id,
+                    imageUrl: image.image_url?.startsWith('http') ? image.image_url : `http://localhost:8080${image.image_url}`,
+                    thumbnailUrl: image.thumbnail_url,
+                    createdAt: image.created_at,
+                    dimensions: {
+                        width: image.width || 1080,
+                        height: image.height || 1080
+                    },
+                    fileSize: image.file_size || 0,
+                    format: image.format || 'png',
+                    crewId: image.crew_id?.toString(),
+                    templateId: image.template_id
+                };
+            });
+            allSavedImages.push(...transformedImages);
+        }
+        
+        console.log('Returning images with URLs:', allSavedImages.map(img => ({ id: img.id, imageUrl: img.imageUrl })));
+        res.json(allSavedImages);
+    } catch (error) {
+        console.error("Error fetching all saved images:", error);
         res.status(500).json({ error: "Failed to fetch saved images" });
     }
 };

@@ -52,14 +52,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
     { label: 'My Crews', path: '/crews' },
   ];
 
-  const templatesDropdownItems: DropdownItem[] = [
-    { label: 'Create Template', path: '/templates/create' },
-    { label: 'View Templates', path: '/templates' },
-    { label: 'Club Presets', path: '/club-presets' },
-  ];
-
   const isCrewsActive = currentPage === 'crews' || currentPage === 'create';
-  const isTemplatesActive = currentPage === 'templates' || currentPage === 'club-presets';
+  const isClubPresetsActive = currentPage === 'club-presets';
 
   const profileDropdownItems: DropdownItem[] = [{ label: 'Settings', path: '/settings' }];
 
@@ -106,32 +100,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
             )}
           </div>
 
-          {/* Templates Dropdown */}
-          <div className="nav-dropdown">
-            <button
-              className={`nav-link dropdown-trigger ${isTemplatesActive ? 'active' : ''}`}
-              onClick={() => toggleDropdown('templates')}
-            >
-              Templates
-              <span className={`dropdown-arrow ${activeDropdown === 'templates' ? 'open' : ''}`}>
-                ▼
-              </span>
-            </button>
-            {activeDropdown === 'templates' && (
-              <div className="dropdown-menu" ref={(el) => (dropdownRefs.current['templates'] = el)}>
-                {templatesDropdownItems.map((item) => (
-                  <button
-                    key={item.path}
-                    className="dropdown-item"
-                    onClick={() => handleNavClick(item.path)}
-                  >
-                    {item.icon && <span className="dropdown-icon">{item.icon}</span>}
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <button
+            className={`nav-link ${isClubPresetsActive ? 'active' : ''}`}
+            onClick={() => handleNavClick('/club-presets')}
+          >
+            Club Presets
+          </button>
 
           <button
             className={`nav-link ${currentPage === 'generate' ? 'active' : ''}`}
