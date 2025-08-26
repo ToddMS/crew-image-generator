@@ -487,7 +487,6 @@ export const getAllSavedImages = async (req: Request, res: Response): Promise<vo
             allSavedImages.push(...transformedImages);
         }
         
-        console.log('Returning images with URLs:', allSavedImages.map(img => ({ id: img.id, imageUrl: img.imageUrl })));
         res.json(allSavedImages);
     } catch (error) {
         console.error("Error fetching all saved images:", error);

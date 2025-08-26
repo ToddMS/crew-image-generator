@@ -89,7 +89,6 @@ const NewGalleryPage: React.FC = () => {
     try {
       const response = await ApiService.getSavedImages();
       if (response.success && response.data) {
-        console.log('Frontend received images:', response.data.map(img => ({ id: img.id, imageUrl: img.imageUrl, thumbnailUrl: img.thumbnailUrl })));
         setImages(response.data);
       } else {
         // Mock data for demonstration
@@ -308,35 +307,11 @@ const NewGalleryPage: React.FC = () => {
                     alt={`${image.crewName} - ${image.templateName}`}
                     onClick={() => setFullscreenImage(image)}
                   />
-                  <div className="image-overlay">
-                    <button
-                      className="overlay-btn"
-                      onClick={() => setFullscreenImage(image)}
-                      title="View Fullscreen"
-                    >
-                      🔍
-                    </button>
-                    <button
-                      className="overlay-btn"
-                      onClick={() => handleDownload(image)}
-                      title="Download"
-                    >
-                      ⬇️
-                    </button>
-                  </div>
                 </div>
 
                 <div className={`image-info ${viewMode}-view`}>
                   <div className="image-title">
                     {image.crewName}
-                    <button className="image-menu-btn" onClick={(e) => handleContextMenu(e, image)}>
-                      ⋮
-                    </button>
-                  </div>
-                  <div className="image-subtitle">Template: {image.templateName}</div>
-                  <div className="image-meta">
-                    <span className="image-meta-icon">📅</span>
-                    {formatDate(image.createdAt)}
                   </div>
                   <div className="image-tags">
                     <span className="image-tag">

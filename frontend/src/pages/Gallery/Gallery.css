@@ -363,7 +363,7 @@
 }
 
 .image-preview.grid-view {
-  aspect-ratio: 3/4;
+  aspect-ratio: 1/1;
 }
 
 .image-preview.list-view {
@@ -375,7 +375,7 @@
 .image-preview img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: var(--transition);
   cursor: pointer;
 }
@@ -385,26 +385,7 @@
 }
 
 .image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(37, 99, 235, 0.8),
-    rgba(16, 185, 129, 0.8)
-  );
-  opacity: 0;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.image-card:hover .image-overlay {
-  opacity: 1;
+  display: none;
 }
 
 .overlay-btn {
