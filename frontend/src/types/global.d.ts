@@ -7,6 +7,7 @@ interface GoogleAccounts {
       auto_select?: boolean;
       cancel_on_tap_outside?: boolean;
       use_fedcm_for_prompt?: boolean;
+      ux_mode?: string;
     }) => void;
     renderButton: (
       element: HTMLElement,
