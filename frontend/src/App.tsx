@@ -1,34 +1,33 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MainLayout from './layouts/MainLayout';
-import DashboardPage from './pages/DashboardPage';
-import CreateCrewPage from './pages/CreateCrewPage';
-import MyCrewsPage from './pages/MyCrewsPage';
-import GenerateImagesPage from './pages/GenerateImagesPage';
-import ClubPresetsPage from './pages/ClubPresetsPage';
-import GalleryPage from './pages/GalleryPage';
-import SettingsPage from './pages/SettingsPage';
-import AnalyticsPage from './pages/AnalyticsPage';
-import TemplateCustomizerPage from './pages/TemplateCustomiserPage';
+import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import DashboardPage from './pages/Dashboard/DashboardPage';
+import CreateCrewPage from './pages/CreateCrews/CreateCrewPage';
+import MyCrewsPage from './pages/MyCrews/MyCrewsPage';
+import GenerateImagesPage from './pages/Generate/GenerateImagesPage';
+import ViewTemplatesPage from './pages/Templates/ViewTemplatesPage';
+import ClubPresetsPage from './pages/ClubPresets/ClubPresetsPage';
+import NewGalleryPage from './pages/Gallery/GalleryPage';
+import NewSettingsPage from './pages/Settings/SettingsPage';
 
 function App() {
   return (
     <Router>
-      <NotificationProvider>
-        <MainLayout showHeader={false}>
+      <AuthProvider>
+        <NotificationProvider>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/crews/create" element={<CreateCrewPage />} />
             <Route path="/create" element={<CreateCrewPage />} />
             <Route path="/crews" element={<MyCrewsPage />} />
-            <Route path="/generate" element={<GenerateImagesPage />} />
             <Route path="/club-presets" element={<ClubPresetsPage />} />
-            <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/template-builder" element={<TemplateCustomizerPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/generate" element={<GenerateImagesPage />} />
+            <Route path="/templates" element={<ViewTemplatesPage />} />
+            <Route path="/gallery" element={<NewGalleryPage />} />
+            <Route path="/settings" element={<NewSettingsPage />} />
           </Routes>
-        </MainLayout>
-      </NotificationProvider>
+        </NotificationProvider>
+      </AuthProvider>
     </Router>
   );
 }

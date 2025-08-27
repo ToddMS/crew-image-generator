@@ -101,6 +101,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Google login data received:', data.user);
+        console.log('Profile picture URL:', data.user.profile_picture);
         setUser(data.user);
         setClubSettings(data.clubSettings);
         setSessionId(data.sessionId);

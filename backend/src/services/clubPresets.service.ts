@@ -106,8 +106,19 @@ class ClubPresetsService {
         );
       }
 
-      const fields = Object.keys(presetData).map((key, index) => `${key} = $${index + 1}`).join(', ');
-      const values = Object.values(presetData);
+      // Filter out undefined values and system-managed fields
+      const filteredData = Object.entries(presetData)
+        .filter(([key, value]) => value !== undefined && key !== 'updated_at' && key !== 'created_at' && key !== 'id')
+        .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+
+      // If no fields to update, just return success
+      if (Object.keys(filteredData).length === 0) {
+        await client.query('COMMIT');
+        return true;
+      }
+
+      const fields = Object.keys(filteredData).map((key, index) => `${key} = $${index + 1}`).join(', ');
+      const values = Object.values(filteredData);
 
       const result = await client.query(
         `UPDATE ClubPresets SET ${fields}, updated_at = CURRENT_TIMESTAMP WHERE id = $${values.length + 1} AND user_id = $${values.length + 2}`,
