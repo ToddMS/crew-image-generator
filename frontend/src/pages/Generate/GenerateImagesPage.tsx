@@ -78,6 +78,7 @@ const GenerateImagesPage: React.FC = () => {
   
   // Search states
   const [presetSearchQuery, setPresetSearchQuery] = useState('');
+  const [crewSearchQuery, setCrewSearchQuery] = useState('');
 
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -497,6 +498,22 @@ const GenerateImagesPage: React.FC = () => {
     return filtered;
   };
 
+  // Filter crews based on search query
+  const getFilteredCrews = () => {
+    if (!crewSearchQuery.trim()) return crews;
+    
+    const searchTerm = crewSearchQuery.toLowerCase();
+    return crews.filter(crew => 
+      crew.name.toLowerCase().includes(searchTerm) ||
+      crew.clubName.toLowerCase().includes(searchTerm) ||
+      crew.raceName.toLowerCase().includes(searchTerm) ||
+      crew.boatType.name.toLowerCase().includes(searchTerm) ||
+      (crew.coachName && crew.coachName.toLowerCase().includes(searchTerm)) ||
+      (crew.coxName && crew.coxName.toLowerCase().includes(searchTerm)) ||
+      crew.crewNames.some(memberName => memberName.toLowerCase().includes(searchTerm))
+    );
+  };
+
   if (!user) {
     return (
       <div className="generate-container">
@@ -553,26 +570,15 @@ const GenerateImagesPage: React.FC = () => {
             <div className="generate-step active">
               <div className="step-content">
                 <div className="step-header-with-actions">
-                  <div>
-                    <h2>Step 1: Select Your Crews</h2>
-                    <p>Choose which crews you'd like to create images for</p>
-                  </div>
                   {crews.length > 0 && (
-                    <div className="crew-selection-actions">
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => setSelectedCrews(crews)}
-                      >
-                        Select All
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => setSelectedCrews([])}
-                      >
-                        Clear All
-                      </button>
+                    <div className="crew-search-container">
+                      <input
+                        type="text"
+                        className="crew-search-input"
+                        placeholder="Search crews, clubs, races..."
+                        value={crewSearchQuery}
+                        onChange={(e) => setCrewSearchQuery(e.target.value)}
+                      />
                     </div>
                   )}
                 </div>
@@ -581,7 +587,7 @@ const GenerateImagesPage: React.FC = () => {
                 
                 
                 <div className="crew-selection-grid">
-                  {crews.length === 0 ? (
+                  {getFilteredCrews().length === 0 ? (
                     <div style={{
                       padding: '3rem 2rem',
                       textAlign: 'center',
@@ -591,8 +597,8 @@ const GenerateImagesPage: React.FC = () => {
                       border: '2px dashed var(--gray-300)'
                     }}>
                       <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🚣</div>
-                      <h3>No Crews Found</h3>
-                      <p>You haven't created any crews yet.</p>
+                      <h3>{crews.length === 0 ? 'No Crews Found' : 'No Matching Crews'}</h3>
+                      <p>{crews.length === 0 ? "You haven't created any crews yet." : 'Try adjusting your search terms.'}</p>
                       <button 
                         className="btn btn-primary"
                         onClick={() => navigate('/crews/create')}
@@ -602,7 +608,7 @@ const GenerateImagesPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    crews.map(crew => {
+                    getFilteredCrews().map(crew => {
                       const isSelected = selectedCrews.find(c => c.id === crew.id);
                       return (
                     <div
@@ -647,9 +653,6 @@ const GenerateImagesPage: React.FC = () => {
             <div className="generate-step active">
               <div className="step-layout">
                 <div className="step-content">
-                  <h2>Step 2: Choose Template & Colors</h2>
-                  <p>Select a template design and club colors</p>
-                  
                   <div className="template-section">
                     <h3>Template Style</h3>
                     {errors.template && <div className="error-message">{errors.template}</div>}
@@ -779,9 +782,6 @@ const GenerateImagesPage: React.FC = () => {
           {currentStep === 3 && (
             <div className="generate-step active">
               <div className="step-content">
-                <h2>Step 3: Generate & Download</h2>
-                <p>Choose your output formats and generate your crew images</p>
-                
                 <div className="generation-options">
                   <h3>Output Formats</h3>
                   {errors.formats && <div className="error-message">{errors.formats}</div>}
