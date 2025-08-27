@@ -22,9 +22,9 @@ const boatClassHasCox = (boatClass: string) => boatClass === '8+' || boatClass =
 
 const boatClassToBoatType = (boatClass: string) => {
   const mapping: Record<string, { id: number; value: string; seats: number; name: string }> = {
-    '8+': { id: 1, value: '8+', seats: 8, name: 'Eight with Coxswain' },
-    '4+': { id: 2, value: '4+', seats: 4, name: 'Four with Coxswain' },
-    '4-': { id: 3, value: '4-', seats: 4, name: 'Four without Coxswain' },
+    '8+': { id: 1, value: '8+', seats: 8, name: 'Eight' },
+    '4+': { id: 2, value: '4+', seats: 4, name: 'Coxed Four' },
+    '4-': { id: 3, value: '4-', seats: 4, name: 'Coxless Four' },
     '4x': { id: 6, value: '4x', seats: 4, name: 'Quad Sculls' },
     '2-': { id: 7, value: '2-', seats: 2, name: 'Coxless Pair' },
     '2x': { id: 4, value: '2x', seats: 2, name: 'Double Sculls' },
@@ -493,9 +493,9 @@ const CreateCrewPage: React.FC = () => {
                     required
                   >
                     <option value="">Select boat class</option>
-                    <option value="8+">8+ (Eight with Coxswain)</option>
-                    <option value="4+">4+ (Four with Coxswain)</option>
-                    <option value="4-">4- (Four without Coxswain)</option>
+                    <option value="8+">8+ (Eight)</option>
+                    <option value="4+">4+ (Coxed Four)</option>
+                    <option value="4-">4- (Coxless Four)</option>
                     <option value="4x">4x (Quad Sculls)</option>
                     <option value="2-">2- (Coxless Pair)</option>
                     <option value="2x">2x (Double Sculls)</option>

@@ -564,12 +564,8 @@ const GenerateImagesPage: React.FC = () => {
                             </div>
                           </div>
                           <div className="crew-card-details">
-                            <div className="crew-detail">
-                              {crew.boatType.name} • {crew.clubName}
-                            </div>
-                            {crew.coachName && (
-                              <div className="crew-detail">Coach: {crew.coachName}</div>
-                            )}
+                            <div className="crew-detail">{crew.clubName}</div>
+                            <div className="crew-detail">{crew.boatType.name}</div>
                           </div>
                         </div>
                       );
