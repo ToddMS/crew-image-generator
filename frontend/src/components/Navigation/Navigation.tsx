@@ -125,7 +125,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
           {user ? (
             <div className="nav-dropdown">
               <button className="user-profile-btn" onClick={() => toggleDropdown('profile')}>
-                <div className="user-avatar">{user.name?.[0] || 'U'}</div>
+                <div className="user-avatar">
+                  {user.profile_picture ? (
+                    <img 
+                      src={user.profile_picture} 
+                      alt={user.name || 'User'} 
+                      className="avatar-image"
+                      onError={(e) => {
+                        console.error('Failed to load profile picture:', user.profile_picture);
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    user.name?.[0] || 'U'
+                  )}
+                </div>
                 <span className="user-name">{user.club_name || user.name}</span>
                 <span className={`dropdown-arrow ${activeDropdown === 'profile' ? 'open' : ''}`}>
                   ▼

@@ -178,32 +178,62 @@ const GenerateImagesPage: React.FC = () => {
           {
             id: 'classic-lineup',
             name: 'Classic Lineup',
-            description: 'Traditional roster layout with boat visualization',
+            description: 'Traditional roster layout with clean presentation',
             category: 'classic'
           },
           {
-            id: 'modern-grid',
-            name: 'Modern Grid',
-            description: 'Clean contemporary design with member cards',
+            id: 'modern-card',
+            name: 'Modern Card',
+            description: 'Contemporary card-based design with member highlights',
             category: 'modern'
           },
           {
             id: 'race-day',
             name: 'Race Day',
-            description: 'Event focused template with bold styling',
-            category: 'race'
+            description: 'Bold event-focused template with dynamic styling',
+            category: 'event'
           },
           {
-            id: 'minimal',
-            name: 'Minimal',
-            description: 'Simple, elegant layout',
+            id: 'minimal-clean',
+            name: 'Minimal Clean',
+            description: 'Simple, elegant layout with clean typography',
             category: 'minimal'
           },
           {
-            id: 'championship',
-            name: 'Championship',
-            description: 'Bold design for major events',
+            id: 'championship-gold',
+            name: 'Championship Gold',
+            description: 'Luxurious golden design for major competitions',
             category: 'championship'
+          },
+          {
+            id: 'vintage-classic',
+            name: 'Vintage Classic',
+            description: 'Traditional parchment style with ornate decorations',
+            category: 'vintage'
+          },
+          {
+            id: 'elite-performance',
+            name: 'Elite Performance',
+            description: 'High-tech performance styling for elite crews',
+            category: 'elite'
+          },
+          {
+            id: 'regatta-royal',
+            name: 'Regatta Royal',
+            description: 'Royal regatta styling with heraldic elements',
+            category: 'royal'
+          },
+          {
+            id: 'oxbridge-herald',
+            name: 'Oxbridge Herald',
+            description: 'Academic heraldic design with Latin styling',
+            category: 'academic'
+          },
+          {
+            id: 'henley-poster',
+            name: 'Henley Poster',
+            description: 'Traditional Henley Royal Regatta poster style',
+            category: 'traditional'
           }
         ];
         setTemplates(mockTemplates);
@@ -334,6 +364,19 @@ const GenerateImagesPage: React.FC = () => {
         formats: selectedFormats,
       }));
 
+      console.log('🖼️ Frontend generating images with requests:', requests.map(r => ({
+        crewId: r.crewId,
+        templateId: r.templateId,
+        colors: r.colors,
+        formats: r.formats
+      })));
+
+      console.log('📋 Selected template details:', {
+        id: selectedTemplate.id,
+        name: selectedTemplate.name,
+        category: selectedTemplate.category
+      });
+
 
       // For now, generate images for the first crew (until backend supports batch generation)
       // TODO: Update when backend supports multiple crew generation
@@ -409,7 +452,14 @@ const GenerateImagesPage: React.FC = () => {
     switch (template.category) {
       case 'classic': return '📋';
       case 'modern': return '🎨';
-      case 'race': return '🏆';
+      case 'event': return '🏆';
+      case 'minimal': return '⚡';
+      case 'championship': return '🥇';
+      case 'vintage': return '📜';
+      case 'elite': return '⚡';
+      case 'royal': return '👑';
+      case 'academic': return '🎓';
+      case 'traditional': return '🏛️';
       default: return '📄';
     }
   };

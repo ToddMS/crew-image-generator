@@ -95,7 +95,7 @@ const ViewTemplatesPage: React.FC = () => {
     setShowClubPresets(!showClubPresets);
   };
 
-  // Mock templates data with custom templates
+  // Professional rowing templates
   const templates: Template[] = [
     {
       id: 'classic-lineup',
@@ -103,41 +103,80 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Traditional • Portrait',
       icon: '📋',
       isCustom: false,
+      description: 'Traditional roster layout with clean presentation'
     },
     {
-      id: 'modern-grid',
-      name: 'Modern Grid',
+      id: 'modern-card',
+      name: 'Modern Card',
       type: 'Contemporary • Square',
       icon: '🎨',
       isCustom: false,
+      description: 'Contemporary card-based design with member highlights'
     },
     {
-      id: 'action-shot',
-      name: 'Action Shot',
-      type: 'Dynamic • Landscape',
-      icon: '🌊',
+      id: 'race-day',
+      name: 'Race Day',
+      type: 'Event • Portrait',
+      icon: '🏆',
       isCustom: false,
-    },
-    { id: 'race-day', name: 'Race Day', type: 'Event • Portrait', icon: '🏆', isCustom: false },
-    { id: 'minimal', name: 'Minimal', type: 'Clean • Square', icon: '⚡', isCustom: false },
-    { id: 'premium', name: 'Premium', type: 'Elegant • Portrait', icon: '✨', isCustom: false },
-    // Custom templates (user created)
-    {
-      id: 'custom-1',
-      name: 'My Club Style',
-      type: 'Custom • Portrait',
-      icon: '🎯',
-      isCustom: true,
-      author: user?.name,
+      description: 'Bold event-focused template with dynamic styling'
     },
     {
-      id: 'custom-2',
-      name: 'Championship 2024',
-      type: 'Custom • Landscape',
-      icon: '🏅',
-      isCustom: true,
-      author: user?.name,
+      id: 'minimal-clean',
+      name: 'Minimal Clean',
+      type: 'Clean • Square',
+      icon: '⚡',
+      isCustom: false,
+      description: 'Simple, elegant layout with clean typography'
     },
+    {
+      id: 'championship-gold',
+      name: 'Championship Gold',
+      type: 'Luxury • Portrait',
+      icon: '🥇',
+      isCustom: false,
+      description: 'Luxurious golden design for major competitions'
+    },
+    {
+      id: 'vintage-classic',
+      name: 'Vintage Classic',
+      type: 'Traditional • Portrait',
+      icon: '📜',
+      isCustom: false,
+      description: 'Traditional parchment style with ornate decorations'
+    },
+    {
+      id: 'elite-performance',
+      name: 'Elite Performance',
+      type: 'High-Tech • Square',
+      icon: '⚡',
+      isCustom: false,
+      description: 'High-tech performance styling for elite crews'
+    },
+    {
+      id: 'regatta-royal',
+      name: 'Regatta Royal',
+      type: 'Royal • Portrait',
+      icon: '👑',
+      isCustom: false,
+      description: 'Royal regatta styling with heraldic elements'
+    },
+    {
+      id: 'oxbridge-herald',
+      name: 'Oxbridge Herald',
+      type: 'Academic • Portrait',
+      icon: '🎓',
+      isCustom: false,
+      description: 'Academic heraldic design with Latin styling'
+    },
+    {
+      id: 'henley-poster',
+      name: 'Henley Poster',
+      type: 'Traditional • Portrait',
+      icon: '🏛️',
+      isCustom: false,
+      description: 'Traditional Henley Royal Regatta poster style'
+    }
   ];
 
   const colors = ['#2563eb', '#dc2626', '#16a34a', '#7c3aed', '#ea580c', '#0891b2'];
@@ -219,7 +258,7 @@ const ViewTemplatesPage: React.FC = () => {
                 className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
                 onClick={() => handleTemplateSelect(template.id)}
               >
-                <div className="template-preview">
+                <div className="template-preview" title={template.description}>
                   {template.icon}
                   {template.isCustom && (
                     <div className="template-actions">
@@ -254,6 +293,9 @@ const ViewTemplatesPage: React.FC = () => {
                       <span className="template-author"> • by {template.author}</span>
                     )}
                   </div>
+                  {template.description && (
+                    <div className="template-description">{template.description}</div>
+                  )}
                 </div>
               </div>
             ))}

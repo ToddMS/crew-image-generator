@@ -12,6 +12,15 @@ const __filename = fileURLToPath(import.meta.url);
 export const generateCrewImageHandler = async (req: Request, res: Response) => {
     try {
         const { crewId, templateId, imageName, colors, clubIcon, clubIconType } = req.body;
+        
+        console.log('🎭 Controller received request:', {
+            crewId,
+            templateId,
+            imageName,
+            colors,
+            clubIconType: clubIconType || 'none'
+        });
+        
         const clubIconFile = req.file;
         if (!crewId) {
             return res.status(400).json({ error: "Crew ID is required" });

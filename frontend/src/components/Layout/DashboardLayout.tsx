@@ -100,7 +100,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {user ? (
               <div className="user-menu">
                 <span className="user-name">{user.club_name || user.name}</span>
-                <div className="user-avatar">{user.name?.[0] || 'U'}</div>
+                <div className="user-avatar">
+                  {user.profile_picture ? (
+                    <img 
+                      src={user.profile_picture} 
+                      alt={user.name || 'User'} 
+                      className="avatar-image"
+                    />
+                  ) : (
+                    user.name?.[0] || 'U'
+                  )}
+                </div>
                 <button className="logout-btn" onClick={logout} title="Logout">
                   ↗️
                 </button>
