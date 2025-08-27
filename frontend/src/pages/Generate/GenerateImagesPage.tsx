@@ -651,128 +651,77 @@ const GenerateImagesPage: React.FC = () => {
           {/* Step 2: Template & Colors */}
           {currentStep === 2 && (
             <div className="generate-step active">
-              <div className="step-layout">
-                <div className="step-content">
-                  <div className="template-section">
-                    <h3>Template Style</h3>
-                    {errors.template && <div className="error-message">{errors.template}</div>}
-                    
-                    <div className="template-selection-grid">
-                      {templates.map(template => (
+              <div className="step-content">
+                <h2>Choose Template & Colors</h2>
+                <p>Select a template design and club colors</p>
+                
+                <div className="template-section">
+                  <h3>Template Style</h3>
+                  {errors.template && <div className="error-message">{errors.template}</div>}
+                  
+                  <div className="template-selection-grid">
+                    {templates.map(template => (
+                      <div
+                        key={template.id}
+                        className={`template-selection-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
+                        onClick={() => handleTemplateSelect(template)}
+                      >
+                        <div className="template-thumb">{getTemplateIcon(template)}</div>
+                        <div className="template-info">
+                          <div className="template-name">{template.name}</div>
+                          <div className="template-desc">{template.description}</div>
+                        </div>
+                        <div className="selection-radio">
+                          <div className="radio-dot"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="colors-section">
+                  <h3>Club Colors</h3>
+                  {errors.preset && <div className="error-message">{errors.preset}</div>}
+                  
+                  <div className="colors-search-container">
+                    <input
+                      type="text"
+                      className="colors-search-input"
+                      placeholder="Search club colors..."
+                      value={presetSearchQuery}
+                      onChange={(e) => setPresetSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="preset-selection-container">
+                    <div className="preset-selection-grid-scrollable">
+                      {getFilteredAndSortedPresets().map(preset => (
                         <div
-                          key={template.id}
-                          className={`template-selection-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
-                          onClick={() => handleTemplateSelect(template)}
+                          key={preset.id}
+                          className={`preset-selection-card-compact ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
+                          onClick={() => handlePresetSelect(preset)}
                         >
-                          <div className="template-thumb">{getTemplateIcon(template)}</div>
-                          <div className="template-info">
-                            <div className="template-name">{template.name}</div>
-                            <div className="template-desc">{template.description}</div>
+                          <div className="preset-colors-compact">
+                            <div className="color-compact" style={{ background: preset.primary_color }}></div>
+                            <div className="color-compact" style={{ background: preset.secondary_color }}></div>
                           </div>
-                          <div className="selection-radio">
-                            <div className="radio-dot"></div>
-                          </div>
+                          <div className="preset-name-compact">{preset.club_name}</div>
+                          {selectedPreset?.id === preset.id && (
+                            <div className="selected-indicator">✓</div>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
-                  
-                  <div className="colors-section">
-                    <h3>Club Colors</h3>
-                    {errors.preset && <div className="error-message">{errors.preset}</div>}
-                    
-                    <div className="colors-search-container">
-                      <input
-                        type="text"
-                        className="colors-search-input"
-                        placeholder="Search club colors..."
-                        value={presetSearchQuery}
-                        onChange={(e) => setPresetSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div className="preset-selection-container">
-                      <div className="preset-selection-grid-scrollable">
-                        {getFilteredAndSortedPresets().map(preset => (
-                          <div
-                            key={preset.id}
-                            className={`preset-selection-card-compact ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
-                            onClick={() => handlePresetSelect(preset)}
-                          >
-                            <div className="preset-colors-compact">
-                              <div className="color-compact" style={{ background: preset.primary_color }}></div>
-                              <div className="color-compact" style={{ background: preset.secondary_color }}></div>
-                            </div>
-                            <div className="preset-name-compact">{preset.club_name}</div>
-                            {selectedPreset?.id === preset.id && (
-                              <div className="selected-indicator">✓</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="step-navigation">
-                    <button className="btn btn-secondary" onClick={previousStep}>
-                      Previous: Select Crew
-                    </button>
-                    <button className="btn btn-primary" onClick={nextStep}>
-                      Next: Generate Image
-                    </button>
-                  </div>
                 </div>
                 
-                {/* Live Preview Panel */}
-                <div className="preview-panel">
-                  <div className="preview-header">
-                    <h3>Live Preview</h3>
-                    <div className="preview-format">Instagram Post (1080×1080)</div>
-                  </div>
-                  <div className="preview-container">
-                    <div 
-                      className="preview-image"
-                      style={{
-                        background: selectedPreset 
-                          ? `linear-gradient(135deg, ${selectedPreset.primary_color}, ${selectedPreset.secondary_color})`
-                          : 'linear-gradient(135deg, #2563eb, #1e40af)'
-                      }}
-                    >
-                      <div className="preview-content">
-                        <div className="preview-header-section">
-                          <div className="preview-club-name">
-                            {selectedCrews[0]?.clubName || 'Club Name'}
-                          </div>
-                          <div className="preview-crew-name">
-                            {selectedCrews[0]?.name || (selectedCrews.length > 1 ? `${selectedCrews.length} crews selected` : 'Crew Name')}
-                          </div>
-                        </div>
-                        <div className="preview-roster">
-                          {selectedCrews.length > 1 ? (
-                            <div className="preview-multi-crews">
-                              <div className="preview-member">Preview showing: {selectedCrews[0]?.name}</div>
-                              <div className="preview-member">+ {selectedCrews.length - 1} other crew{selectedCrews.length - 1 !== 1 ? 's' : ''}</div>
-                            </div>
-                          ) : selectedCrews[0] ? (
-                            <>
-                              {selectedCrews[0].crewNames.map((name, index) => (
-                                <div key={index} className="preview-member">
-                                  {index + 1}. {name}
-                                  {index === 0 && selectedCrews[0].boatType.seats > 1 ? ' (Bow)' : ''}
-                                  {index === selectedCrews[0].crewNames.length - 1 && selectedCrews[0].boatType.seats > 1 ? ' (Stroke)' : ''}
-                                </div>
-                              ))}
-                              {selectedCrews[0].coxName && (
-                                <div className="preview-cox">Cox: {selectedCrews[0].coxName}</div>
-                              )}
-                            </>
-                          ) : (
-                            <div className="preview-member">No crew selected</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="step-navigation">
+                  <button className="btn btn-secondary" onClick={previousStep}>
+                    Previous: Select Crew
+                  </button>
+                  <button className="btn btn-primary" onClick={nextStep}>
+                    Next: Generate Image
+                  </button>
                 </div>
               </div>
             </div>
