@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation/Navigation';
 import AuthModal from '../../components/Auth/AuthModal';
+import StepIndicator, { Step } from '../../components/StepIndicator';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { useThemeMode } from '../../context/RowgramThemeContext';
@@ -85,6 +86,22 @@ const GenerateImagesPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getCurrentPage = () => 'generate';
+  
+  // Define the steps for the StepIndicator
+  const steps: Step[] = [
+    { label: 'Select Crew', description: 'Choose your crews' },
+    { label: 'Choose Template & Colors', description: 'Pick design and colors' },
+    { label: 'Generate & Download', description: 'Create your images' },
+  ];
+
+  // Calculate completed steps based on current step
+  const getCompletedSteps = () => {
+    const completed = new Set<number>();
+    for (let i = 0; i < currentStep - 1; i++) {
+      completed.add(i);
+    }
+    return completed;
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -486,7 +503,6 @@ const GenerateImagesPage: React.FC = () => {
         <Navigation currentPage={getCurrentPage()} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
-            <div className="empty-state-icon">🎨</div>
             <h2>Generate Images</h2>
             <p>Sign in to create professional crew images</p>
             <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
@@ -523,25 +539,13 @@ const GenerateImagesPage: React.FC = () => {
       <Navigation currentPage={getCurrentPage()} onAuthModalOpen={() => setShowAuthModal(true)} />
       
       <div className="container">
-        {/* Progress Steps */}
-        <div className="progress-container">
-          <div className="progress-steps">
-            <div className={`progress-step ${currentStep === 1 ? 'active' : currentStep > 1 ? 'completed' : ''}`}>
-              <div className="step-number">{currentStep > 1 ? '✓' : '1'}</div>
-              <div className="step-label">Select Crew</div>
-            </div>
-            <div className="progress-line"></div>
-            <div className={`progress-step ${currentStep === 2 ? 'active' : currentStep > 2 ? 'completed' : ''}`}>
-              <div className="step-number">{currentStep > 2 ? '✓' : '2'}</div>
-              <div className="step-label">Choose Template & Colors</div>
-            </div>
-            <div className="progress-line"></div>
-            <div className={`progress-step ${currentStep === 3 ? 'active' : currentStep > 3 ? 'completed' : ''}`}>
-              <div className="step-number">{currentStep > 3 ? '✓' : '3'}</div>
-              <div className="step-label">Generate & Download</div>
-            </div>
-          </div>
-        </div>
+        {/* Step Indicator */}
+        <StepIndicator 
+          steps={steps}
+          currentStep={currentStep - 1} // Convert from 1-based to 0-based
+          completedSteps={getCompletedSteps()}
+          className="generate-steps"
+        />
 
         <div className="generate-main">
           {/* Step 1: Select Crew */}

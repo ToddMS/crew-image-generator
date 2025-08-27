@@ -225,7 +225,6 @@ const NewGalleryPage: React.FC = () => {
         <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
-            <div className="empty-state-icon">🖼️</div>
             <h2>Image Gallery</h2>
             <p>Sign in to view and manage your generated crew images</p>
             <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>

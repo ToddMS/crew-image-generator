@@ -262,7 +262,6 @@ const MyCrewsPage: React.FC = () => {
         <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
-            <div className="empty-state-icon">👥</div>
             <h2>My Crews</h2>
             <p>Sign in to view and manage your saved crew lineups</p>
             <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>

@@ -128,12 +128,17 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
                 <div className="user-avatar">
                   {user.profile_picture ? (
                     <img 
-                      src={user.profile_picture} 
+                      src={`${import.meta.env.VITE_API_URL}/api/auth/profile-picture/${user.id}`}
                       alt={user.name || 'User'} 
                       className="avatar-image"
                       onError={(e) => {
-                        console.error('Failed to load profile picture:', user.profile_picture);
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        console.error('Failed to load profile picture via proxy for user:', user.id);
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        // Show fallback text
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = user.name?.[0] || 'U';
+                        }
                       }}
                     />
                   ) : (

@@ -534,7 +534,6 @@ const ClubPresetsPage: React.FC = () => {
         <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
-            <div className="empty-state-icon">🏛️</div>
             <h2>Club Presets</h2>
             <p>Sign in to manage your club color presets</p>
             <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>

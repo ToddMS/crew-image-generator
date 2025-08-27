@@ -103,9 +103,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 <div className="user-avatar">
                   {user.profile_picture ? (
                     <img 
-                      src={user.profile_picture} 
+                      src={`${import.meta.env.VITE_API_URL}/api/auth/profile-picture/${user.id}`}
                       alt={user.name || 'User'} 
                       className="avatar-image"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        // Show fallback text
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = user.name?.[0] || 'U';
+                        }
+                      }}
                     />
                   ) : (
                     user.name?.[0] || 'U'

@@ -8,7 +8,7 @@
 .container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1rem 1.5rem 2rem;
 }
 
 /* Hero Section */
@@ -34,72 +34,10 @@
   margin: 0 auto;
 }
 
-/* Progress Steps */
-.progress-container {
+/* Step Indicator Customization */
+.generate-steps {
   margin-bottom: 2rem;
-}
-
-.progress-steps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.progress-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  opacity: 0.4;
-  transition: var(--transition);
-}
-
-.progress-step.active {
-  opacity: 1;
-}
-
-.progress-step.completed {
-  opacity: 0.8;
-}
-
-.step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--gray-300);
-  color: var(--gray-600);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  transition: var(--transition);
-}
-
-.progress-step.active .step-number {
-  background: var(--primary);
-  color: var(--white);
-}
-
-.progress-step.completed .step-number {
-  background: var(--success);
-  color: var(--white);
-}
-
-.step-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--gray-600);
-  text-align: center;
-}
-
-.progress-line {
-  flex: 1;
-  height: 2px;
-  background: var(--gray-300);
-  margin: 0 1rem;
-  max-width: 100px;
+  margin-top: 1rem;
 }
 
 /* Main Content */
