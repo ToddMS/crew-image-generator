@@ -45,19 +45,6 @@ const MyCrewsPage: React.FC = () => {
     return 'dashboard';
   };
 
-  useEffect(() => {
-    loadCrews();
-  }, [user]);
-
-  useEffect(() => {
-    const state = location.state as { successMessage?: string } | null;
-    if (state?.successMessage) {
-      setSuccessMessage(state.successMessage);
-      navigate(location.pathname, { replace: true });
-      setTimeout(() => setSuccessMessage(null), 3000);
-    }
-  }, [location.state, navigate, location.pathname]);
-
   const loadCrews = useCallback(async () => {
     if (!user) {
       setSavedCrews([]);
@@ -117,6 +104,19 @@ const MyCrewsPage: React.FC = () => {
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    loadCrews();
+  }, [loadCrews]);
+
+  useEffect(() => {
+    const state = location.state as { successMessage?: string } | null;
+    if (state?.successMessage) {
+      setSuccessMessage(state.successMessage);
+      navigate(location.pathname, { replace: true });
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  }, [location.state, navigate, location.pathname]);
 
   const getSortedCrews = () => {
     const crewsCopy = [...savedCrews];

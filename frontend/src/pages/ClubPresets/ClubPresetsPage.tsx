@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
@@ -9,7 +8,6 @@ import { ApiService } from '../../services/api.service';
 import './ClubPresets.css';
 
 const ClubPresetsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -37,10 +35,6 @@ const ClubPresetsPage: React.FC = () => {
     is_default: false,
   });
 
-  const handleNavClick = (path: string) => {
-    navigate(path);
-  };
-
   const getCurrentPage = () => {
     const path = window.location.pathname;
     if (path === '/') return 'dashboard';
@@ -66,248 +60,9 @@ const ClubPresetsPage: React.FC = () => {
       const response = await ApiService.getClubPresets();
       if (response.data && !response.error) {
         setClubPresets(response.data);
-      } else {
-        // API call failed or returned no data, use mock data
-        console.log('API response:', response);
-        setClubPresets([
-          {
-            id: 1,
-            club_name: 'Thames Rowing Club',
-            primary_color: '#2563eb',
-            secondary_color: '#1e40af',
-            is_default: true,
-          },
-          {
-            id: 2,
-            club_name: 'London Rowing Club',
-            primary_color: '#dc2626',
-            secondary_color: '#1f2937',
-            is_default: false,
-          },
-          {
-            id: 3,
-            club_name: 'Leander Club',
-            primary_color: '#be185d',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 4,
-            club_name: 'Tideway Scullers School',
-            primary_color: '#16a34a',
-            secondary_color: '#1f2937',
-            is_default: false,
-          },
-          {
-            id: 5,
-            club_name: 'Putney Town RC',
-            primary_color: '#0891b2',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 6,
-            club_name: 'Imperial College BC',
-            primary_color: '#1e40af',
-            secondary_color: '#ef4444',
-            is_default: false,
-          },
-          {
-            id: 7,
-            club_name: 'Kings College London BC',
-            primary_color: '#7c3aed',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 8,
-            club_name: 'University College London BC',
-            primary_color: '#1f2937',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 9,
-            club_name: 'London School of Economics BC',
-            primary_color: '#dc2626',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 10,
-            club_name: 'Fulham Reach BC',
-            primary_color: '#059669',
-            secondary_color: '#065f46',
-            is_default: false,
-          },
-          {
-            id: 11,
-            club_name: 'Barn Elms BC',
-            primary_color: '#7c2d12',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 12,
-            club_name: 'Kingston RC',
-            primary_color: '#1e40af',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 13,
-            club_name: 'Mortlake Anglian & Alpha BC',
-            primary_color: '#0891b2',
-            secondary_color: '#0f172a',
-            is_default: false,
-          },
-          {
-            id: 14,
-            club_name: 'Vesta RC',
-            primary_color: '#be123c',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 15,
-            club_name: 'Thames RC',
-            primary_color: '#1e3a8a',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 16,
-            club_name: 'Quintin BC',
-            primary_color: '#7c3aed',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 17,
-            club_name: 'Westminster School BC',
-            primary_color: '#be185d',
-            secondary_color: '#1f2937',
-            is_default: false,
-          },
-          {
-            id: 18,
-            club_name: 'Westminster School Ladies BC',
-            primary_color: '#be185d',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 19,
-            club_name: 'Hammersmith RC',
-            primary_color: '#dc2626',
-            secondary_color: '#1f2937',
-            is_default: false,
-          },
-          {
-            id: 20,
-            club_name: 'Wandsworth RC',
-            primary_color: '#1e40af',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 21,
-            club_name: 'Auriol Kensington RC',
-            primary_color: '#084f29',
-            secondary_color: '#efc0d4',
-            is_default: false,
-          },
-          {
-            id: 22,
-            club_name: 'Star & Arrow Club',
-            primary_color: '#1f2937',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 23,
-            club_name: 'Crabtree RC',
-            primary_color: '#16a34a',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 24,
-            club_name: 'City of London School BC',
-            primary_color: '#1e40af',
-            secondary_color: '#dc2626',
-            is_default: false,
-          },
-          {
-            id: 25,
-            club_name: 'Dulwich College BC',
-            primary_color: '#7c2d12',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 26,
-            club_name: "Guy's, King's & St Thomas' BC",
-            primary_color: '#1e40af',
-            secondary_color: '#dc2626',
-            is_default: false,
-          },
-          {
-            id: 27,
-            club_name: 'Molesey BC',
-            primary_color: '#be123c',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-          {
-            id: 28,
-            club_name: 'Walton RC',
-            primary_color: '#dc2626',
-            secondary_color: '#1f2937',
-            is_default: false,
-          },
-          {
-            id: 29,
-            club_name: 'Twickenham RC',
-            primary_color: '#059669',
-            secondary_color: '#fbbf24',
-            is_default: false,
-          },
-          {
-            id: 30,
-            club_name: 'Richmond RC',
-            primary_color: '#7c3aed',
-            secondary_color: '#f8fafc',
-            is_default: false,
-          },
-        ]);
       }
     } catch (error) {
       console.error('Error loading club presets:', error);
-      // Set some mock data for development
-      setClubPresets([
-        {
-          id: 1,
-          club_name: 'Thames Rowing Club',
-          primary_color: '#2563eb',
-          secondary_color: '#1e40af',
-          is_default: true,
-        },
-        {
-          id: 2,
-          club_name: 'London Rowing Club',
-          primary_color: '#dc2626',
-          secondary_color: '#1f2937',
-          is_default: false,
-        },
-        {
-          id: 3,
-          club_name: 'Leander Club',
-          primary_color: '#be185d',
-          secondary_color: '#f8fafc',
-          is_default: false,
-        },
-      ]);
     } finally {
       setLoading(false);
     }
@@ -433,20 +188,6 @@ const ClubPresetsPage: React.FC = () => {
       console.error('Error updating preset:', error);
       showError('Failed to update preset. Please try again.');
     }
-  };
-
-  const handleApplyPreset = (preset: ClubPreset) => {
-    // Navigate to create crew page with preset colors
-    navigate('/crews/create', {
-      state: {
-        presetColors: {
-          primary: preset.primary_color,
-          secondary: preset.secondary_color,
-          clubName: preset.club_name,
-        },
-      },
-    });
-    showSuccess(`Applied ${preset.club_name} colors`);
   };
 
   const filteredPresets = clubPresets.filter((preset) =>

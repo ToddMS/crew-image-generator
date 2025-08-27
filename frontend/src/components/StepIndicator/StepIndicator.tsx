@@ -13,11 +13,11 @@ interface StepIndicatorProps {
   className?: string;
 }
 
-const StepIndicator: React.FC<StepIndicatorProps> = ({ 
-  steps, 
-  currentStep, 
-  completedSteps = new Set(), 
-  className = '' 
+const StepIndicator: React.FC<StepIndicatorProps> = ({
+  steps,
+  currentStep,
+  completedSteps = new Set(),
+  className = '',
 }) => {
   const getStepState = (index: number) => {
     if (completedSteps.has(index)) return 'completed';
@@ -28,18 +28,11 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
   return (
     <div className={`stepper ${className}`}>
       {steps.map((step, index) => (
-        <div
-          key={step.label}
-          className={`step ${getStepState(index)}`}
-        >
-          <div className="step-icon">
-            {completedSteps.has(index) ? '✓' : index + 1}
-          </div>
+        <div key={step.label} className={`step ${getStepState(index)}`}>
+          <div className="step-icon">{completedSteps.has(index) ? '✓' : index + 1}</div>
           <div className="step-content">
             <div className="step-label">{step.label}</div>
-            {step.description && (
-              <div className="step-description">{step.description}</div>
-            )}
+            {step.description && <div className="step-description">{step.description}</div>}
           </div>
         </div>
       ))}

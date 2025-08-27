@@ -85,7 +85,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
               </span>
             </button>
             {activeDropdown === 'crews' && (
-              <div className="dropdown-menu" ref={(el) => (dropdownRefs.current['crews'] = el)}>
+              <div
+                className="dropdown-menu"
+                ref={(el) => {
+                  dropdownRefs.current['crews'] = el;
+                }}
+              >
                 {crewDropdownItems.map((item) => (
                   <button
                     key={item.path}
@@ -127,12 +132,15 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
               <button className="user-profile-btn" onClick={() => toggleDropdown('profile')}>
                 <div className="user-avatar">
                   {user.profile_picture ? (
-                    <img 
+                    <img
                       src={`${import.meta.env.VITE_API_URL}/api/auth/profile-picture/${user.id}`}
-                      alt={user.name || 'User'} 
+                      alt={user.name || 'User'}
                       className="avatar-image"
                       onError={(e) => {
-                        console.error('Failed to load profile picture via proxy for user:', user.id);
+                        console.error(
+                          'Failed to load profile picture via proxy for user:',
+                          user.id,
+                        );
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
                         // Show fallback text
@@ -153,7 +161,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
               {activeDropdown === 'profile' && (
                 <div
                   className="dropdown-menu profile-dropdown"
-                  ref={(el) => (dropdownRefs.current['profile'] = el)}
+                  ref={(el) => {
+                    dropdownRefs.current['profile'] = el;
+                  }}
                 >
                   {profileDropdownItems.map((item) => (
                     <button

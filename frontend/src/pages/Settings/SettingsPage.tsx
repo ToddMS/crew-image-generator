@@ -1,22 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
-import { ApiService } from '../../services/api.service';
-import { ClubPreset } from '../../types/club.types';
 import ClubPresetsComponent from '../../components/ClubPresets/ClubPresetsComponent';
 import './Settings.css';
-
-interface ClubSettings {
-  clubName: string;
-  primaryColor: string;
-  secondaryColor: string;
-  logoUrl?: string;
-  description?: string;
-}
 
 interface UserPreferences {
   darkMode: boolean;
@@ -26,9 +15,7 @@ interface UserPreferences {
 }
 
 const NewSettingsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { isDarkMode, toggleTheme } = useThemeMode();
   const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -40,25 +27,6 @@ const NewSettingsPage: React.FC = () => {
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileEmail, setProfileEmail] = useState(user?.email || '');
 
-  // Club presets
-  const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
-  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
-  const [newPreset, setNewPreset] = useState<Partial<ClubPreset>>({
-    club_name: '',
-    primary_color: '#2563eb',
-    secondary_color: '#10b981',
-    is_default: false,
-  });
-  const [editingPresetId, setEditingPresetId] = useState<number | null>(null);
-
-  // Legacy club settings (for backward compatibility)
-  const [clubSettings, setClubSettings] = useState<ClubSettings>({
-    clubName: user?.club_name || '',
-    primaryColor: '#2563eb',
-    secondaryColor: '#10b981',
-    description: '',
-  });
-
   // User preferences
   const [preferences, setPreferences] = useState<UserPreferences>({
     darkMode: isDarkMode,
@@ -66,10 +34,6 @@ const NewSettingsPage: React.FC = () => {
     pushNotifications: false,
     autoSaveInterval: 30,
   });
-
-  const handleNavClick = (path: string) => {
-    navigate(path);
-  };
 
   const getCurrentPage = () => {
     const path = window.location.pathname;
@@ -81,124 +45,6 @@ const NewSettingsPage: React.FC = () => {
     if (path.includes('/gallery')) return 'gallery';
     if (path.includes('/settings')) return 'settings';
     return 'dashboard';
-  };
-
-  useEffect(() => {
-    if (user) {
-      loadUserSettings();
-    }
-  }, [user]);
-
-  const loadUserSettings = async () => {
-    try {
-      // Load club presets
-      await loadClubPresets();
-      // Load user preferences and club settings from API
-      // For now, we'll use default values
-    } catch (error) {
-      console.error('Error loading user settings:', error);
-    }
-  };
-
-  const loadClubPresets = async () => {
-    try {
-      const response = await ApiService.getClubPresets();
-      if (response.success && response.data) {
-        setClubPresets(response.data);
-        // Set selected preset to default if available
-        const defaultPreset = response.data.find((preset: ClubPreset) => preset.is_default);
-        if (defaultPreset) {
-          setSelectedPresetId(defaultPreset.id);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading club presets:', error);
-      // Set some mock data for development
-      setClubPresets([
-        {
-          id: 1,
-          club_name: 'Thames Rowing Club',
-          primary_color: '#1e40af',
-          secondary_color: '#3b82f6',
-          is_default: true,
-        },
-        {
-          id: 2,
-          club_name: 'Oxford University BC',
-          primary_color: '#1e3a8a',
-          secondary_color: '#60a5fa',
-          is_default: false,
-        },
-      ]);
-      setSelectedPresetId(1);
-    }
-  };
-
-  const handleSaveNewPreset = async () => {
-    if (!newPreset.club_name || !newPreset.primary_color || !newPreset.secondary_color) {
-      showError('Please fill in all required fields');
-      return;
-    }
-
-    setSaving('new-preset');
-    try {
-      const response = await ApiService.createClubPreset(newPreset as Omit<ClubPreset, 'id'>);
-      if (response.success && response.data) {
-        setClubPresets((prev) => [...prev, response.data]);
-        setNewPreset({
-          club_name: '',
-          primary_color: '#2563eb',
-          secondary_color: '#10b981',
-          is_default: false,
-        });
-        showSuccess('Club preset saved successfully!');
-      }
-    } catch (error) {
-      console.error('Error saving club preset:', error);
-      showError('Failed to save club preset. Please try again.');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleUpdatePreset = async (presetId: number, updatedPreset: Partial<ClubPreset>) => {
-    setSaving(`preset-${presetId}`);
-    try {
-      const response = await ApiService.updateClubPreset(presetId, updatedPreset);
-      if (response.success && response.data) {
-        setClubPresets((prev) =>
-          prev.map((preset) => (preset.id === presetId ? { ...preset, ...updatedPreset } : preset)),
-        );
-        setEditingPresetId(null);
-        showSuccess('Club preset updated successfully!');
-      }
-    } catch (error) {
-      console.error('Error updating club preset:', error);
-      showError('Failed to update club preset. Please try again.');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleDeletePreset = async (presetId: number) => {
-    if (!confirm('Are you sure you want to delete this club preset?')) return;
-
-    setSaving(`delete-${presetId}`);
-    try {
-      const response = await ApiService.deleteClubPreset(presetId);
-      if (response.success) {
-        setClubPresets((prev) => prev.filter((preset) => preset.id !== presetId));
-        if (selectedPresetId === presetId) {
-          setSelectedPresetId(null);
-        }
-        showSuccess('Club preset deleted successfully!');
-      }
-    } catch (error) {
-      console.error('Error deleting club preset:', error);
-      showError('Failed to delete club preset. Please try again.');
-    } finally {
-      setSaving(null);
-    }
   };
 
   const toggleSection = (sectionId: string) => {
@@ -214,24 +60,11 @@ const NewSettingsPage: React.FC = () => {
   const handleSaveProfile = async () => {
     setSaving('profile');
     try {
-      // API call to save profile
       await new Promise((resolve) => setTimeout(resolve, 1000));
       showSuccess('Profile settings saved successfully!');
     } catch (error) {
       showError('Failed to save profile settings. Please try again.');
-    } finally {
-      setSaving(null);
-    }
-  };
-
-  const handleSaveClubSettings = async () => {
-    setSaving('club');
-    try {
-      // API call to save club settings
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      showSuccess('Club settings saved successfully!');
-    } catch (error) {
-      showError('Failed to save club settings. Please try again.');
+      console.log(error);
     } finally {
       setSaving(null);
     }
@@ -244,17 +77,10 @@ const NewSettingsPage: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       showSuccess('Preferences saved successfully!');
     } catch (error) {
+      console.log(error);
       showError('Failed to save preferences. Please try again.');
     } finally {
       setSaving(null);
-    }
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Handle logo upload
-      showSuccess('Logo uploaded successfully!');
     }
   };
 
@@ -437,8 +263,7 @@ const NewSettingsPage: React.FC = () => {
               </div>
 
               <div className="alert info">
-                ℹ️ Some notification features are coming soon and will be available in future
-                updates.
+                Some notification features are coming soon and will be available in future updates.
               </div>
 
               <div className="form-actions">
@@ -479,7 +304,7 @@ const NewSettingsPage: React.FC = () => {
                     Download all your crews, templates, and generated images in a portable format.
                   </div>
                   <button className="btn btn-secondary" onClick={handleExportData}>
-                    📤 Export My Data
+                    Export My Data
                   </button>
                 </div>
 
@@ -489,13 +314,13 @@ const NewSettingsPage: React.FC = () => {
                     Permanently delete your account and all associated data. This cannot be undone.
                   </div>
                   <button className="btn btn-danger" onClick={handleDeleteAccount}>
-                    🗑️ Delete Account
+                    Delete Account
                   </button>
                 </div>
               </div>
 
               <div className="alert info">
-                ℹ️ For additional support or account assistance, please contact us at
+                For additional support or account assistance, please contact us at
                 support@rowgram.com
               </div>
             </div>

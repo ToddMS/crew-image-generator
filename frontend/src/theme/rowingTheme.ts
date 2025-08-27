@@ -1,4 +1,4 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
 
 declare module '@mui/material/styles' {
   interface Palette {
@@ -57,7 +57,7 @@ const baseTheme = {
   },
   components: {
     MuiCssBaseline: {
-      styleOverrides: (theme: any) => ({
+      styleOverrides: (theme: Theme) => ({
         body: {
           margin: 0,
           padding: 0,

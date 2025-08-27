@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
 import { ClubPreset } from '../../types/club.types';
@@ -37,22 +36,29 @@ const boatClassToBoatType = (boatClass: string) => {
 const CreateCrewPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useThemeMode();
+  const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
 
   const [activeStep, setActiveStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [boatClass, setBoatClass] = useState('');
+  const [clubName, setClubName] = useState('');
+  const [raceName, setRaceName] = useState('');
+  const [boatName, setBoatName] = useState('');
+  const [coachName, setCoachName] = useState('');
+  const [crewNames, setCrewNames] = useState<string[]>([]);
+  const [coxName, setCoxName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
+  const [showStep1Validation, setShowStep1Validation] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [preserveStateAfterLogin, setPreserveStateAfterLogin] = useState(false);
+  const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  const [showClubPresets, setShowClubPresets] = useState(false);
 
-  useEffect(() => {
-    sessionStorage.setItem('create_crew_step', activeStep.toString());
-    window.dispatchEvent(new CustomEvent('step-changed'));
-  }, [activeStep]);
-
-  useEffect(() => {
-    loadClubPresets();
-  }, [user]); // Load when user changes (login/logout)
-
-  const loadClubPresets = async () => {
+  const loadClubPresets = useCallback(async () => {
     if (!user) {
       console.log('No user logged in, skipping club presets load');
       setClubPresets([]);
@@ -75,7 +81,16 @@ const CreateCrewPage: React.FC = () => {
       console.error('Error loading club presets:', error);
       setClubPresets([]);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    sessionStorage.setItem('create_crew_step', activeStep.toString());
+    window.dispatchEvent(new CustomEvent('step-changed'));
+  }, [activeStep]);
+
+  useEffect(() => {
+    loadClubPresets();
+  }, [loadClubPresets]);
 
   const handleClubPresetSelect = (presetId: number) => {
     setSelectedPresetId(presetId);
@@ -84,10 +99,6 @@ const CreateCrewPage: React.FC = () => {
       setClubName(preset.club_name);
       setShowClubPresets(false);
     }
-  };
-
-  const handleToggleClubPresets = () => {
-    setShowClubPresets(!showClubPresets);
   };
 
   useEffect(() => {
@@ -102,7 +113,6 @@ const CreateCrewPage: React.FC = () => {
     window.addEventListener('navigate-back-step', handleHeaderBack);
     return () => window.removeEventListener('navigate-back-step', handleHeaderBack);
   }, [activeStep, navigate]);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
   const steps = [
     {
@@ -118,25 +128,6 @@ const CreateCrewPage: React.FC = () => {
       description: 'Review and save your crew',
     },
   ];
-
-  const [boatClass, setBoatClass] = useState('');
-  const [clubName, setClubName] = useState('');
-  const [raceName, setRaceName] = useState('');
-  const [boatName, setBoatName] = useState('');
-  const [coachName, setCoachName] = useState('');
-  const [crewNames, setCrewNames] = useState<string[]>([]);
-  const [coxName, setCoxName] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [editingCrewId, setEditingCrewId] = useState<string | null>(null);
-  const [showValidation, setShowValidation] = useState(false);
-  const [showStep1Validation, setShowStep1Validation] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [preserveStateAfterLogin, setPreserveStateAfterLogin] = useState(false);
-
-  // Club presets
-  const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);
-  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
-  const [showClubPresets, setShowClubPresets] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -226,7 +217,7 @@ const CreateCrewPage: React.FC = () => {
         localStorage.removeItem(`rowgram_draft_${user.id}`);
       }
     }
-  }, [location.pathname, user, preserveStateAfterLogin]);
+  }, [location.pathname, location.state, user, preserveStateAfterLogin, navigate]);
 
   useEffect(() => {
     if (
@@ -253,134 +244,13 @@ const CreateCrewPage: React.FC = () => {
     }
   }, [boatClass, clubName, raceName, boatName, coachName, crewNames, coxName, user]);
 
-  useEffect(() => {
-    if (
-      user &&
-      activeStep === 2 &&
-      boatClass &&
-      clubName &&
-      raceName &&
-      boatName &&
-      crewNames.every((name) => name.trim()) &&
-      (!boatClassHasCox(boatClass) || coxName.trim()) &&
-      !saving &&
-      !showAuthModal
-    ) {
-      const wasRestored = localStorage.getItem('rowgram_was_restored');
-      if (wasRestored) {
-        localStorage.removeItem('rowgram_was_restored');
-        setTimeout(() => {
-          handleSaveCrew();
-        }, 100);
-      }
-    }
-  }, [
-    user,
-    activeStep,
-    boatClass,
-    clubName,
-    raceName,
-    boatName,
-    crewNames,
-    coxName,
-    saving,
-    showAuthModal,
-  ]);
-
-  const clearDraft = () => {
+  const clearDraft = useCallback(() => {
     if (user) {
       localStorage.removeItem(`rowgram_draft_${user.id}`);
     }
-  };
+  }, [user]);
 
-  const handleAuthSuccess = () => {
-    setShowAuthModal(false);
-  };
-
-  const handleNext = () => {
-    if (canProceedFromStep(activeStep)) {
-      proceedToNextStep();
-    }
-  };
-
-  const proceedToNextStep = () => {
-    const newCompleted = new Set(completedSteps);
-    newCompleted.add(activeStep);
-    setCompletedSteps(newCompleted);
-    setActiveStep((prev) => prev + 1);
-    setShowValidation(false);
-    setShowStep1Validation(false);
-  };
-
-  const handleBack = () => {
-    if (activeStep === 0) {
-      navigate('/');
-    } else {
-      setActiveStep((prev) => prev - 1);
-    }
-  };
-
-  const canProceedFromStep = (step: number): boolean => {
-    switch (step) {
-      case 0:
-        return !!(boatClass && clubName && raceName && boatName);
-      case 1:
-        return (
-          crewNames.every((name) => name.trim().length > 0) &&
-          (!boatClassHasCox(boatClass) || coxName.trim().length > 0)
-        );
-      default:
-        return true;
-    }
-  };
-
-  const handleNameChange = (idx: number, value: string) => {
-    setCrewNames((names) => names.map((n, i) => (i === idx ? value : n)));
-  };
-
-  const focusNextInput = (currentElement: HTMLElement) => {
-    const form = currentElement.closest('form') || currentElement.closest('.form-container');
-    if (!form) return;
-
-    const inputs = Array.from(form.querySelectorAll('input, select')) as HTMLElement[];
-    const currentIndex = inputs.indexOf(currentElement);
-
-    if (currentIndex < inputs.length - 1) {
-      inputs[currentIndex + 1].focus();
-    } else if (activeStep === 0 && canProceedFromStep(0)) {
-      // On step 0, if we're on the last input (coach name), go to next step
-      proceedToNextStep();
-    } else if (activeStep === 1 && canProceedFromStep(1)) {
-      // On step 1, if we're on the last input, go to next step
-      proceedToNextStep();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent, currentElement?: HTMLElement) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const target = currentElement || (e.target as HTMLElement);
-      focusNextInput(target);
-    }
-  };
-
-  const handleNavClick = (path: string) => {
-    navigate(path);
-  };
-
-  const getCurrentPage = () => {
-    const path = window.location.pathname;
-    if (path === '/') return 'dashboard';
-    if (path.includes('/crews/create') || path.includes('/create')) return 'create';
-    if (path.includes('/crews')) return 'crews';
-    if (path.includes('/club-presets')) return 'club-presets';
-    if (path.includes('/generate')) return 'generate';
-    if (path.includes('/gallery')) return 'gallery';
-    if (path.includes('/settings')) return 'settings';
-    return 'dashboard';
-  };
-
-  const handleSaveCrew = async () => {
+  const handleSaveCrew = useCallback(async () => {
     if (!user) {
       const currentState = {
         boatClass,
@@ -455,6 +325,140 @@ const CreateCrewPage: React.FC = () => {
     } finally {
       setSaving(false);
     }
+  }, [
+    user,
+    boatClass,
+    clubName,
+    raceName,
+    boatName,
+    coachName,
+    crewNames,
+    coxName,
+    activeStep,
+    completedSteps,
+    editingCrewId,
+    showSuccess,
+    showError,
+    navigate,
+    clearDraft,
+  ]);
+
+  useEffect(() => {
+    if (
+      user &&
+      activeStep === 2 &&
+      boatClass &&
+      clubName &&
+      raceName &&
+      boatName &&
+      crewNames.every((name) => name.trim()) &&
+      (!boatClassHasCox(boatClass) || coxName.trim()) &&
+      !saving &&
+      !showAuthModal
+    ) {
+      const wasRestored = localStorage.getItem('rowgram_was_restored');
+      if (wasRestored) {
+        localStorage.removeItem('rowgram_was_restored');
+        setTimeout(() => {
+          handleSaveCrew();
+        }, 100);
+      }
+    }
+  }, [
+    user,
+    activeStep,
+    boatClass,
+    clubName,
+    raceName,
+    boatName,
+    crewNames,
+    coxName,
+    saving,
+    showAuthModal,
+    handleSaveCrew,
+  ]);
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+  };
+
+  const handleNext = () => {
+    if (canProceedFromStep(activeStep)) {
+      proceedToNextStep();
+    }
+  };
+
+  const proceedToNextStep = () => {
+    const newCompleted = new Set(completedSteps);
+    newCompleted.add(activeStep);
+    setCompletedSteps(newCompleted);
+    setActiveStep((prev) => prev + 1);
+    setShowValidation(false);
+    setShowStep1Validation(false);
+  };
+
+  const handleBack = () => {
+    if (activeStep === 0) {
+      navigate('/');
+    } else {
+      setActiveStep((prev) => prev - 1);
+    }
+  };
+
+  const canProceedFromStep = (step: number): boolean => {
+    switch (step) {
+      case 0:
+        return !!(boatClass && clubName && raceName && boatName);
+      case 1:
+        return (
+          crewNames.every((name) => name.trim().length > 0) &&
+          (!boatClassHasCox(boatClass) || coxName.trim().length > 0)
+        );
+      default:
+        return true;
+    }
+  };
+
+  const handleNameChange = (idx: number, value: string) => {
+    setCrewNames((names) => names.map((n, i) => (i === idx ? value : n)));
+  };
+
+  const focusNextInput = (currentElement: HTMLElement) => {
+    const form = currentElement.closest('form') || currentElement.closest('.form-container');
+    if (!form) return;
+
+    const inputs = Array.from(form.querySelectorAll('input, select')) as HTMLElement[];
+    const currentIndex = inputs.indexOf(currentElement);
+
+    if (currentIndex < inputs.length - 1) {
+      inputs[currentIndex + 1].focus();
+    } else if (activeStep === 0 && canProceedFromStep(0)) {
+      // On step 0, if we're on the last input (coach name), go to next step
+      proceedToNextStep();
+    } else if (activeStep === 1 && canProceedFromStep(1)) {
+      // On step 1, if we're on the last input, go to next step
+      proceedToNextStep();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, currentElement?: HTMLElement) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const target = currentElement || (e.target as HTMLElement);
+      focusNextInput(target);
+    }
+  };
+
+  const getCurrentPage = () => {
+    const path = window.location.pathname;
+    if (path === '/') return 'dashboard';
+    if (path.includes('/crews/create') || path.includes('/create')) return 'create';
+    if (path.includes('/crews')) return 'crews';
+    if (path.includes('/club-presets')) return 'club-presets';
+    if (path.includes('/generate')) return 'generate';
+    if (path.includes('/gallery')) return 'gallery';
+    if (path.includes('/settings')) return 'settings';
+    return 'dashboard';
   };
 
   const renderStepContent = (step: number) => {

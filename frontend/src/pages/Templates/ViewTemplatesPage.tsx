@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
-import { useAuth } from '../../context/AuthContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ClubPreset } from '../../types/club.types';
 import { ApiService } from '../../services/api.service';
@@ -21,7 +19,6 @@ interface Template {
 
 const ViewTemplatesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('classic-lineup');
@@ -103,7 +100,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Traditional • Portrait',
       icon: '📋',
       isCustom: false,
-      description: 'Traditional roster layout with clean presentation'
+      description: 'Traditional roster layout with clean presentation',
     },
     {
       id: 'modern-card',
@@ -111,7 +108,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Contemporary • Square',
       icon: '🎨',
       isCustom: false,
-      description: 'Contemporary card-based design with member highlights'
+      description: 'Contemporary card-based design with member highlights',
     },
     {
       id: 'race-day',
@@ -119,7 +116,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Event • Portrait',
       icon: '🏆',
       isCustom: false,
-      description: 'Bold event-focused template with dynamic styling'
+      description: 'Bold event-focused template with dynamic styling',
     },
     {
       id: 'minimal-clean',
@@ -127,7 +124,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Clean • Square',
       icon: '⚡',
       isCustom: false,
-      description: 'Simple, elegant layout with clean typography'
+      description: 'Simple, elegant layout with clean typography',
     },
     {
       id: 'championship-gold',
@@ -135,7 +132,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Luxury • Portrait',
       icon: '🥇',
       isCustom: false,
-      description: 'Luxurious golden design for major competitions'
+      description: 'Luxurious golden design for major competitions',
     },
     {
       id: 'vintage-classic',
@@ -143,7 +140,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Traditional • Portrait',
       icon: '📜',
       isCustom: false,
-      description: 'Traditional parchment style with ornate decorations'
+      description: 'Traditional parchment style with ornate decorations',
     },
     {
       id: 'elite-performance',
@@ -151,7 +148,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'High-Tech • Square',
       icon: '⚡',
       isCustom: false,
-      description: 'High-tech performance styling for elite crews'
+      description: 'High-tech performance styling for elite crews',
     },
     {
       id: 'regatta-royal',
@@ -159,7 +156,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Royal • Portrait',
       icon: '👑',
       isCustom: false,
-      description: 'Royal regatta styling with heraldic elements'
+      description: 'Royal regatta styling with heraldic elements',
     },
     {
       id: 'oxbridge-herald',
@@ -167,7 +164,7 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Academic • Portrait',
       icon: '🎓',
       isCustom: false,
-      description: 'Academic heraldic design with Latin styling'
+      description: 'Academic heraldic design with Latin styling',
     },
     {
       id: 'henley-poster',
@@ -175,8 +172,8 @@ const ViewTemplatesPage: React.FC = () => {
       type: 'Traditional • Portrait',
       icon: '🏛️',
       isCustom: false,
-      description: 'Traditional Henley Royal Regatta poster style'
-    }
+      description: 'Traditional Henley Royal Regatta poster style',
+    },
   ];
 
   const colors = ['#2563eb', '#dc2626', '#16a34a', '#7c3aed', '#ea580c', '#0891b2'];
@@ -191,12 +188,10 @@ const ViewTemplatesPage: React.FC = () => {
 
   const handleDeleteTemplate = async (templateId: string) => {
     try {
-      // Call API to delete template
-      // await ApiService.deleteTemplate(templateId);
-      showSuccess('Template deleted successfully!');
+      showSuccess('Template: ' + templateId + ' deleted successfully!');
       setShowDeleteModal(null);
     } catch (error) {
-      showError('Failed to delete template. Please try again.');
+      showError('Failed to delete template. Please try again.' + error);
     }
   };
 

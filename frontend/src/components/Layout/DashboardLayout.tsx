@@ -102,9 +102,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 <span className="user-name">{user.club_name || user.name}</span>
                 <div className="user-avatar">
                   {user.profile_picture ? (
-                    <img 
+                    <img
                       src={`${import.meta.env.VITE_API_URL}/api/auth/profile-picture/${user.id}`}
-                      alt={user.name || 'User'} 
+                      alt={user.name || 'User'}
                       className="avatar-image"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;

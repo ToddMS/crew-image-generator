@@ -1,65 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../context/NotificationContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
-import { ApiService } from '../../services/api.service';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import './Dashboard.css';
 
-interface DashboardStats {
-  totalCrews: number;
-  totalTemplates: number;
-  totalImages: number;
-  lastGenerated: string;
-}
-
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { showError } = useNotification();
+  const { user } = useAuth();
+
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCrews: 0,
-    totalTemplates: 0,
-    totalImages: 0,
-    lastGenerated: 'Never',
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      loadDashboardStats();
-    }
-  }, [user]);
-
-  const loadDashboardStats = async () => {
-    try {
-      setLoading(true);
-
-      // Load crews
-      const crewsResponse = await ApiService.getCrews();
-      const totalCrews = crewsResponse.data?.length || 0;
-
-      // Mock other stats for now - you can add these API calls when ready
-      const totalTemplates = 5;
-      const totalImages = Math.floor(totalCrews * 2.5); // Estimate based on crews
-      const lastGenerated = totalImages > 0 ? 'Today' : 'Never';
-
-      setStats({
-        totalCrews,
-        totalTemplates,
-        totalImages,
-        lastGenerated,
-      });
-    } catch (error) {
-      showError('Failed to load dashboard data');
-      console.error('Dashboard stats error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleActionClick = (action: string) => {
     if (!user) {
@@ -80,10 +30,6 @@ const DashboardPage: React.FC = () => {
       default:
         break;
     }
-  };
-
-  const handleNavClick = (path: string) => {
-    navigate(path);
   };
 
   const getCurrentPage = () => {
@@ -119,7 +65,9 @@ const DashboardPage: React.FC = () => {
         <div className="action-cards">
           <div className="action-card" onClick={() => handleActionClick('create')}>
             <h3 className="action-title">Create Crew</h3>
-            <p className="action-description">Set up a new crew with members, cox, and coach details</p>
+            <p className="action-description">
+              Set up a new crew with members, cox, and coach details
+            </p>
             <div className="action-arrow">
               Get started <span>→</span>
             </div>
@@ -127,7 +75,9 @@ const DashboardPage: React.FC = () => {
 
           <div className="action-card" onClick={() => handleActionClick('generate')}>
             <h3 className="action-title">Generate Images</h3>
-            <p className="action-description">Turn your crews into beautiful Instagram-ready images</p>
+            <p className="action-description">
+              Turn your crews into beautiful Instagram-ready images
+            </p>
             <div className="action-arrow">
               Create now <span>→</span>
             </div>
@@ -141,7 +91,6 @@ const DashboardPage: React.FC = () => {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Auth Modal */}

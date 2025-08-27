@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
+import { SavedImageResponse } from '../../types/image.types';
 import './Gallery.css';
 
 interface SavedImage {
@@ -34,11 +34,6 @@ const NewGalleryPage: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [fullscreenImage, setFullscreenImage] = useState<SavedImage | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const handleNavClick = (path: string) => {
-    navigate(path);
-  };
 
   const getCurrentPage = () => {
     const path = window.location.pathname;
@@ -58,41 +53,17 @@ const NewGalleryPage: React.FC = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    applyFilter();
-  }, [images, searchQuery]);
-
-
-  const loadImages = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await ApiService.getSavedImages();
-      if (response.success && response.data) {
-        setImages(response.data);
-      } else {
-        // Mock data for demonstration
-        setImages([]);
-      }
-    } catch (error) {
-      console.error('Error loading images:', error);
-      setError('Failed to load images. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const applyFilter = () => {
+  const applyFilter = useCallback(() => {
     let filtered = [...images];
 
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(image => 
-        image.crewName.toLowerCase().includes(query) ||
-        image.templateName.toLowerCase().includes(query) ||
-        (image.crewId && image.crewId.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        (image) =>
+          image.crewName.toLowerCase().includes(query) ||
+          image.templateName.toLowerCase().includes(query) ||
+          (image.crewId && image.crewId.toLowerCase().includes(query)),
       );
     }
 
@@ -102,6 +73,41 @@ const NewGalleryPage: React.FC = () => {
     );
 
     setFilteredImages(filtered);
+  }, [images, searchQuery]);
+
+  useEffect(() => {
+    applyFilter();
+  }, [applyFilter]);
+
+  const loadImages = async () => {
+    setLoading(true);
+
+    try {
+      const response = await ApiService.getSavedImages();
+      if (response.success && response.data) {
+        // Map SavedImageResponse[] to SavedImage[]
+        const mappedImages: SavedImage[] = response.data.map((img: SavedImageResponse) => ({
+          id: img.id.toString(),
+          crewName: img.imageName || 'Unknown Crew',
+          templateName: img.template_id || 'Unknown Template',
+          imageUrl: img.imagePath || img.image_url || '',
+          createdAt: img.created_at || new Date().toISOString(),
+          fileSize: 0, // Default value since not in response
+          format: 'png', // Default format
+          dimensions: undefined,
+          crewId: undefined,
+          templateId: img.template_id,
+        }));
+        setImages(mappedImages);
+      } else {
+        // Mock data for demonstration
+        setImages([]);
+      }
+    } catch (error) {
+      console.error('Error loading images:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDownload = async (image: SavedImage) => {
@@ -123,7 +129,6 @@ const NewGalleryPage: React.FC = () => {
     }
   };
 
-
   const handleImageSelect = (imageId: string) => {
     const newSelected = new Set(selectedImages);
     if (newSelected.has(imageId)) {
@@ -138,15 +143,15 @@ const NewGalleryPage: React.FC = () => {
     if (selectedImages.size === filteredImages.length) {
       setSelectedImages(new Set());
     } else {
-      setSelectedImages(new Set(filteredImages.map(img => img.id)));
+      setSelectedImages(new Set(filteredImages.map((img) => img.id)));
     }
   };
 
   const handleBatchDownload = async () => {
-    const selectedImagesList = images.filter(img => selectedImages.has(img.id));
+    const selectedImagesList = images.filter((img) => selectedImages.has(img.id));
     for (const image of selectedImagesList) {
       await handleDownload(image);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between downloads
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Small delay between downloads
     }
     setSelectedImages(new Set());
     showSuccess(`Downloaded ${selectedImagesList.length} images!`);
@@ -154,7 +159,7 @@ const NewGalleryPage: React.FC = () => {
 
   const handleDeleteImage = async (image: SavedImage) => {
     const isConfirmed = window.confirm(
-      `Are you sure you want to delete "${image.crewName}"?\n\nThis action cannot be undone.`
+      `Are you sure you want to delete "${image.crewName}"?\n\nThis action cannot be undone.`,
     );
 
     if (!isConfirmed) {
@@ -177,7 +182,7 @@ const NewGalleryPage: React.FC = () => {
 
   const handleBatchDelete = () => {
     if (selectedImages.size === 0) return;
-    const selectedImagesList = images.filter(img => selectedImages.has(img.id));
+    const selectedImagesList = images.filter((img) => selectedImages.has(img.id));
     if (selectedImagesList.length > 0) {
       const confirmMessage = `Are you sure you want to delete ${selectedImagesList.length} images? This action cannot be undone.`;
       if (window.confirm(confirmMessage)) {
@@ -188,27 +193,11 @@ const NewGalleryPage: React.FC = () => {
             console.error('Error deleting image:', error);
           }
         });
-        setImages(prev => prev.filter(img => !selectedImages.has(img.id)));
+        setImages((prev) => prev.filter((img) => !selectedImages.has(img.id)));
         setSelectedImages(new Set());
         showSuccess(`Deleted ${selectedImagesList.length} images!`);
       }
     }
-  };
-
-
-  const formatFileSize = (bytes: number) => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const handleAuthSuccess = () => {
@@ -271,34 +260,22 @@ const NewGalleryPage: React.FC = () => {
           </div>
 
           <div className="gallery-actions">
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={handleSelectAll}
-            >
+            <button className="btn btn-secondary btn-sm" onClick={handleSelectAll}>
               {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
             </button>
-            
+
             {selectedImages.size > 0 && (
               <>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={handleBatchDownload}
-                >
+                <button className="btn btn-primary btn-sm" onClick={handleBatchDownload}>
                   Download Selected ({selectedImages.size})
                 </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={handleBatchDelete}
-                >
+                <button className="btn btn-danger btn-sm" onClick={handleBatchDelete}>
                   Delete Selected ({selectedImages.size})
                 </button>
               </>
             )}
 
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate('/generate')}
-            >
+            <button className="btn btn-primary" onClick={() => navigate('/generate')}>
               Generate New Image
             </button>
           </div>
@@ -307,7 +284,6 @@ const NewGalleryPage: React.FC = () => {
         <div className="gallery-status">
           {filteredImages.length} of {images.length} images
         </div>
-
 
         {/* Gallery Content */}
         {filteredImages.length === 0 ? (
@@ -344,9 +320,7 @@ const NewGalleryPage: React.FC = () => {
                 </div>
 
                 <div className="image-info">
-                  <div className="image-title">
-                    {image.crewName}
-                  </div>
+                  <div className="image-title">{image.crewName}</div>
                   <div className="image-actions">
                     <button
                       className="image-action-btn primary"
@@ -373,15 +347,12 @@ const NewGalleryPage: React.FC = () => {
           </div>
         )}
 
-
         {/* Fullscreen Modal */}
         {fullscreenImage && (
           <div className="modal-overlay" onClick={() => setFullscreenImage(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <div className="modal-title">
-                  {fullscreenImage.crewName}
-                </div>
+                <div className="modal-title">{fullscreenImage.crewName}</div>
                 <button className="modal-close" onClick={() => setFullscreenImage(null)}>
                   ×
                 </button>
@@ -396,7 +367,6 @@ const NewGalleryPage: React.FC = () => {
             </div>
           </div>
         )}
-
       </div>
 
       <AuthModal

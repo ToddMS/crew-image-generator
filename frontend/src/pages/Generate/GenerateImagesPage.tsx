@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation/Navigation';
 import AuthModal from '../../components/Auth/AuthModal';
@@ -30,16 +30,6 @@ interface Template {
   description: string;
   category: string;
   thumbnail?: string;
-}
-
-interface GenerationRequest {
-  crewId: string;
-  templateId: string;
-  colors: {
-    primary: string;
-    secondary: string;
-  };
-  formats: string[];
 }
 
 interface GenerationStatus {
@@ -74,7 +64,7 @@ const GenerateImagesPage: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [selectedPreset, setSelectedPreset] = useState<ClubPreset | null>(null);
   const [selectedFormats, setSelectedFormats] = useState<string[]>(['instagram_post']);
-  
+
   // Search states
   const [presetSearchQuery, setPresetSearchQuery] = useState('');
   const [crewSearchQuery, setCrewSearchQuery] = useState('');
@@ -86,7 +76,7 @@ const GenerateImagesPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getCurrentPage = () => 'generate';
-  
+
   // Define the steps for the StepIndicator
   const steps: Step[] = [
     { label: 'Select Crew', description: 'Choose your crews' },
@@ -103,45 +93,9 @@ const GenerateImagesPage: React.FC = () => {
     return completed;
   };
 
-  // Load data on component mount
-  useEffect(() => {
-    if (user) {
-      loadInitialData();
-    }
-  }, [user]);
-
-  // Handle selected crews from location state
-  useEffect(() => {
-    console.log('🔄 Generate Images page useEffect triggered');
-    console.log('📍 location.state:', location.state);
-    console.log('👥 crews.length:', crews.length);
-    console.log('🚣 crews:', crews.map(c => ({ id: c.id, name: c.name })));
-    
-    const state = location.state as {
-      selectedCrewIds?: string[];
-    } | null;
-
-    if (state?.selectedCrewIds && state.selectedCrewIds.length > 0 && crews.length > 0) {
-      console.log('✅ Found selectedCrewIds from MyCrews:', state.selectedCrewIds);
-      
-      const selectedCrewsFromState = crews.filter(crew => 
-        state.selectedCrewIds!.includes(crew.id)
-      );
-      
-      console.log('🎯 Filtered crews from state:', selectedCrewsFromState.map(c => ({ id: c.id, name: c.name })));
-      
-      if (selectedCrewsFromState.length > 0) {
-        console.log('✅ Setting selected crews to:', selectedCrewsFromState.map(c => c.name));
-        setSelectedCrews(selectedCrewsFromState);
-      }
-    } else {
-      console.log('⏭️ No selectedCrewIds in location state, keeping auto-selected crews');
-    }
-  }, [location.state, crews]);
-
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     setLoading(true);
-    
+
     try {
       const [crewsResponse, templatesResponse, presetsResponse] = await Promise.all([
         ApiService.getCrews(),
@@ -151,9 +105,12 @@ const GenerateImagesPage: React.FC = () => {
 
       // Handle crews response
       if (crewsResponse.success && crewsResponse.data) {
-        console.log('✅ Crews loaded successfully:', crewsResponse.data.map(c => ({ id: c.id, name: c.name })));
+        console.log(
+          '✅ Crews loaded successfully:',
+          crewsResponse.data.map((c) => ({ id: c.id, name: c.name })),
+        );
         setCrews(crewsResponse.data);
-        
+
         // Only auto-select first crew if no selectedCrewIds in location state
         const state = location.state as { selectedCrewIds?: string[] } | null;
         if (!state?.selectedCrewIds && crewsResponse.data.length > 0) {
@@ -164,9 +121,12 @@ const GenerateImagesPage: React.FC = () => {
         }
       } else if (crewsResponse.data && !crewsResponse.success) {
         // Handle case where API returns data but no explicit success flag
-        console.log('✅ Crews loaded (no success flag):', crewsResponse.data.map(c => ({ id: c.id, name: c.name })));
+        console.log(
+          '✅ Crews loaded (no success flag):',
+          crewsResponse.data.map((c) => ({ id: c.id, name: c.name })),
+        );
         setCrews(crewsResponse.data);
-        
+
         // Only auto-select first crew if no selectedCrewIds in location state
         const state = location.state as { selectedCrewIds?: string[] } | null;
         if (!state?.selectedCrewIds && crewsResponse.data.length > 0) {
@@ -179,82 +139,16 @@ const GenerateImagesPage: React.FC = () => {
 
       // Handle templates response
       if (templatesResponse.success && templatesResponse.data) {
-        setTemplates(templatesResponse.data);
+        setTemplates(templatesResponse.data as Template[]);
         // Auto-select first template if available
         if (templatesResponse.data.length > 0) {
-          setSelectedTemplate(templatesResponse.data[0]);
+          setSelectedTemplate(templatesResponse.data[0] as Template);
         }
       } else if (templatesResponse.data && !templatesResponse.success) {
-        setTemplates(templatesResponse.data);
+        setTemplates(templatesResponse.data as Template[]);
         if (templatesResponse.data.length > 0) {
-          setSelectedTemplate(templatesResponse.data[0]);
+          setSelectedTemplate(templatesResponse.data[0] as Template);
         }
-      } else {
-        // Create mock templates so the UI works while backend is being implemented
-        const mockTemplates = [
-          {
-            id: 'classic-lineup',
-            name: 'Classic Lineup',
-            description: 'Traditional roster layout with clean presentation',
-            category: 'classic'
-          },
-          {
-            id: 'modern-card',
-            name: 'Modern Card',
-            description: 'Contemporary card-based design with member highlights',
-            category: 'modern'
-          },
-          {
-            id: 'race-day',
-            name: 'Race Day',
-            description: 'Bold event-focused template with dynamic styling',
-            category: 'event'
-          },
-          {
-            id: 'minimal-clean',
-            name: 'Minimal Clean',
-            description: 'Simple, elegant layout with clean typography',
-            category: 'minimal'
-          },
-          {
-            id: 'championship-gold',
-            name: 'Championship Gold',
-            description: 'Luxurious golden design for major competitions',
-            category: 'championship'
-          },
-          {
-            id: 'vintage-classic',
-            name: 'Vintage Classic',
-            description: 'Traditional parchment style with ornate decorations',
-            category: 'vintage'
-          },
-          {
-            id: 'elite-performance',
-            name: 'Elite Performance',
-            description: 'High-tech performance styling for elite crews',
-            category: 'elite'
-          },
-          {
-            id: 'regatta-royal',
-            name: 'Regatta Royal',
-            description: 'Royal regatta styling with heraldic elements',
-            category: 'royal'
-          },
-          {
-            id: 'oxbridge-herald',
-            name: 'Oxbridge Herald',
-            description: 'Academic heraldic design with Latin styling',
-            category: 'academic'
-          },
-          {
-            id: 'henley-poster',
-            name: 'Henley Poster',
-            description: 'Traditional Henley Royal Regatta poster style',
-            category: 'traditional'
-          }
-        ];
-        setTemplates(mockTemplates);
-        setSelectedTemplate(mockTemplates[0]);
       }
 
       // Handle presets response
@@ -269,24 +163,68 @@ const GenerateImagesPage: React.FC = () => {
         const defaultPreset = presetsResponse.data.find((p: ClubPreset) => p.is_default);
         setSelectedPreset(defaultPreset || presetsResponse.data[0]);
       }
-
-    } catch (error) {
+    } catch {
       showError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [location.state, showError]);
+
+  // Load data on component mount
+  useEffect(() => {
+    if (user) {
+      loadInitialData();
+    }
+  }, [user, loadInitialData]);
+
+  // Handle selected crews from location state
+  useEffect(() => {
+    console.log('🔄 Generate Images page useEffect triggered');
+    console.log('📍 location.state:', location.state);
+    console.log('👥 crews.length:', crews.length);
+    console.log(
+      '🚣 crews:',
+      crews.map((c) => ({ id: c.id, name: c.name })),
+    );
+
+    const state = location.state as {
+      selectedCrewIds?: string[];
+    } | null;
+
+    if (state?.selectedCrewIds && state.selectedCrewIds.length > 0 && crews.length > 0) {
+      console.log('✅ Found selectedCrewIds from MyCrews:', state.selectedCrewIds);
+
+      const selectedCrewsFromState = crews.filter((crew) =>
+        state.selectedCrewIds!.includes(crew.id),
+      );
+
+      console.log(
+        '🎯 Filtered crews from state:',
+        selectedCrewsFromState.map((c) => ({ id: c.id, name: c.name })),
+      );
+
+      if (selectedCrewsFromState.length > 0) {
+        console.log(
+          '✅ Setting selected crews to:',
+          selectedCrewsFromState.map((c) => c.name),
+        );
+        setSelectedCrews(selectedCrewsFromState);
+      }
+    } else {
+      console.log('⏭️ No selectedCrewIds in location state, keeping auto-selected crews');
+    }
+  }, [location.state, crews]);
 
   // Step navigation
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep(prev => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, 3));
       setErrors({});
     }
   };
 
   const previousStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
     setErrors({});
   };
 
@@ -320,39 +258,39 @@ const GenerateImagesPage: React.FC = () => {
 
   // Selection handlers
   const handleCrewToggle = (crew: Crew) => {
-    setSelectedCrews(prev => {
-      const isSelected = prev.find(c => c.id === crew.id);
+    setSelectedCrews((prev) => {
+      const isSelected = prev.find((c) => c.id === crew.id);
       if (isSelected) {
         // Remove crew from selection
-        return prev.filter(c => c.id !== crew.id);
+        return prev.filter((c) => c.id !== crew.id);
       } else {
         // Add crew to selection
         return [...prev, crew];
       }
     });
-    setErrors(prev => ({ ...prev, crew: '' }));
+    setErrors((prev) => ({ ...prev, crew: '' }));
   };
 
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
-    setErrors(prev => ({ ...prev, template: '' }));
+    setErrors((prev) => ({ ...prev, template: '' }));
   };
 
   const handlePresetSelect = (preset: ClubPreset) => {
     setSelectedPreset(preset);
-    setErrors(prev => ({ ...prev, preset: '' }));
+    setErrors((prev) => ({ ...prev, preset: '' }));
   };
 
   const handleFormatToggle = (format: string) => {
-    setSelectedFormats(prev => {
+    setSelectedFormats((prev) => {
       const newFormats = prev.includes(format)
-        ? prev.filter(f => f !== format)
+        ? prev.filter((f) => f !== format)
         : [...prev, format];
-      
+
       if (newFormats.length > 0) {
-        setErrors(prev => ({ ...prev, formats: '' }));
+        setErrors((prev) => ({ ...prev, formats: '' }));
       }
-      
+
       return newFormats;
     });
   };
@@ -364,14 +302,19 @@ const GenerateImagesPage: React.FC = () => {
       return;
     }
 
-    if (!validateCurrentStep() || selectedCrews.length === 0 || !selectedTemplate || !selectedPreset) {
+    if (
+      !validateCurrentStep() ||
+      selectedCrews.length === 0 ||
+      !selectedTemplate ||
+      !selectedPreset
+    ) {
       return;
     }
 
     setGenerating(true);
     try {
       // Generate images for each selected crew
-      const requests = selectedCrews.map(crew => ({
+      const requests = selectedCrews.map((crew) => ({
         crewId: crew.id,
         templateId: selectedTemplate.id,
         colors: {
@@ -381,27 +324,29 @@ const GenerateImagesPage: React.FC = () => {
         formats: selectedFormats,
       }));
 
-      console.log('🖼️ Frontend generating images with requests:', requests.map(r => ({
-        crewId: r.crewId,
-        templateId: r.templateId,
-        colors: r.colors,
-        formats: r.formats
-      })));
+      console.log(
+        '🖼️ Frontend generating images with requests:',
+        requests.map((r) => ({
+          crewId: r.crewId,
+          templateId: r.templateId,
+          colors: r.colors,
+          formats: r.formats,
+        })),
+      );
 
       console.log('📋 Selected template details:', {
         id: selectedTemplate.id,
         name: selectedTemplate.name,
-        category: selectedTemplate.category
+        category: selectedTemplate.category,
       });
-
 
       // For now, generate images for the first crew (until backend supports batch generation)
       // TODO: Update when backend supports multiple crew generation
       const response = await ApiService.generateImages(requests[0]);
-      
+
       if (response.data) {
         setGenerationStatus(response.data);
-        
+
         // Since we're using immediate generation, no need to poll
         // Just set the final state directly
         if (response.data.status === 'completed') {
@@ -412,34 +357,9 @@ const GenerateImagesPage: React.FC = () => {
       } else {
         throw new Error(response.error || 'Generation failed');
       }
-    } catch (error) {
+    } catch {
       showError('Failed to generate images. Please try again.');
       setGenerating(false);
-    }
-  };
-
-  const pollGenerationStatus = async (generationId: string) => {
-    try {
-      const response = await ApiService.getGenerationStatus(generationId);
-      
-      if (response.success && response.data) {
-        setGenerationStatus(response.data);
-        
-        if (response.data.status === 'completed') {
-          setGenerating(false);
-          setCurrentStep(4); // Success step
-          showSuccess('Images generated successfully!');
-        } else if (response.data.status === 'failed') {
-          setGenerating(false);
-          showError(response.data.error || 'Generation failed');
-        } else if (response.data.status === 'processing' || response.data.status === 'pending') {
-          // Continue polling
-          setTimeout(() => pollGenerationStatus(generationId), 2000);
-        }
-      }
-    } catch (error) {
-      setGenerating(false);
-      showError('Failed to get generation status');
     }
   };
 
@@ -467,49 +387,61 @@ const GenerateImagesPage: React.FC = () => {
 
   const getTemplateIcon = (template: Template) => {
     switch (template.category) {
-      case 'classic': return '📋';
-      case 'modern': return '🎨';
-      case 'event': return '🏆';
-      case 'minimal': return '⚡';
-      case 'championship': return '🥇';
-      case 'vintage': return '📜';
-      case 'elite': return '⚡';
-      case 'royal': return '👑';
-      case 'academic': return '🎓';
-      case 'traditional': return '🏛️';
-      default: return '📄';
+      case 'classic':
+        return '📋';
+      case 'modern':
+        return '🎨';
+      case 'event':
+        return '🏆';
+      case 'minimal':
+        return '⚡';
+      case 'championship':
+        return '🥇';
+      case 'vintage':
+        return '📜';
+      case 'elite':
+        return '⚡';
+      case 'royal':
+        return '👑';
+      case 'academic':
+        return '🎓';
+      case 'traditional':
+        return '🏛️';
+      default:
+        return '📄';
     }
   };
 
   // Filter and sort presets - selected first, then by search query
   const getFilteredAndSortedPresets = () => {
-    let filtered = clubPresets.filter(preset => 
-      preset.club_name.toLowerCase().includes(presetSearchQuery.toLowerCase())
+    const filtered = clubPresets.filter((preset) =>
+      preset.club_name.toLowerCase().includes(presetSearchQuery.toLowerCase()),
     );
-    
+
     // Sort with selected preset first
     filtered.sort((a, b) => {
       if (selectedPreset && a.id === selectedPreset.id) return -1;
       if (selectedPreset && b.id === selectedPreset.id) return 1;
       return a.club_name.localeCompare(b.club_name);
     });
-    
+
     return filtered;
   };
 
   // Filter crews based on search query
   const getFilteredCrews = () => {
     if (!crewSearchQuery.trim()) return crews;
-    
+
     const searchTerm = crewSearchQuery.toLowerCase();
-    return crews.filter(crew => 
-      crew.name.toLowerCase().includes(searchTerm) ||
-      crew.clubName.toLowerCase().includes(searchTerm) ||
-      crew.raceName.toLowerCase().includes(searchTerm) ||
-      crew.boatType.name.toLowerCase().includes(searchTerm) ||
-      (crew.coachName && crew.coachName.toLowerCase().includes(searchTerm)) ||
-      (crew.coxName && crew.coxName.toLowerCase().includes(searchTerm)) ||
-      crew.crewNames.some(memberName => memberName.toLowerCase().includes(searchTerm))
+    return crews.filter(
+      (crew) =>
+        crew.name.toLowerCase().includes(searchTerm) ||
+        crew.clubName.toLowerCase().includes(searchTerm) ||
+        crew.raceName.toLowerCase().includes(searchTerm) ||
+        crew.boatType.name.toLowerCase().includes(searchTerm) ||
+        (crew.coachName && crew.coachName.toLowerCase().includes(searchTerm)) ||
+        (crew.coxName && crew.coxName.toLowerCase().includes(searchTerm)) ||
+        crew.crewNames.some((memberName) => memberName.toLowerCase().includes(searchTerm)),
     );
   };
 
@@ -553,10 +485,10 @@ const GenerateImagesPage: React.FC = () => {
   return (
     <div className="generate-container">
       <Navigation currentPage={getCurrentPage()} onAuthModalOpen={() => setShowAuthModal(true)} />
-      
+
       <div className="container">
         {/* Step Indicator */}
-        <StepIndicator 
+        <StepIndicator
           steps={steps}
           currentStep={currentStep - 1} // Convert from 1-based to 0-based
           completedSteps={getCompletedSteps()}
@@ -581,24 +513,29 @@ const GenerateImagesPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {errors.crew && <div className="error-message">{errors.crew}</div>}
-                
-                
+
                 <div className="crew-selection-grid">
                   {getFilteredCrews().length === 0 ? (
-                    <div style={{
-                      padding: '3rem 2rem',
-                      textAlign: 'center',
-                      color: 'var(--gray-600)',
-                      backgroundColor: 'var(--gray-50)',
-                      borderRadius: 'var(--radius-lg)',
-                      border: '2px dashed var(--gray-300)'
-                    }}>
+                    <div
+                      style={{
+                        padding: '3rem 2rem',
+                        textAlign: 'center',
+                        color: 'var(--gray-600)',
+                        backgroundColor: 'var(--gray-50)',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '2px dashed var(--gray-300)',
+                      }}
+                    >
                       <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🚣</div>
                       <h3>{crews.length === 0 ? 'No Crews Found' : 'No Matching Crews'}</h3>
-                      <p>{crews.length === 0 ? "You haven't created any crews yet." : 'Try adjusting your search terms.'}</p>
-                      <button 
+                      <p>
+                        {crews.length === 0
+                          ? "You haven't created any crews yet."
+                          : 'Try adjusting your search terms.'}
+                      </p>
+                      <button
                         className="btn btn-primary"
                         onClick={() => navigate('/crews/create')}
                         style={{ marginTop: '1rem' }}
@@ -607,38 +544,43 @@ const GenerateImagesPage: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    getFilteredCrews().map(crew => {
-                      const isSelected = selectedCrews.find(c => c.id === crew.id);
+                    getFilteredCrews().map((crew) => {
+                      const isSelected = selectedCrews.find((c) => c.id === crew.id);
                       return (
-                    <div
-                      key={crew.id}
-                      className={`crew-selection-card ${isSelected ? 'selected' : ''}`}
-                      onClick={() => handleCrewToggle(crew)}
-                    >
-                      <div className="crew-card-header">
-                        <h3>{crew.name}</h3>
-                        <div className="selection-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={!!isSelected}
-                            onChange={() => handleCrewToggle(crew)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                        <div
+                          key={crew.id}
+                          className={`crew-selection-card ${isSelected ? 'selected' : ''}`}
+                          onClick={() => handleCrewToggle(crew)}
+                        >
+                          <div className="crew-card-header">
+                            <h3>{crew.name}</h3>
+                            <div className="selection-checkbox">
+                              <input
+                                type="checkbox"
+                                checked={!!isSelected}
+                                onChange={() => handleCrewToggle(crew)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                          </div>
+                          <div className="crew-card-details">
+                            <div className="crew-detail">
+                              {crew.boatType.name} • {crew.clubName}
+                            </div>
+                            {crew.coachName && (
+                              <div className="crew-detail">Coach: {crew.coachName}</div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="crew-card-details">
-                        <div className="crew-detail">{crew.boatType.name} • {crew.clubName}</div>
-                        {crew.coachName && (
-                          <div className="crew-detail">Coach: {crew.coachName}</div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                  }))}
+                      );
+                    })
+                  )}
                 </div>
-                
+
                 <div className="step-navigation">
-                  <button className="btn btn-secondary" disabled>Previous</button>
+                  <button className="btn btn-secondary" disabled>
+                    Previous
+                  </button>
                   <button className="btn btn-primary" onClick={nextStep}>
                     Next: Choose Template
                   </button>
@@ -653,13 +595,13 @@ const GenerateImagesPage: React.FC = () => {
               <div className="step-content">
                 <h2>Choose Template & Colors</h2>
                 <p>Select a template design and club colors</p>
-                
+
                 <div className="template-section">
                   <h3>Template Style</h3>
                   {errors.template && <div className="error-message">{errors.template}</div>}
-                  
+
                   <div className="template-selection-grid">
-                    {templates.map(template => (
+                    {templates.map((template) => (
                       <div
                         key={template.id}
                         className={`template-selection-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
@@ -677,11 +619,11 @@ const GenerateImagesPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="colors-section">
                   <h3>Club Colors</h3>
                   {errors.preset && <div className="error-message">{errors.preset}</div>}
-                  
+
                   <div className="colors-search-container">
                     <input
                       type="text"
@@ -691,18 +633,24 @@ const GenerateImagesPage: React.FC = () => {
                       onChange={(e) => setPresetSearchQuery(e.target.value)}
                     />
                   </div>
-                  
+
                   <div className="preset-selection-container">
                     <div className="preset-selection-grid-scrollable">
-                      {getFilteredAndSortedPresets().map(preset => (
+                      {getFilteredAndSortedPresets().map((preset) => (
                         <div
                           key={preset.id}
                           className={`preset-selection-card-compact ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
                           onClick={() => handlePresetSelect(preset)}
                         >
                           <div className="preset-colors-compact">
-                            <div className="color-compact" style={{ background: preset.primary_color }}></div>
-                            <div className="color-compact" style={{ background: preset.secondary_color }}></div>
+                            <div
+                              className="color-compact"
+                              style={{ background: preset.primary_color }}
+                            ></div>
+                            <div
+                              className="color-compact"
+                              style={{ background: preset.secondary_color }}
+                            ></div>
                           </div>
                           <div className="preset-name-compact">{preset.club_name}</div>
                           {selectedPreset?.id === preset.id && (
@@ -713,7 +661,7 @@ const GenerateImagesPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="step-navigation">
                   <button className="btn btn-secondary" onClick={previousStep}>
                     Previous: Select Crew
@@ -733,9 +681,9 @@ const GenerateImagesPage: React.FC = () => {
                 <div className="generation-options">
                   <h3>Output Formats</h3>
                   {errors.formats && <div className="error-message">{errors.formats}</div>}
-                  
+
                   <div className="format-options">
-                    {formatOptions.map(format => (
+                    {formatOptions.map((format) => (
                       <label key={format.id} className="format-option">
                         <input
                           type="checkbox"
@@ -750,17 +698,16 @@ const GenerateImagesPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="generation-summary">
                   <h3>Generation Summary</h3>
                   <div className="summary-card">
                     <div className="summary-row">
                       <span className="summary-label">Crews:</span>
                       <span className="summary-value">
-                        {selectedCrews.length === 1 
-                          ? selectedCrews[0].name 
-                          : `${selectedCrews.length} crews selected`
-                        }
+                        {selectedCrews.length === 1
+                          ? selectedCrews[0].name
+                          : `${selectedCrews.length} crews selected`}
                       </span>
                     </div>
                     <div className="summary-row">
@@ -774,12 +721,13 @@ const GenerateImagesPage: React.FC = () => {
                     <div className="summary-row">
                       <span className="summary-label">Formats:</span>
                       <span className="summary-value">
-                        {selectedFormats.length} format{selectedFormats.length !== 1 ? 's' : ''} selected
+                        {selectedFormats.length} format{selectedFormats.length !== 1 ? 's' : ''}{' '}
+                        selected
                       </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="step-navigation">
                   <button className="btn btn-secondary" onClick={previousStep}>
                     Previous: Template & Colors
@@ -803,7 +751,7 @@ const GenerateImagesPage: React.FC = () => {
                 <div className="success-icon">✅</div>
                 <h2>Images Generated Successfully!</h2>
                 <p>Your crew images have been created and saved to your gallery</p>
-                
+
                 <div className="success-summary">
                   <div className="success-stat">
                     <div className="stat-number">{generationStatus.images?.length || 0}</div>
@@ -816,11 +764,11 @@ const GenerateImagesPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="success-actions">
                   {generationStatus.images && generationStatus.images.length > 0 && (
-                    <button 
-                      className="btn btn-primary" 
+                    <button
+                      className="btn btn-primary"
                       onClick={() => {
                         const link = document.createElement('a');
                         link.href = generationStatus.images![0].url;

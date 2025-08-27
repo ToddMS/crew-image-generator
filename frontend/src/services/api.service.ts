@@ -13,6 +13,20 @@ const API_CONFIG = {
   },
 };
 
+type JsonObject = Record<string, unknown>;
+
+interface GenerationImage {
+  format: string;
+  url: string;
+  size: string;
+}
+
+interface GenerationResult {
+  id: string;
+  status: 'completed' | 'pending' | 'failed';
+  progress: number;
+  images: GenerationImage[];
+}
 
 export class ApiService {
   static getAuthHeaders(): Record<string, string> {
@@ -22,7 +36,7 @@ export class ApiService {
 
   static async request<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
     const fullUrl = `${API_CONFIG.baseUrl}${endpoint}`;
-    
+
     try {
       const response = await fetch(fullUrl, {
         ...options,
@@ -33,11 +47,10 @@ export class ApiService {
         },
       });
 
-
       // Handle different content types
-      let data: any;
+      let data: unknown;
       const contentType = response.headers.get('content-type');
-      
+
       if (contentType && contentType.includes('application/json')) {
         data = await response.json();
       } else {
@@ -46,19 +59,30 @@ export class ApiService {
         data = { message: textData };
       }
 
-
       if (!response.ok) {
+        const parsed = data as { message?: string; error?: string } | string | unknown;
+        const message =
+          typeof parsed === 'object' && parsed !== null
+            ? (parsed as { message?: string }).message
+            : undefined;
+        const errorField =
+          typeof parsed === 'object' && parsed !== null
+            ? (parsed as { error?: string }).error
+            : undefined;
         return {
+          success: false,
           error: `HTTP ${response.status}: ${response.statusText}`,
-          message: data.message || data.error || 'Request failed',
+          message: message || errorField || 'Request failed',
         };
       }
 
       return {
+        success: true,
         data: data as T,
       };
     } catch (error) {
       return {
+        success: false,
         error: error instanceof Error ? error.message : 'An error occurred',
       };
     }
@@ -92,12 +116,12 @@ export class ApiService {
     crewId: string,
     options?: {
       templateId?: string;
-      templateConfig?: any;
+      templateConfig?: unknown;
       imageName?: string;
       colors?: { primary: string; secondary: string };
       clubIcon?: { type: string; file?: File; [key: string]: unknown };
     },
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<ApiResponse<JsonObject>> {
     try {
       const { templateId, templateConfig, imageName, colors, clubIcon } = options || {};
       const hasFileUpload = clubIcon?.type === 'upload' && clubIcon?.file;
@@ -134,7 +158,7 @@ export class ApiService {
           return { success: false, error: error || 'Failed to generate image' };
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as JsonObject;
         return { success: true, data };
       } else {
         const payload: Record<string, unknown> = {
@@ -166,7 +190,7 @@ export class ApiService {
           return { success: false, error: error || 'Failed to generate image' };
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as JsonObject;
         return { success: true, data };
       }
     } catch (error) {
@@ -209,26 +233,32 @@ export class ApiService {
         },
       );
 
-      const data = await response.json();
+      const data = (await response.json()) as
+        | { id: number; imagePath: string; imageName: string }
+        | { message?: string; error?: string };
 
       if (!response.ok) {
+        const err = data as { message?: string; error?: string };
         return {
-          error: data.message || 'Failed to save image',
-          message: data.error,
+          success: false,
+          error: err.message || 'Failed to save image',
+          message: err.error,
         };
       }
 
       return {
-        data: data,
+        success: true,
+        data: data as { id: number; imagePath: string; imageName: string },
       };
     } catch (error) {
       return {
+        success: false,
         error: error instanceof Error ? error.message : 'An error occurred while saving image',
       };
     }
   }
 
-  static async getSavedImages(): Promise<{ success: boolean; data?: any[]; error?: string }> {
+  static async getSavedImages(): Promise<ApiResponse<SavedImageResponse[]>> {
     try {
       const response = await this.request<SavedImageResponse[]>('/crews/saved-images');
       if (response.error) {
@@ -265,19 +295,22 @@ export class ApiService {
   }
 
   // Template methods
-  static async getTemplates(): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>(API_CONFIG.endpoints.templates);
+  static async getTemplates(): Promise<ApiResponse<unknown[]>> {
+    return this.request<unknown[]>(API_CONFIG.endpoints.templates);
   }
 
-  static async createTemplate(template: any): Promise<ApiResponse<any>> {
-    return this.request<any>('/templates', {
+  static async createTemplate(template: JsonObject): Promise<ApiResponse<JsonObject>> {
+    return this.request<JsonObject>('/templates', {
       method: 'POST',
       body: JSON.stringify(template),
     });
   }
 
-  static async updateTemplate(id: string, template: any): Promise<ApiResponse<any>> {
-    return this.request<any>(`/templates/${id}`, {
+  static async updateTemplate(
+    id: string,
+    template: Partial<JsonObject>,
+  ): Promise<ApiResponse<JsonObject>> {
+    return this.request<JsonObject>(`/templates/${id}`, {
       method: 'PUT',
       body: JSON.stringify(template),
     });
@@ -290,22 +323,22 @@ export class ApiService {
   }
 
   // User profile methods
-  static async updateProfile(profile: any): Promise<ApiResponse<any>> {
-    return this.request<any>('/user/profile', {
+  static async updateProfile(profile: JsonObject): Promise<ApiResponse<JsonObject>> {
+    return this.request<JsonObject>('/user/profile', {
       method: 'PUT',
       body: JSON.stringify(profile),
     });
   }
 
-  static async updateClubSettings(settings: any): Promise<ApiResponse<any>> {
-    return this.request<any>('/user/club-settings', {
+  static async updateClubSettings(settings: JsonObject): Promise<ApiResponse<JsonObject>> {
+    return this.request<JsonObject>('/user/club-settings', {
       method: 'PUT',
       body: JSON.stringify(settings),
     });
   }
 
-  static async updatePreferences(preferences: any): Promise<ApiResponse<any>> {
-    return this.request<any>('/user/preferences', {
+  static async updatePreferences(preferences: JsonObject): Promise<ApiResponse<JsonObject>> {
+    return this.request<JsonObject>('/user/preferences', {
       method: 'PUT',
       body: JSON.stringify(preferences),
     });
@@ -324,32 +357,38 @@ export class ApiService {
         body: formData,
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as
+        | { url: string }
+        | { message?: string; error?: string };
 
       if (!response.ok) {
+        const err = data as { message?: string; error?: string };
         return {
-          error: data.message || 'Failed to upload logo',
-          message: data.error,
+          success: false,
+          error: err.message || 'Failed to upload logo',
+          message: err.error,
         };
       }
 
       return {
-        data: data,
+        success: true,
+        data: data as { url: string },
       };
     } catch (error) {
       return {
+        success: false,
         error: error instanceof Error ? error.message : 'An error occurred while uploading logo',
       };
     }
   }
 
   // Statistics and analytics methods
-  static async getDashboardStats(): Promise<ApiResponse<any>> {
-    return this.request<any>('/dashboard/stats');
+  static async getDashboardStats(): Promise<ApiResponse<JsonObject>> {
+    return this.request<JsonObject>('/dashboard/stats');
   }
 
-  static async getRecentActivity(): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>('/dashboard/recent-activity');
+  static async getRecentActivity(): Promise<ApiResponse<JsonObject[]>> {
+    return this.request<JsonObject[]>('/dashboard/recent-activity');
   }
 
   // Club Preset methods
@@ -386,7 +425,7 @@ export class ApiService {
     templateId: string;
     colors: { primary: string; secondary: string };
     formats: string[];
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<GenerationResult>> {
     // Use the existing crews/generate-image endpoint
     const payload = {
       crewId: request.crewId,
@@ -405,23 +444,23 @@ export class ApiService {
             ...this.getAuthHeaders(),
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        return { error: errorText || 'Failed to generate image' };
+        return { success: false, error: errorText || 'Failed to generate image' };
       }
 
       // Check if the response is actually an image (PNG)
       const contentType = response.headers.get('content-type');
-      
+
       if (contentType && contentType.includes('image')) {
         // The backend returns the image buffer directly
         const imageBlob = await response.blob();
-        
+
         // Create a mock generation status response
-        const mockResponse = {
+        const mockResponse: GenerationResult = {
           id: `gen-${Date.now()}`,
           status: 'completed' as const,
           progress: 100,
@@ -429,47 +468,39 @@ export class ApiService {
             {
               format: request.formats[0] || 'instagram_post',
               url: URL.createObjectURL(imageBlob),
-              size: '1080x1080'
-            }
-          ]
+              size: '1080x1080',
+            },
+          ],
         };
 
-        return { data: mockResponse };
+        return { success: true, data: mockResponse };
       } else {
         // Try to parse as JSON in case there's an error message
         try {
-          const jsonData = await response.json();
-          return { error: jsonData.error || 'Unknown error from server' };
-        } catch (parseError) {
+          const jsonData = (await response.json()) as { error?: string };
+          return { success: false, error: jsonData.error || 'Unknown error from server' };
+        } catch {
           const textData = await response.text();
-          return { error: textData || 'Unknown error from server' };
+          return { success: false, error: textData || 'Unknown error from server' };
         }
       }
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Failed to generate image' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate image',
+      };
     }
   }
 
-  static async getGenerationStatus(generationId: string): Promise<ApiResponse<any>> {
-    // Since we're using the existing endpoint that returns images immediately,
-    // we can just return a completed status
+  static async getGenerationStatus(generationId: string): Promise<ApiResponse<GenerationResult>> {
     return {
       success: true,
       data: {
         id: generationId,
         status: 'completed',
-        progress: 100
-      }
+        progress: 100,
+        images: [],
+      },
     };
-  }
-
-  static async cancelGeneration(generationId: string): Promise<ApiResponse<void>> {
-    // Not needed for immediate generation, but keep for compatibility
-    return { success: true };
-  }
-
-  static async downloadGeneratedImage(generationId: string, format: string): Promise<ApiResponse<Blob>> {
-    // Not needed since the image URL is already provided in the generateImages response
-    return { error: 'Direct download not available. Use the image URL from generation response.' };
   }
 }
