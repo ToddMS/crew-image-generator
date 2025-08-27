@@ -13,6 +13,7 @@ export interface Crew {
   boatType: BoatType;
   crewNames: string[];
   coachName?: string;
+  coxName?: string;
 }
 
 export interface CrewDB {
@@ -41,6 +42,7 @@ export interface CreateCrewRequest {
   boatType: BoatType;
   crewNames: string[];
   coachName?: string;
+  coxName?: string;
 }
 
 export interface UpdateCrewRequest extends CreateCrewRequest {

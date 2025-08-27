@@ -1,6 +1,7 @@
 import { getNextFileName } from "../utils/file.utils.js";
 import { Crew } from "../types/crew.types.js";
-import { TemplateGeneratorService, TemplateConfig } from "./template-generator/TemplateGeneratorService.js";
+import { TemplateGeneratorService } from "./template-generator/TemplateGeneratorService.js";
+import { TemplateConfig } from "./template-generator/interfaces.js";
 import { TEMPLATE_REGISTRY } from "./template-generator/templates/index.js";
 import { createCanvas } from 'canvas';
 import fs from 'fs';

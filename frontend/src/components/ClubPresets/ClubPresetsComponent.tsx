@@ -76,7 +76,7 @@ const ClubPresetsComponent: React.FC<ClubPresetsComponentProps> = ({
     try {
       const response = await ApiService.createClubPreset(newPreset as Omit<ClubPreset, 'id'>);
       if (response.success && response.data) {
-        setClubPresets((prev) => [...prev, response.data]);
+        setClubPresets((prev) => [...prev, response.data!]);
         setNewPreset({
           club_name: '',
           primary_color: '#2563eb',
