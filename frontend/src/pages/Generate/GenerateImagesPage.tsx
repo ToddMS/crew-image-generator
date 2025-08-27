@@ -5,7 +5,6 @@ import AuthModal from '../../components/Auth/AuthModal';
 import StepIndicator, { Step } from '../../components/StepIndicator';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
 import { ApiService } from '../../services/api.service';
 import { ClubPreset } from '../../types/club.types';
 import './GenerateImages.css';

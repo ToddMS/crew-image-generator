@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
 import { useAuth } from '../../context/AuthContext';
-import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ClubPreset } from '../../types/club.types';
 import { ApiService } from '../../services/api.service';
@@ -11,8 +10,7 @@ import './ClubPresets.css';
 
 const ClubPresetsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useThemeMode();
+  const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [clubPresets, setClubPresets] = useState<ClubPreset[]>([]);

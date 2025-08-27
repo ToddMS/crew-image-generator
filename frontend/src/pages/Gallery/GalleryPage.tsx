@@ -24,9 +24,7 @@ interface SavedImage {
 
 const NewGalleryPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useThemeMode();
+  const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
