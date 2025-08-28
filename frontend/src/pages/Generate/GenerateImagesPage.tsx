@@ -76,12 +76,19 @@ const GenerateImagesPage: React.FC = () => {
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Preview panel states
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
   const getCurrentPage = () => 'generate';
 
   // Define the steps for the StepIndicator
   const steps: Step[] = [
     { label: 'Select Crew', description: 'Choose your crews' },
-    { label: 'Choose Template & Colors', description: 'Pick design and colors' },
+    { label: 'Choose Template', description: 'Pick design style' },
+    { label: 'Choose Colors', description: 'Select club colors' },
     { label: 'Generate & Download', description: 'Create your images' },
   ];
 
@@ -139,17 +146,64 @@ const GenerateImagesPage: React.FC = () => {
       }
 
       // Handle templates response
-      if (templatesResponse.success && templatesResponse.data) {
+      console.log('🎨 Templates API response:', templatesResponse);
+      if (
+        templatesResponse.success &&
+        templatesResponse.data &&
+        templatesResponse.data.length > 0
+      ) {
+        console.log(
+          '✅ Templates loaded successfully:',
+          templatesResponse.data.length,
+          'templates',
+        );
         setTemplates(templatesResponse.data as Template[]);
         // Auto-select first template if available
-        if (templatesResponse.data.length > 0) {
-          setSelectedTemplate(templatesResponse.data[0] as Template);
-        }
-      } else if (templatesResponse.data && !templatesResponse.success) {
+        console.log('🎯 Auto-selecting first template:', templatesResponse.data[0]);
+        setSelectedTemplate(templatesResponse.data[0] as Template);
+      } else if (
+        templatesResponse.data &&
+        !templatesResponse.success &&
+        templatesResponse.data.length > 0
+      ) {
+        console.log(
+          '⚠️ Templates loaded (no success flag):',
+          templatesResponse.data.length,
+          'templates',
+        );
         setTemplates(templatesResponse.data as Template[]);
-        if (templatesResponse.data.length > 0) {
-          setSelectedTemplate(templatesResponse.data[0] as Template);
-        }
+        setSelectedTemplate(templatesResponse.data[0] as Template);
+      } else {
+        console.log('❌ No templates data received, using mock templates:', templatesResponse);
+        // Fallback to mock templates for development
+        const mockTemplates: Template[] = [
+          {
+            id: 'classic-1',
+            name: 'Classic',
+            description: 'Traditional crew layout with clean typography',
+            category: 'classic',
+          },
+          {
+            id: 'modern-1',
+            name: 'Modern',
+            description: 'Contemporary design with bold elements',
+            category: 'modern',
+          },
+          {
+            id: 'minimal-1',
+            name: 'Minimal',
+            description: 'Clean and simple design',
+            category: 'minimal',
+          },
+          {
+            id: 'championship-1',
+            name: 'Championship',
+            description: 'Premium design for special events',
+            category: 'championship',
+          },
+        ];
+        setTemplates(mockTemplates);
+        setSelectedTemplate(mockTemplates[0]);
       }
 
       // Handle presets response
@@ -219,7 +273,7 @@ const GenerateImagesPage: React.FC = () => {
   // Step navigation
   const nextStep = () => {
     if (validateCurrentStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
       setErrors({});
     }
   };
@@ -242,11 +296,13 @@ const GenerateImagesPage: React.FC = () => {
         if (!selectedTemplate) {
           newErrors.template = 'Please select a template';
         }
+        break;
+      case 3:
         if (!selectedPreset) {
           newErrors.preset = 'Please select club colors';
         }
         break;
-      case 3:
+      case 4:
         if (selectedFormats.length === 0) {
           newErrors.formats = 'Please select at least one output format';
         }
@@ -352,7 +408,7 @@ const GenerateImagesPage: React.FC = () => {
         // Just set the final state directly
         if (response.data.status === 'completed') {
           setGenerating(false);
-          setCurrentStep(4); // Success step
+          setCurrentStep(5); // Success step
           showSuccess('Images generated successfully!');
         }
       } else {
@@ -372,6 +428,71 @@ const GenerateImagesPage: React.FC = () => {
     setSelectedFormats(['instagram_post']);
   };
 
+  // Preview panel drag handlers
+  const handlePreviewMouseDown = (e: React.MouseEvent) => {
+    if (previewCollapsed) return;
+
+    const rect = (e.target as HTMLElement).closest('.preview-panel')?.getBoundingClientRect();
+    if (!rect) return;
+
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const handlePreviewMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+
+    const newX = e.clientX - dragOffset.x;
+    const newY = e.clientY - dragOffset.y;
+
+    // Keep panel within viewport bounds
+    const panelWidth = previewCollapsed ? 280 : 320;
+    const panelHeight = previewCollapsed ? 32 : 400;
+    const maxX = window.innerWidth - panelWidth;
+    const maxY = window.innerHeight - panelHeight;
+
+    setPreviewPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY)),
+    });
+  };
+
+  const handlePreviewMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  React.useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handlePreviewMouseMove);
+      document.addEventListener('mouseup', handlePreviewMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handlePreviewMouseMove);
+        document.removeEventListener('mouseup', handlePreviewMouseUp);
+      };
+    }
+  }, [isDragging, dragOffset, handlePreviewMouseMove]);
+
+  const togglePreviewCollapsed = () => {
+    const newCollapsedState = !previewCollapsed;
+    setPreviewCollapsed(newCollapsedState);
+
+    const currentX = previewPosition.x || 0;
+    const currentY = previewPosition.y || 0;
+
+    const panelWidth = newCollapsedState ? 280 : 320;
+    const panelHeight = newCollapsedState ? 32 : 400;
+    const maxX = window.innerWidth - panelWidth;
+    const maxY = window.innerHeight - panelHeight;
+
+    setPreviewPosition({
+      x: Math.max(0, Math.min(currentX, maxX)),
+      y: Math.max(0, Math.min(currentY, maxY)),
+    });
+  };
+
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
     if (user) {
@@ -385,33 +506,6 @@ const GenerateImagesPage: React.FC = () => {
     { id: 'facebook_post', name: 'Facebook Post', size: '1200×630px (Landscape)' },
     { id: 'twitter_post', name: 'Twitter Post', size: '1024×512px (Landscape)' },
   ];
-
-  const getTemplateIcon = (template: Template) => {
-    switch (template.category) {
-      case 'classic':
-        return '📋';
-      case 'modern':
-        return '🎨';
-      case 'event':
-        return '🏆';
-      case 'minimal':
-        return '⚡';
-      case 'championship':
-        return '🥇';
-      case 'vintage':
-        return '📜';
-      case 'elite':
-        return '⚡';
-      case 'royal':
-        return '👑';
-      case 'academic':
-        return '🎓';
-      case 'traditional':
-        return '🏛️';
-      default:
-        return '📄';
-    }
-  };
 
   // Filter and sort presets - selected first, then by search query
   const getFilteredAndSortedPresets = () => {
@@ -501,19 +595,17 @@ const GenerateImagesPage: React.FC = () => {
           {currentStep === 1 && (
             <div className="generate-step active">
               <div className="step-content">
-                <div className="step-header-with-actions">
-                  {crews.length > 0 && (
-                    <div className="crew-search-container">
-                      <input
-                        type="text"
-                        className="crew-search-input"
-                        placeholder="Search crews, clubs, races..."
-                        value={crewSearchQuery}
-                        onChange={(e) => setCrewSearchQuery(e.target.value)}
-                      />
-                    </div>
-                  )}
-                </div>
+                {crews.length > 0 && (
+                  <div className="crew-search-container">
+                    <input
+                      type="text"
+                      className="crew-search-input"
+                      placeholder="Search crews, clubs, races..."
+                      value={crewSearchQuery}
+                      onChange={(e) => setCrewSearchQuery(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 {errors.crew && <div className="error-message">{errors.crew}</div>}
 
@@ -579,82 +671,56 @@ const GenerateImagesPage: React.FC = () => {
                     Previous
                   </Button>
                   <Button variant="primary" onClick={nextStep}>
-                    Next: Choose Template
+                    Next: Template
                   </Button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 2: Template & Colors */}
+          {/* Step 2: Choose Template */}
           {currentStep === 2 && (
             <div className="generate-step active">
               <div className="step-content">
-                <h2>Choose Template & Colors</h2>
-                <p>Select a template design and club colors</p>
-
-                <div className="template-section">
-                  <h3>Template Style</h3>
-                  {errors.template && <div className="error-message">{errors.template}</div>}
-
-                  <div className="template-selection-grid">
-                    {templates.map((template) => (
-                      <div
-                        key={template.id}
-                        className={`template-selection-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
-                        onClick={() => handleTemplateSelect(template)}
-                      >
-                        <div className="template-thumb">{getTemplateIcon(template)}</div>
-                        <div className="template-info">
-                          <div className="template-name">{template.name}</div>
-                          <div className="template-desc">{template.description}</div>
-                        </div>
-                        <div className="selection-radio">
-                          <div className="radio-dot"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="colors-section">
-                  <h3>Club Colors</h3>
-                  {errors.preset && <div className="error-message">{errors.preset}</div>}
-
-                  <div className="colors-search-container">
-                    <input
-                      type="text"
-                      className="colors-search-input"
-                      placeholder="Search club colors..."
-                      value={presetSearchQuery}
-                      onChange={(e) => setPresetSearchQuery(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="preset-selection-container">
-                    <div className="preset-selection-grid-scrollable">
-                      {getFilteredAndSortedPresets().map((preset) => (
+                <div className="template-colors-wrapper">
+                  <div className="template-column">
+                    <div className="template-selection-grid">
+                      {templates.length === 0 ? (
                         <div
-                          key={preset.id}
-                          className={`preset-selection-card-compact ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
-                          onClick={() => handlePresetSelect(preset)}
+                          style={{
+                            padding: '3rem 2rem',
+                            textAlign: 'center',
+                            color: 'var(--gray-600)',
+                            backgroundColor: 'var(--gray-50)',
+                            borderRadius: 'var(--radius-lg)',
+                            border: '2px dashed var(--gray-300)',
+                            gridColumn: '1 / -1',
+                          }}
                         >
-                          <div className="preset-colors-compact">
-                            <div
-                              className="color-compact"
-                              style={{ background: preset.primary_color }}
-                            ></div>
-                            <div
-                              className="color-compact"
-                              style={{ background: preset.secondary_color }}
-                            ></div>
-                          </div>
-                          <div className="preset-name-compact">{preset.club_name}</div>
-                          {selectedPreset?.id === preset.id && (
-                            <div className="selected-indicator">✓</div>
-                          )}
+                          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🎨</div>
+                          <h3>No Templates Available</h3>
+                          <p>Templates are being loaded or there may be a connection issue.</p>
                         </div>
-                      ))}
+                      ) : (
+                        templates.map((template) => (
+                          <div
+                            key={template.id}
+                            className={`template-selection-card ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
+                            onClick={() => handleTemplateSelect(template)}
+                          >
+                            <div className="template-preview">
+                              <div>{template.name}</div>
+                            </div>
+                            <div className="template-info">
+                              <div className="template-name">{template.name}</div>
+                              <div className="template-desc">{template.description}</div>
+                              <div className="selection-radio">
+                                <div className="radio-dot"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -664,15 +730,69 @@ const GenerateImagesPage: React.FC = () => {
                     Previous: Select Crew
                   </Button>
                   <Button variant="primary" onClick={nextStep}>
-                    Next: Generate Image
+                    Next: Choose Colors
                   </Button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Generate & Download */}
+          {/* Step 3: Choose Colors */}
           {currentStep === 3 && (
+            <div className="generate-step active">
+              <div className="step-content">
+                <div className="template-colors-wrapper">
+                  <div className="colors-column">
+                    <div className="colors-search-container">
+                      <input
+                        type="text"
+                        className="colors-search-input"
+                        placeholder="Search club colors..."
+                        value={presetSearchQuery}
+                        onChange={(e) => setPresetSearchQuery(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="preset-selection-container">
+                      <div className="preset-selection-grid">
+                        {getFilteredAndSortedPresets().map((preset) => (
+                          <div
+                            key={preset.id}
+                            className={`preset-selection-card ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
+                            onClick={() => handlePresetSelect(preset)}
+                          >
+                            <div className="preset-colors-mini">
+                              <div
+                                className="color-mini"
+                                style={{ background: preset.primary_color }}
+                              ></div>
+                              <div
+                                className="color-mini"
+                                style={{ background: preset.secondary_color }}
+                              ></div>
+                            </div>
+                            <div className="preset-name-mini">{preset.club_name}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="step-navigation">
+                  <Button variant="secondary" onClick={previousStep}>
+                    Previous: Choose Template
+                  </Button>
+                  <Button variant="primary" onClick={nextStep}>
+                    Next: Generate Images
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Generate & Download */}
+          {currentStep === 4 && (
             <div className="generate-step active">
               <div className="step-content">
                 <div className="generation-options">
@@ -727,7 +847,7 @@ const GenerateImagesPage: React.FC = () => {
 
                 <div className="step-navigation">
                   <Button variant="secondary" onClick={previousStep}>
-                    Previous: Template & Colors
+                    Previous: Choose Colors
                   </Button>
                   <Button
                     variant="primary"
@@ -743,7 +863,7 @@ const GenerateImagesPage: React.FC = () => {
           )}
 
           {/* Success State */}
-          {currentStep === 4 && generationStatus && (
+          {currentStep === 5 && generationStatus && (
             <div className="generate-step active">
               <div className="step-content text-center">
                 <div className="success-icon">✅</div>
@@ -790,6 +910,74 @@ const GenerateImagesPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Floating Preview Panel */}
+        {currentStep > 1 && currentStep < 5 && (
+          <div
+            className={`preview-panel ${previewCollapsed ? 'collapsed' : ''} ${isDragging ? 'dragging' : ''}`}
+            style={{
+              left: previewPosition.x || undefined,
+              top: previewPosition.y || undefined,
+              right: previewPosition.x ? 'auto' : '2rem',
+              transform: previewPosition.x || previewPosition.y ? 'none' : 'translateY(-50%)',
+            }}
+            onMouseDown={handlePreviewMouseDown}
+          >
+            <div className="preview-drag-handle" />
+            {previewCollapsed && <div className="preview-collapsed-title">Live Preview</div>}
+            <button
+              className="preview-toggle"
+              onClick={togglePreviewCollapsed}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {previewCollapsed ? '+' : '−'}
+            </button>
+            <div className="preview-content-wrapper">
+              <div className="preview-header">
+                <h3>Live Preview</h3>
+                <div className="preview-format">1080×1080px</div>
+              </div>
+              <div className="preview-container">
+                <div
+                  className="preview-image"
+                  style={{
+                    background: selectedPreset
+                      ? `linear-gradient(135deg, ${selectedPreset.primary_color}, ${selectedPreset.secondary_color})`
+                      : 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                  }}
+                >
+                  <div className="preview-content">
+                    <div className="preview-header-section">
+                      <div className="preview-club-name">
+                        {selectedCrews[0]?.clubName || 'Club Name'}
+                      </div>
+                      <div className="preview-crew-name">
+                        {selectedCrews[0]?.name || 'Crew Name'}
+                      </div>
+                    </div>
+                    <div className="preview-roster">
+                      {selectedCrews[0]?.crewNames.map((name, index) => (
+                        <div key={index} className="preview-member">
+                          {index + 1}. {name}
+                        </div>
+                      )) || (
+                        <>
+                          <div className="preview-member">1. Member Name</div>
+                          <div className="preview-member">2. Member Name</div>
+                          <div className="preview-member">3. Member Name</div>
+                          <div className="preview-member">4. Member Name</div>
+                        </>
+                      )}
+                      {selectedCrews[0]?.coxName && (
+                        <div className="preview-cox">Cox: {selectedCrews[0].coxName}</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <AuthModal
