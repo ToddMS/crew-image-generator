@@ -76,7 +76,6 @@ const GenerateImagesPage: React.FC = () => {
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-
   const getCurrentPage = () => 'generate';
 
   // Define the steps for the StepIndicator
@@ -333,21 +332,6 @@ const GenerateImagesPage: React.FC = () => {
     setErrors((prev) => ({ ...prev, preset: '' }));
   };
 
-  const handleFormatToggle = (format: string) => {
-    setSelectedFormats((prev) => {
-      const newFormats = prev.includes(format)
-        ? prev.filter((f) => f !== format)
-        : [...prev, format];
-
-      if (newFormats.length > 0) {
-        setErrors((prev) => ({ ...prev, formats: '' }));
-      }
-
-      return newFormats;
-    });
-  };
-
-  // Image generation
   const generateImages = async () => {
     if (!user) {
       setShowAuthModal(true);
@@ -423,7 +407,6 @@ const GenerateImagesPage: React.FC = () => {
     setSelectedFormats(['instagram_post']);
   };
 
-
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
     if (user) {
@@ -431,20 +414,11 @@ const GenerateImagesPage: React.FC = () => {
     }
   };
 
-  const formatOptions = [
-    { id: 'instagram_post', name: 'Instagram Post', size: '1080×1080px (Square)' },
-    { id: 'instagram_story', name: 'Instagram Story', size: '1080×1920px (Portrait)' },
-    { id: 'facebook_post', name: 'Facebook Post', size: '1200×630px (Landscape)' },
-    { id: 'twitter_post', name: 'Twitter Post', size: '1024×512px (Landscape)' },
-  ];
-
-  // Filter and sort presets - selected first, then by search query
   const getFilteredAndSortedPresets = () => {
     const filtered = clubPresets.filter((preset) =>
       preset.club_name.toLowerCase().includes(presetSearchQuery.toLowerCase()),
     );
 
-    // Sort with selected preset first
     filtered.sort((a, b) => {
       if (selectedPreset && a.id === selectedPreset.id) return -1;
       if (selectedPreset && b.id === selectedPreset.id) return 1;
@@ -836,7 +810,6 @@ const GenerateImagesPage: React.FC = () => {
             </div>
           )}
         </div>
-
       </div>
 
       <AuthModal

@@ -177,15 +177,14 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
                     </button>
                   ))}
                   <div className="dropdown-separator"></div>
-                  <button
-                    className="dropdown-item theme-toggle-item"
-                    onClick={() => {
-                      toggleTheme();
-                      setActiveDropdown(null);
-                    }}
-                  >
-                    {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                  </button>
+                  <div className="dropdown-item theme-toggle-item">
+                    <span className="theme-toggle-text">Theme</span>
+                    <label className="theme-switch">
+                      <input type="checkbox" checked={isDarkMode} onChange={toggleTheme} />
+                      <span className="theme-slider"></span>
+                    </label>
+                  </div>
+                  <div className="dropdown-separator"></div>
                   <button
                     className="dropdown-item logout-item"
                     onClick={() => {
