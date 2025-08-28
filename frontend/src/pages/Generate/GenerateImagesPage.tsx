@@ -169,31 +169,43 @@ const GenerateImagesPage: React.FC = () => {
         setSelectedTemplate(templatesResponse.data[0] as Template);
       } else {
         console.log('❌ No templates data received, using mock templates:', templatesResponse);
-        // Fallback to mock templates for development
+        // Fallback to mock templates for development - using backend template IDs
         const mockTemplates: Template[] = [
           {
-            id: 'classic-1',
-            name: 'Classic',
+            id: 'classic-lineup',
+            name: 'Classic Lineup',
             description: 'Traditional crew layout with clean typography',
             category: 'classic',
           },
           {
-            id: 'modern-1',
-            name: 'Modern',
+            id: 'modern-card',
+            name: 'Modern Card',
             description: 'Contemporary design with bold elements',
             category: 'modern',
           },
           {
-            id: 'minimal-1',
-            name: 'Minimal',
+            id: 'minimal-clean',
+            name: 'Minimal Clean',
             description: 'Clean and simple design',
             category: 'minimal',
           },
           {
-            id: 'championship-1',
-            name: 'Championship',
+            id: 'championship-gold',
+            name: 'Championship Gold',
             description: 'Premium design for special events',
             category: 'championship',
+          },
+          {
+            id: 'race-day',
+            name: 'Race Day',
+            description: 'Dynamic race day poster style',
+            category: 'event',
+          },
+          {
+            id: 'vintage-classic',
+            name: 'Vintage Classic',
+            description: 'Classic vintage rowing poster',
+            category: 'vintage',
           },
         ];
         setTemplates(mockTemplates);
@@ -360,22 +372,6 @@ const GenerateImagesPage: React.FC = () => {
         formats: selectedFormats,
       }));
 
-      console.log(
-        '🖼️ Frontend generating images with requests:',
-        requests.map((r) => ({
-          crewId: r.crewId,
-          templateId: r.templateId,
-          colors: r.colors,
-          formats: r.formats,
-        })),
-      );
-
-      console.log('📋 Selected template details:', {
-        id: selectedTemplate.id,
-        name: selectedTemplate.name,
-        category: selectedTemplate.category,
-      });
-
       // For now, generate images for the first crew (until backend supports batch generation)
       // TODO: Update when backend supports multiple crew generation
       const response = await ApiService.generateImages(requests[0]);
@@ -412,20 +408,6 @@ const GenerateImagesPage: React.FC = () => {
     if (user) {
       loadInitialData();
     }
-  };
-
-  const getFilteredAndSortedPresets = () => {
-    const filtered = clubPresets.filter((preset) =>
-      preset.club_name.toLowerCase().includes(presetSearchQuery.toLowerCase()),
-    );
-
-    filtered.sort((a, b) => {
-      if (selectedPreset && a.id === selectedPreset.id) return -1;
-      if (selectedPreset && b.id === selectedPreset.id) return 1;
-      return a.club_name.localeCompare(b.club_name);
-    });
-
-    return filtered;
   };
 
   // Filter crews based on search query
@@ -660,25 +642,31 @@ const GenerateImagesPage: React.FC = () => {
 
                     <div className="preset-selection-container">
                       <div className="preset-selection-grid">
-                        {getFilteredAndSortedPresets().map((preset) => (
-                          <div
-                            key={preset.id}
-                            className={`preset-selection-card ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
-                            onClick={() => handlePresetSelect(preset)}
-                          >
-                            <div className="preset-colors-mini">
-                              <div
-                                className="color-mini"
-                                style={{ background: preset.primary_color }}
-                              ></div>
-                              <div
-                                className="color-mini"
-                                style={{ background: preset.secondary_color }}
-                              ></div>
+                        {clubPresets
+                          .filter((preset) =>
+                            preset.club_name
+                              .toLowerCase()
+                              .includes(presetSearchQuery.toLowerCase()),
+                          )
+                          .map((preset) => (
+                            <div
+                              key={preset.id}
+                              className={`preset-selection-card ${selectedPreset?.id === preset.id ? 'selected' : ''}`}
+                              onClick={() => handlePresetSelect(preset)}
+                            >
+                              <div className="preset-colors-mini">
+                                <div
+                                  className="color-mini"
+                                  style={{ background: preset.primary_color }}
+                                ></div>
+                                <div
+                                  className="color-mini"
+                                  style={{ background: preset.secondary_color }}
+                                ></div>
+                              </div>
+                              <div className="preset-name-mini">{preset.club_name}</div>
                             </div>
-                            <div className="preset-name-mini">{preset.club_name}</div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   </div>

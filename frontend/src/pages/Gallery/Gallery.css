@@ -1,9 +1,9 @@
 /* Gallery Page styles matching the beautiful HTML design */
 
-
 /* Gallery Container */
 .gallery-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   color: var(--gray-900);
   background: var(--gray-50);
@@ -45,11 +45,11 @@
 .image-checkbox {
   position: absolute;
   top: 8px;
-  left: 8px;
+  right: 8px;
   z-index: 10;
 }
 
-.image-checkbox input[type="checkbox"] {
+.image-checkbox input[type='checkbox'] {
   width: 18px;
   height: 18px;
   accent-color: var(--primary);
@@ -684,32 +684,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
   animation: fadeIn 0.3s ease-out;
 }
 
-.modal-content {
+.modal-overlay .modal-content {
   background: var(--white);
   border-radius: var(--radius-lg);
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 60vw;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
   overflow: hidden;
   box-shadow: var(--shadow-xl);
   animation: slideInUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
 }
 
-.modal-header {
-  padding: 1.5rem 2rem;
+.modal-overlay .modal-header {
+  padding: 0.5rem;
   border-bottom: 1px solid var(--gray-200);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .modal-title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--gray-900);
+  margin: 0;
 }
 
 .modal-close {
@@ -725,16 +732,24 @@
   color: var(--gray-700);
 }
 
-.modal-body {
-  padding: 2rem;
-  max-height: 70vh;
-  overflow: auto;
+.modal-overlay .modal-body {
+  padding: 0.5rem;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }
 
 .fullscreen-image {
-  width: 100%;
+  max-width: calc(60vw - 3rem);
+  max-height: calc(70vh - 4rem);
+  width: auto;
   height: auto;
   border-radius: var(--radius);
+  object-fit: contain;
+  margin: 0.5rem 0;
 }
 
 .image-details {
@@ -864,8 +879,12 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {
@@ -912,15 +931,15 @@
   .nav-links {
     display: none;
   }
-  
+
   .nav-container {
     justify-content: space-between;
   }
-  
+
   .gallery-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
-  
+
   .gallery-controls {
     flex-direction: column;
     align-items: stretch;
@@ -961,11 +980,11 @@
   .nav-container {
     padding: 1rem;
   }
-  
+
   .user-name {
     display: none;
   }
-  
+
   .nav-actions {
     gap: 0.5rem;
   }

@@ -434,6 +434,8 @@ export class ApiService {
       imageName: `crew-${request.crewId}-${Date.now()}`,
     };
 
+    console.log('🚀 Sending image generation request:', payload);
+
     try {
       const response = await fetch(
         `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.crews}/generate-image`,

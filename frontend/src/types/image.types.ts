@@ -1,16 +1,27 @@
-// API response type for saved images
+// API response type for saved images - matches actual API response
 export interface SavedImageResponse {
-  id: number;
-  imagePath: string;
-  imageName: string;
-  // Additional properties that may be present
+  id: string;
+  crewName: string;
+  templateName: string;
+  imageUrl: string;
+  createdAt: string;
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  fileSize: number;
+  format: string;
+  crewId: string;
+  templateId: string;
+  // Legacy fields for backward compatibility
+  imagePath?: string;
+  imageName?: string;
   image_name?: string;
   image_url?: string;
   template_id?: string;
   created_at?: string;
   primary_color?: string;
   secondary_color?: string;
-  [key: string]: unknown;
 }
 
 // Complete SavedImage type for components

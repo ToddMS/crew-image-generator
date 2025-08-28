@@ -89,14 +89,14 @@ const NewGalleryPage: React.FC = () => {
         // Map SavedImageResponse[] to SavedImage[]
         const mappedImages: SavedImage[] = response.data.map((img: SavedImageResponse) => ({
           id: img.id.toString(),
-          crewName: img.imageName || 'Unknown Crew',
-          templateName: img.template_id || 'Unknown Template',
-          imageUrl: img.imagePath || img.image_url || '',
-          createdAt: img.created_at || new Date().toISOString(),
-          fileSize: 0, // Default value since not in response
-          format: 'png', // Default format
-          dimensions: undefined,
-          crewId: undefined,
+          crewName: img.crewName || img.imageName || 'Unknown Crew',
+          templateName: img.templateName || img.template_id || 'Unknown Template',
+          imageUrl: img.imageUrl || img.imagePath || img.image_url || '',
+          createdAt: img.createdAt || img.created_at || new Date().toISOString(),
+          fileSize: img.fileSize || 0,
+          format: img.format || 'png',
+          dimensions: img.dimensions,
+          crewId: img.crewId,
           templateId: img.template_id,
         }));
         setImages(mappedImages);
@@ -205,6 +205,23 @@ const NewGalleryPage: React.FC = () => {
     setShowAuthModal(false);
   };
 
+  // Handle ESC key to close fullscreen modal
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && fullscreenImage) {
+        setFullscreenImage(null);
+      }
+    };
+
+    if (fullscreenImage) {
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [fullscreenImage]);
+
   const currentPage = getCurrentPage();
 
   if (!user) {
@@ -261,20 +278,25 @@ const NewGalleryPage: React.FC = () => {
           </div>
 
           <div className="gallery-actions">
-            <Button variant="secondary" size="small" onClick={handleSelectAll}>
-              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
-            </Button>
-
             {selectedImages.size > 0 && (
               <>
-                <Button variant="primary" size="small" onClick={handleBatchDownload}>
+                <Button variant="secondary" size="medium" onClick={handleBatchDownload}>
                   Download Selected ({selectedImages.size})
                 </Button>
-                <Button variant="danger" size="small" onClick={handleBatchDelete}>
+                <Button variant="danger" size="medium" onClick={handleBatchDelete}>
                   Delete Selected ({selectedImages.size})
                 </Button>
               </>
             )}
+
+            <Button
+              variant="secondary"
+              size="medium"
+              onClick={handleSelectAll}
+              style={{ minWidth: '120px' }}
+            >
+              {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
+            </Button>
 
             <Button variant="primary" onClick={() => navigate('/generate')}>
               Generate New Image
@@ -302,6 +324,7 @@ const NewGalleryPage: React.FC = () => {
               <div
                 key={image.id}
                 className={`image-card ${selectedImages.has(image.id) ? 'selected' : ''}`}
+                onClick={() => handleImageSelect(image.id)}
               >
                 {/* Image Selection Checkbox */}
                 <div className="image-checkbox">
@@ -309,31 +332,45 @@ const NewGalleryPage: React.FC = () => {
                     type="checkbox"
                     checked={selectedImages.has(image.id)}
                     onChange={() => handleImageSelect(image.id)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
 
                 <div className="image-preview">
-                  <img
-                    src={image.imageUrl}
-                    alt={`${image.crewName}`}
-                    onClick={() => setFullscreenImage(image)}
-                  />
+                  <img src={image.imageUrl} alt={`${image.crewName}`} />
                 </div>
 
                 <div className="image-info">
                   <div className="image-title">{image.crewName}</div>
                   <div className="image-actions">
                     <Button
+                      variant="secondary"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(image);
+                      }}
+                    >
+                      Download
+                    </Button>
+                    <Button
                       variant="primary"
                       size="small"
-                      onClick={() => setFullscreenImage(image)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFullscreenImage(image);
+                      }}
                     >
                       Preview
                     </Button>
-                    <Button variant="secondary" size="small" onClick={() => handleDownload(image)}>
-                      Download
-                    </Button>
-                    <Button variant="danger" size="small" onClick={() => handleDeleteImage(image)}>
+                    <Button
+                      variant="danger"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteImage(image);
+                      }}
+                    >
                       Delete
                     </Button>
                   </div>
