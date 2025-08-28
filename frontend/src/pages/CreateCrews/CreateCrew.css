@@ -386,11 +386,15 @@
 }
 
 .form-group select option[value=""] {
-  color: var(--gray-400);
+  color: var(--gray-500);
 }
 
 .form-group select:invalid {
-  color: var(--gray-400);
+  color: var(--gray-500);
+}
+
+.form-group input::placeholder {
+  color: var(--gray-500);
 }
 
 .form-group input {

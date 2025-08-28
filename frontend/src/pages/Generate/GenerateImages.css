@@ -131,10 +131,32 @@
 }
 
 .crew-selection-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 2rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-400) transparent;
+}
+
+.crew-selection-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.crew-selection-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.crew-selection-grid::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 3px;
+}
+
+.crew-selection-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
 }
 
 .crew-selection-card {
