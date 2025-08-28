@@ -198,7 +198,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
               )}
             </div>
           ) : (
-            <Button variant="primary" size="small" onClick={onAuthModalOpen}>
+            <Button variant="primary" size="medium" onClick={onAuthModalOpen}>
               Sign In
             </Button>
           )}
