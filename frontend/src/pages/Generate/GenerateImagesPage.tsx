@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from '../../components/Navigation/Navigation';
 import AuthModal from '../../components/Auth/AuthModal';
 import StepIndicator, { Step } from '../../components/StepIndicator';
+import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
@@ -453,9 +454,9 @@ const GenerateImagesPage: React.FC = () => {
           <div className="empty-state">
             <h2>Generate Images</h2>
             <p>Sign in to create professional crew images</p>
-            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
+            <Button variant="primary" onClick={() => setShowAuthModal(true)}>
               Sign In to Generate Images
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -535,13 +536,13 @@ const GenerateImagesPage: React.FC = () => {
                           ? "You haven't created any crews yet."
                           : 'Try adjusting your search terms.'}
                       </p>
-                      <button
-                        className="btn btn-primary"
+                      <Button
+                        variant="primary"
                         onClick={() => navigate('/crews/create')}
                         style={{ marginTop: '1rem' }}
                       >
                         Create Your First Crew
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     getFilteredCrews().map((crew) => {
@@ -574,12 +575,12 @@ const GenerateImagesPage: React.FC = () => {
                 </div>
 
                 <div className="step-navigation">
-                  <button className="btn btn-secondary" disabled>
+                  <Button variant="secondary" disabled>
                     Previous
-                  </button>
-                  <button className="btn btn-primary" onClick={nextStep}>
+                  </Button>
+                  <Button variant="primary" onClick={nextStep}>
                     Next: Choose Template
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -659,12 +660,12 @@ const GenerateImagesPage: React.FC = () => {
                 </div>
 
                 <div className="step-navigation">
-                  <button className="btn btn-secondary" onClick={previousStep}>
+                  <Button variant="secondary" onClick={previousStep}>
                     Previous: Select Crew
-                  </button>
-                  <button className="btn btn-primary" onClick={nextStep}>
+                  </Button>
+                  <Button variant="primary" onClick={nextStep}>
                     Next: Generate Image
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -725,16 +726,17 @@ const GenerateImagesPage: React.FC = () => {
                 </div>
 
                 <div className="step-navigation">
-                  <button className="btn btn-secondary" onClick={previousStep}>
+                  <Button variant="secondary" onClick={previousStep}>
                     Previous: Template & Colors
-                  </button>
-                  <button
-                    className={`btn btn-primary btn-generate ${generating ? 'loading' : ''}`}
+                  </Button>
+                  <Button
+                    variant="primary"
                     onClick={generateImages}
+                    loading={generating}
                     disabled={generating}
                   >
-                    {generating ? 'Generating...' : 'Generate Images'}
-                  </button>
+                    Generate Images
+                  </Button>
                 </div>
               </div>
             </div>
@@ -763,8 +765,8 @@ const GenerateImagesPage: React.FC = () => {
 
                 <div className="success-actions">
                   {generationStatus.images && generationStatus.images.length > 0 && (
-                    <button
-                      className="btn btn-primary"
+                    <Button
+                      variant="primary"
                       onClick={() => {
                         const link = document.createElement('a');
                         link.href = generationStatus.images![0].url;
@@ -775,14 +777,14 @@ const GenerateImagesPage: React.FC = () => {
                       }}
                     >
                       Download Image
-                    </button>
+                    </Button>
                   )}
-                  <button className="btn btn-secondary" onClick={resetGenerator}>
+                  <Button variant="secondary" onClick={resetGenerator}>
                     Generate Another
-                  </button>
-                  <button className="btn btn-primary" onClick={() => navigate('/gallery')}>
+                  </Button>
+                  <Button variant="primary" onClick={() => navigate('/gallery')}>
                     View in Gallery
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

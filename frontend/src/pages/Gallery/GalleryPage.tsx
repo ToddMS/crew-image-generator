@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
+import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
@@ -214,9 +215,9 @@ const NewGalleryPage: React.FC = () => {
           <div className="empty-state">
             <h2>Image Gallery</h2>
             <p>Sign in to view and manage your generated crew images</p>
-            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
+            <Button variant="primary" onClick={() => setShowAuthModal(true)}>
               Sign In to View Gallery
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -260,24 +261,24 @@ const NewGalleryPage: React.FC = () => {
           </div>
 
           <div className="gallery-actions">
-            <button className="btn btn-secondary btn-sm" onClick={handleSelectAll}>
+            <Button variant="secondary" size="small" onClick={handleSelectAll}>
               {selectedImages.size === filteredImages.length ? 'Deselect All' : 'Select All'}
-            </button>
+            </Button>
 
             {selectedImages.size > 0 && (
               <>
-                <button className="btn btn-primary btn-sm" onClick={handleBatchDownload}>
+                <Button variant="primary" size="small" onClick={handleBatchDownload}>
                   Download Selected ({selectedImages.size})
-                </button>
-                <button className="btn btn-danger btn-sm" onClick={handleBatchDelete}>
+                </Button>
+                <Button variant="danger" size="small" onClick={handleBatchDelete}>
                   Delete Selected ({selectedImages.size})
-                </button>
+                </Button>
               </>
             )}
 
-            <button className="btn btn-primary" onClick={() => navigate('/generate')}>
+            <Button variant="primary" onClick={() => navigate('/generate')}>
               Generate New Image
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -291,9 +292,9 @@ const NewGalleryPage: React.FC = () => {
             <div className="empty-state-icon">🎨</div>
             <h2>No Images Yet</h2>
             <p>Start creating beautiful crew images by generating your first image</p>
-            <button className="btn btn-primary" onClick={() => navigate('/generate')}>
+            <Button variant="primary" onClick={() => navigate('/generate')}>
               🎨 Generate Your First Image
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="gallery-grid">
@@ -322,24 +323,19 @@ const NewGalleryPage: React.FC = () => {
                 <div className="image-info">
                   <div className="image-title">{image.crewName}</div>
                   <div className="image-actions">
-                    <button
-                      className="image-action-btn primary"
+                    <Button
+                      variant="primary"
+                      size="small"
                       onClick={() => setFullscreenImage(image)}
                     >
                       Preview
-                    </button>
-                    <button
-                      className="image-action-btn secondary"
-                      onClick={() => handleDownload(image)}
-                    >
+                    </Button>
+                    <Button variant="secondary" size="small" onClick={() => handleDownload(image)}>
                       Download
-                    </button>
-                    <button
-                      className="image-action-btn danger"
-                      onClick={() => handleDeleteImage(image)}
-                    >
+                    </Button>
+                    <Button variant="danger" size="small" onClick={() => handleDeleteImage(image)}>
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

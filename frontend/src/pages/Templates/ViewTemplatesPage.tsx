@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
+import Button from '../../components/Button';
 import { useNotification } from '../../context/NotificationContext';
 import { ClubPreset } from '../../types/club.types';
 import { ApiService } from '../../services/api.service';
@@ -232,14 +233,14 @@ const ViewTemplatesPage: React.FC = () => {
               <h1>Template Gallery</h1>
               <p>View, customize, and manage your templates</p>
             </div>
-            <button
-              className="btn btn-primary"
+            <Button
+              variant="primary"
               onClick={() => navigate('/templates/create')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
               <span>🎨</span>
               Create New Template
-            </button>
+            </Button>
           </div>
         </section>
 
@@ -257,8 +258,9 @@ const ViewTemplatesPage: React.FC = () => {
                   {template.icon}
                   {template.isCustom && (
                     <div className="template-actions">
-                      <button
-                        className="template-action-btn edit"
+                      <Button
+                        variant="secondary"
+                        size="small"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditTemplate(template.id);
@@ -266,9 +268,10 @@ const ViewTemplatesPage: React.FC = () => {
                         title="Edit Template"
                       >
                         ✏️
-                      </button>
-                      <button
-                        className="template-action-btn delete"
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="small"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowDeleteModal(template.id);
@@ -276,7 +279,7 @@ const ViewTemplatesPage: React.FC = () => {
                         title="Delete Template"
                       >
                         🗑️
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -304,12 +307,9 @@ const ViewTemplatesPage: React.FC = () => {
           {/* Club Presets Section */}
           <div className="form-section">
             <label className="form-label">Club Presets</label>
-            <button
-              className="btn btn-secondary club-presets-toggle"
-              onClick={handleToggleClubPresets}
-            >
+            <Button variant="secondary" onClick={handleToggleClubPresets}>
               🏛️ {showClubPresets ? 'Hide' : 'Use'} Club Presets
-            </button>
+            </Button>
 
             {showClubPresets && (
               <div className="club-presets-dropdown">
@@ -367,8 +367,8 @@ const ViewTemplatesPage: React.FC = () => {
           </div>
 
           <div className="btn-group">
-            <button
-              className="btn btn-secondary"
+            <Button
+              variant="secondary"
               onClick={() => {
                 setSelectedPresetId(null);
                 setSelectedColor('#2563eb');
@@ -376,10 +376,10 @@ const ViewTemplatesPage: React.FC = () => {
               }}
             >
               Reset Colors
-            </button>
-            <button className="btn btn-primary" onClick={handleUseTemplate}>
+            </Button>
+            <Button variant="primary" onClick={handleUseTemplate}>
               Use Template in Generate
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -391,15 +391,12 @@ const ViewTemplatesPage: React.FC = () => {
             <h3>Delete Template</h3>
             <p>Are you sure you want to delete this template? This action cannot be undone.</p>
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowDeleteModal(null)}>
+              <Button variant="secondary" onClick={() => setShowDeleteModal(null)}>
                 Cancel
-              </button>
-              <button
-                className="btn btn-danger"
-                onClick={() => handleDeleteTemplate(showDeleteModal)}
-              >
+              </Button>
+              <Button variant="danger" onClick={() => handleDeleteTemplate(showDeleteModal)}>
                 Delete Template
-              </button>
+              </Button>
             </div>
           </div>
         </div>

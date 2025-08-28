@@ -20,7 +20,7 @@ interface GoogleAccounts {
         logo_alignment?: string;
         width?: string | number;
         locale?: string;
-      }
+      },
     ) => void;
   };
 }

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/RowgramThemeContext';
+import Button from '../Button';
 import RowGramLogo from '../../assets/RowGramImage.svg';
 import './Navigation.css';
 
@@ -199,9 +200,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
               )}
             </div>
           ) : (
-            <button className="login-btn" onClick={onAuthModalOpen}>
+            <Button variant="primary" size="small" onClick={onAuthModalOpen}>
               Sign In
-            </button>
+            </Button>
           )}
         </div>
       </div>

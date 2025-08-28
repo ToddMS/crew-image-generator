@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
+import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
@@ -895,23 +896,24 @@ const CreateCrewPage: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button className="btn btn-secondary" onClick={handleBack}>
+          <Button variant="secondary" onClick={handleBack}>
             ← {activeStep === 0 ? 'Dashboard' : 'Back'}
-          </button>
+          </Button>
 
           <div style={{ display: 'flex', gap: '1rem' }}>
             {activeStep === steps.length - 1 ? (
-              <button
-                className={`btn btn-primary ${saving ? 'btn-loading' : ''}`}
+              <Button
+                variant="success"
                 onClick={handleSaveCrew}
+                loading={saving}
                 disabled={saving || !canProceedFromStep(activeStep) || !user}
                 title={!user ? 'Please sign in to save your crew' : ''}
               >
-                {saving ? 'Saving...' : editingCrewId ? 'Update Crew' : 'Save Crew'}
-              </button>
+                {editingCrewId ? 'Update Crew' : 'Save Crew'}
+              </Button>
             ) : (
-              <button
-                className="btn btn-primary"
+              <Button
+                variant="primary"
                 onClick={() => {
                   if (activeStep === 0) {
                     setShowValidation(true);
@@ -923,7 +925,7 @@ const CreateCrewPage: React.FC = () => {
                 disabled={!canProceedFromStep(activeStep)}
               >
                 Next Step →
-              </button>
+              </Button>
             )}
           </div>
         </div>

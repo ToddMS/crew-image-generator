@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
+import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ClubPreset } from '../../types/club.types';
@@ -275,9 +276,9 @@ const ClubPresetsPage: React.FC = () => {
           <div className="empty-state">
             <h2>Club Presets</h2>
             <p>Sign in to manage your club color presets</p>
-            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
+            <Button variant="primary" onClick={() => setShowAuthModal(true)}>
               Sign In to Manage Presets
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -305,9 +306,9 @@ const ClubPresetsPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="btn btn-primary" onClick={startNewPreset} disabled={isCreatingNew}>
+              <Button variant="primary" onClick={startNewPreset} disabled={isCreatingNew}>
                 + Add New
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -324,17 +325,17 @@ const ClubPresetsPage: React.FC = () => {
                 <>
                   <h3>No presets found</h3>
                   <p>No club presets match "{searchTerm}"</p>
-                  <button className="btn btn-secondary" onClick={() => setSearchTerm('')}>
+                  <Button variant="secondary" onClick={() => setSearchTerm('')}>
                     Clear Search
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
                   <h3>No Club Presets Yet</h3>
                   <p>Create your first club preset to get started</p>
-                  <button className="btn btn-primary" onClick={openAddPresetModal}>
+                  <Button variant="primary" onClick={openAddPresetModal}>
                     Create First Preset
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
@@ -384,12 +385,12 @@ const ClubPresetsPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="preset-actions">
-                    <button className="preset-btn" onClick={cancelNewPreset}>
+                    <Button variant="secondary" size="small" onClick={cancelNewPreset}>
                       Cancel
-                    </button>
-                    <button className="preset-btn primary" onClick={saveNewPreset}>
+                    </Button>
+                    <Button variant="primary" size="small" onClick={saveNewPreset}>
                       Save
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -492,30 +493,37 @@ const ClubPresetsPage: React.FC = () => {
                     <div className="preset-actions">
                       {isEditing ? (
                         <>
-                          <button
-                            className="preset-btn"
+                          <Button
+                            variant="secondary"
+                            size="small"
                             onClick={() => handleCancelEdit(preset.id)}
                           >
                             Cancel
-                          </button>
-                          <button
-                            className="preset-btn primary"
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="small"
                             onClick={() => handleSaveEdit(preset)}
                           >
                             Save
-                          </button>
+                          </Button>
                         </>
                       ) : (
                         <>
-                          <button className="preset-btn" onClick={() => handleEdit(preset)}>
+                          <Button
+                            variant="secondary"
+                            size="small"
+                            onClick={() => handleEdit(preset)}
+                          >
                             Edit
-                          </button>
-                          <button
-                            className="preset-btn danger"
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="small"
                             onClick={() => setShowDeleteConfirm(preset.id)}
                           >
                             Delete
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -602,12 +610,12 @@ const ClubPresetsPage: React.FC = () => {
               </div>
 
               <div className="btn-group">
-                <button type="button" className="btn btn-secondary" onClick={closeAddPresetModal}>
+                <Button variant="secondary" onClick={closeAddPresetModal}>
                   Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
+                </Button>
+                <Button variant="success" type="submit">
                   Save Preset
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -621,12 +629,12 @@ const ClubPresetsPage: React.FC = () => {
             <h3>Delete Club Preset</h3>
             <p>Are you sure you want to delete this club preset? This action cannot be undone.</p>
             <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowDeleteConfirm(null)}>
+              <Button variant="secondary" onClick={() => setShowDeleteConfirm(null)}>
                 Cancel
-              </button>
-              <button className="btn btn-danger" onClick={() => handleDelete(showDeleteConfirm)}>
+              </Button>
+              <Button variant="danger" onClick={() => handleDelete(showDeleteConfirm)}>
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </div>

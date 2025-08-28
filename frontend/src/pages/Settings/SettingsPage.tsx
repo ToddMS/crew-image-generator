@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
+import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useThemeMode } from '../../context/RowgramThemeContext';
 import { useNotification } from '../../context/NotificationContext';
-import ClubPresetsComponent from '../../components/ClubPresets/ClubPresetsComponent';
 import './Settings.css';
 
 interface UserPreferences {
@@ -109,9 +109,9 @@ const NewSettingsPage: React.FC = () => {
             <div className="empty-state-icon">⚙️</div>
             <h2>Settings</h2>
             <p>Sign in to manage your account settings and preferences</p>
-            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
+            <Button variant="primary" onClick={() => setShowAuthModal(true)}>
               Sign In to Access Settings
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -173,33 +173,15 @@ const NewSettingsPage: React.FC = () => {
                 </div>
               </div>
               <div className="form-actions">
-                <button
-                  className={`btn btn-primary ${saving === 'profile' ? 'loading' : ''}`}
+                <Button
+                  variant="primary"
                   onClick={handleSaveProfile}
+                  loading={saving === 'profile'}
                   disabled={saving === 'profile'}
                 >
-                  {saving === 'profile' ? 'Saving...' : '💾 Save Profile'}
-                </button>
+                  💾 Save Profile
+                </Button>
               </div>
-            </div>
-          </div>
-
-          {/* Club Presets */}
-          <div className="settings-section">
-            <div
-              className={`section-header ${expandedSections.has('club') ? 'expanded' : ''}`}
-              onClick={() => toggleSection('club')}
-            >
-              <div className="section-title">
-                <div className="section-title-content">
-                  <span className="section-icon">🏛️</span>
-                  Club Presets
-                </div>
-                <span className="expand-icon">▼</span>
-              </div>
-            </div>
-            <div className={`section-content ${expandedSections.has('club') ? 'expanded' : ''}`}>
-              <ClubPresetsComponent showManagement={true} />
             </div>
           </div>
 
@@ -267,13 +249,14 @@ const NewSettingsPage: React.FC = () => {
               </div>
 
               <div className="form-actions">
-                <button
-                  className={`btn btn-primary ${saving === 'preferences' ? 'loading' : ''}`}
+                <Button
+                  variant="primary"
                   onClick={handleSavePreferences}
+                  loading={saving === 'preferences'}
                   disabled={saving === 'preferences'}
                 >
-                  {saving === 'preferences' ? 'Saving...' : '💾 Save Preferences'}
-                </button>
+                  💾 Save Preferences
+                </Button>
               </div>
             </div>
           </div>
@@ -303,9 +286,9 @@ const NewSettingsPage: React.FC = () => {
                   <div className="action-description">
                     Download all your crews, templates, and generated images in a portable format.
                   </div>
-                  <button className="btn btn-secondary" onClick={handleExportData}>
+                  <Button variant="secondary" onClick={handleExportData}>
                     Export My Data
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="action-card danger">
@@ -313,9 +296,9 @@ const NewSettingsPage: React.FC = () => {
                   <div className="action-description">
                     Permanently delete your account and all associated data. This cannot be undone.
                   </div>
-                  <button className="btn btn-danger" onClick={handleDeleteAccount}>
+                  <Button variant="danger" onClick={handleDeleteAccount}>
                     Delete Account
-                  </button>
+                  </Button>
                 </div>
               </div>
 

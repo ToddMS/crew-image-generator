@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AuthModal from '../../components/Auth/AuthModal';
 import Navigation from '../../components/Navigation/Navigation';
+import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { ApiService } from '../../services/api.service';
@@ -264,9 +265,9 @@ const MyCrewsPage: React.FC = () => {
           <div className="empty-state">
             <h2>My Crews</h2>
             <p>Sign in to view and manage your saved crew lineups</p>
-            <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
+            <Button variant="primary" onClick={() => setShowAuthModal(true)}>
               Sign In to View Crews
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -301,9 +302,9 @@ const MyCrewsPage: React.FC = () => {
             </button>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <button className="btn btn-primary" onClick={loadCrews}>
+            <Button variant="primary" onClick={loadCrews}>
               Retry Loading Crews
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -321,9 +322,9 @@ const MyCrewsPage: React.FC = () => {
             <p>
               Create your first crew lineup to get started with generating beautiful rowing images
             </p>
-            <button className="btn btn-primary" onClick={() => navigate('/crews/create')}>
+            <Button variant="primary" onClick={() => navigate('/crews/create')}>
               👥 Create Your First Crew
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -370,17 +371,19 @@ const MyCrewsPage: React.FC = () => {
             <div className="section-header-right">
               {selectedCrews.size > 0 && (
                 <div className="selection-actions-inline">
-                  <button
-                    className="btn btn-text-small"
+                  <Button
+                    variant="secondary"
+                    size="small"
                     onClick={() => setSelectedCrews(new Set())}
                   >
                     Clear ({selectedCrews.size})
-                  </button>
-                  <button className="btn btn-outline-danger-small" onClick={handleBulkDelete}>
+                  </Button>
+                  <Button variant="danger" size="small" onClick={handleBulkDelete}>
                     Delete
-                  </button>
-                  <button
-                    className="btn btn-primary-small"
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="small"
                     onClick={() => {
                       navigate('/generate', {
                         state: {
@@ -390,7 +393,7 @@ const MyCrewsPage: React.FC = () => {
                     }}
                   >
                     Generate
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -511,8 +514,9 @@ const MyCrewsPage: React.FC = () => {
 
                     <div className="crew-actions">
                       <div className="crew-actions-left">
-                        <button
-                          className="crew-action-btn primary"
+                        <Button
+                          variant="primary"
+                          size="small"
                           onClick={(e) => {
                             e.stopPropagation();
                             const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
@@ -520,11 +524,12 @@ const MyCrewsPage: React.FC = () => {
                           }}
                         >
                           Edit
-                        </button>
+                        </Button>
                       </div>
                       <div className="crew-actions-right">
-                        <button
-                          className="crew-action-btn secondary"
+                        <Button
+                          variant="secondary"
+                          size="small"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate('/generate', {
@@ -533,9 +538,10 @@ const MyCrewsPage: React.FC = () => {
                           }}
                         >
                           Generate
-                        </button>
-                        <button
-                          className="crew-action-btn danger"
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="small"
                           onClick={(e) => {
                             e.stopPropagation();
                             const originalIndex = savedCrews.findIndex((c) => c.id === crew.id);
@@ -543,7 +549,7 @@ const MyCrewsPage: React.FC = () => {
                           }}
                         >
                           Delete
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
