@@ -76,11 +76,6 @@ const GenerateImagesPage: React.FC = () => {
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Preview panel states
-  const [previewCollapsed, setPreviewCollapsed] = useState(false);
-  const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const getCurrentPage = () => 'generate';
 
@@ -428,70 +423,6 @@ const GenerateImagesPage: React.FC = () => {
     setSelectedFormats(['instagram_post']);
   };
 
-  // Preview panel drag handlers
-  const handlePreviewMouseDown = (e: React.MouseEvent) => {
-    if (previewCollapsed) return;
-
-    const rect = (e.target as HTMLElement).closest('.preview-panel')?.getBoundingClientRect();
-    if (!rect) return;
-
-    setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
-
-  const handlePreviewMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-
-    const newX = e.clientX - dragOffset.x;
-    const newY = e.clientY - dragOffset.y;
-
-    // Keep panel within viewport bounds
-    const panelWidth = previewCollapsed ? 280 : 320;
-    const panelHeight = previewCollapsed ? 32 : 400;
-    const maxX = window.innerWidth - panelWidth;
-    const maxY = window.innerHeight - panelHeight;
-
-    setPreviewPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY)),
-    });
-  };
-
-  const handlePreviewMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handlePreviewMouseMove);
-      document.addEventListener('mouseup', handlePreviewMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handlePreviewMouseMove);
-        document.removeEventListener('mouseup', handlePreviewMouseUp);
-      };
-    }
-  }, [isDragging, dragOffset, handlePreviewMouseMove]);
-
-  const togglePreviewCollapsed = () => {
-    const newCollapsedState = !previewCollapsed;
-    setPreviewCollapsed(newCollapsedState);
-
-    const currentX = previewPosition.x || 0;
-    const currentY = previewPosition.y || 0;
-
-    const panelWidth = newCollapsedState ? 280 : 320;
-    const panelHeight = newCollapsedState ? 32 : 400;
-    const maxX = window.innerWidth - panelWidth;
-    const maxY = window.innerHeight - panelHeight;
-
-    setPreviewPosition({
-      x: Math.max(0, Math.min(currentX, maxX)),
-      y: Math.max(0, Math.min(currentY, maxY)),
-    });
-  };
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
@@ -795,52 +726,47 @@ const GenerateImagesPage: React.FC = () => {
           {currentStep === 4 && (
             <div className="generate-step active">
               <div className="step-content">
-                <div className="generation-options">
-                  <h3>Output Formats</h3>
-                  {errors.formats && <div className="error-message">{errors.formats}</div>}
-
-                  <div className="format-options">
-                    {formatOptions.map((format) => (
-                      <label key={format.id} className="format-option">
-                        <input
-                          type="checkbox"
-                          checked={selectedFormats.includes(format.id)}
-                          onChange={() => handleFormatToggle(format.id)}
-                        />
-                        <div className="format-info">
-                          <div className="format-name">{format.name}</div>
-                          <div className="format-size">{format.size}</div>
-                        </div>
-                      </label>
-                    ))}
+                <div className="generate-preview-centered">
+                  <div className="preview-header">
+                    <h3>Live Preview</h3>
+                    <div className="preview-format">1080×1080px</div>
                   </div>
-                </div>
-
-                <div className="generation-summary">
-                  <h3>Generation Summary</h3>
-                  <div className="summary-card">
-                    <div className="summary-row">
-                      <span className="summary-label">Crews:</span>
-                      <span className="summary-value">
-                        {selectedCrews.length === 1
-                          ? selectedCrews[0].name
-                          : `${selectedCrews.length} crews selected`}
-                      </span>
-                    </div>
-                    <div className="summary-row">
-                      <span className="summary-label">Template:</span>
-                      <span className="summary-value">{selectedTemplate?.name}</span>
-                    </div>
-                    <div className="summary-row">
-                      <span className="summary-label">Club Colors:</span>
-                      <span className="summary-value">{selectedPreset?.club_name}</span>
-                    </div>
-                    <div className="summary-row">
-                      <span className="summary-label">Formats:</span>
-                      <span className="summary-value">
-                        {selectedFormats.length} format{selectedFormats.length !== 1 ? 's' : ''}{' '}
-                        selected
-                      </span>
+                  <div className="preview-container">
+                    <div
+                      className="preview-image"
+                      style={{
+                        background: selectedPreset
+                          ? `linear-gradient(135deg, ${selectedPreset.primary_color}, ${selectedPreset.secondary_color})`
+                          : 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                      }}
+                    >
+                      <div className="preview-content">
+                        <div className="preview-header-section">
+                          <div className="preview-club-name">
+                            {selectedCrews[0]?.clubName || 'Club Name'}
+                          </div>
+                          <div className="preview-crew-name">
+                            {selectedCrews[0]?.name || 'Crew Name'}
+                          </div>
+                        </div>
+                        <div className="preview-roster">
+                          {selectedCrews[0]?.crewNames.map((name, index) => (
+                            <div key={index} className="preview-member">
+                              {index + 1}. {name}
+                            </div>
+                          )) || (
+                            <>
+                              <div className="preview-member">1. Member Name</div>
+                              <div className="preview-member">2. Member Name</div>
+                              <div className="preview-member">3. Member Name</div>
+                              <div className="preview-member">4. Member Name</div>
+                            </>
+                          )}
+                          {selectedCrews[0]?.coxName && (
+                            <div className="preview-cox">Cox: {selectedCrews[0].coxName}</div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -911,73 +837,6 @@ const GenerateImagesPage: React.FC = () => {
           )}
         </div>
 
-        {/* Floating Preview Panel */}
-        {currentStep > 1 && currentStep < 5 && (
-          <div
-            className={`preview-panel ${previewCollapsed ? 'collapsed' : ''} ${isDragging ? 'dragging' : ''}`}
-            style={{
-              left: previewPosition.x || undefined,
-              top: previewPosition.y || undefined,
-              right: previewPosition.x ? 'auto' : '2rem',
-              transform: previewPosition.x || previewPosition.y ? 'none' : 'translateY(-50%)',
-            }}
-            onMouseDown={handlePreviewMouseDown}
-          >
-            <div className="preview-drag-handle" />
-            {previewCollapsed && <div className="preview-collapsed-title">Live Preview</div>}
-            <button
-              className="preview-toggle"
-              onClick={togglePreviewCollapsed}
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              {previewCollapsed ? '+' : '−'}
-            </button>
-            <div className="preview-content-wrapper">
-              <div className="preview-header">
-                <h3>Live Preview</h3>
-                <div className="preview-format">1080×1080px</div>
-              </div>
-              <div className="preview-container">
-                <div
-                  className="preview-image"
-                  style={{
-                    background: selectedPreset
-                      ? `linear-gradient(135deg, ${selectedPreset.primary_color}, ${selectedPreset.secondary_color})`
-                      : 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
-                  }}
-                >
-                  <div className="preview-content">
-                    <div className="preview-header-section">
-                      <div className="preview-club-name">
-                        {selectedCrews[0]?.clubName || 'Club Name'}
-                      </div>
-                      <div className="preview-crew-name">
-                        {selectedCrews[0]?.name || 'Crew Name'}
-                      </div>
-                    </div>
-                    <div className="preview-roster">
-                      {selectedCrews[0]?.crewNames.map((name, index) => (
-                        <div key={index} className="preview-member">
-                          {index + 1}. {name}
-                        </div>
-                      )) || (
-                        <>
-                          <div className="preview-member">1. Member Name</div>
-                          <div className="preview-member">2. Member Name</div>
-                          <div className="preview-member">3. Member Name</div>
-                          <div className="preview-member">4. Member Name</div>
-                        </>
-                      )}
-                      {selectedCrews[0]?.coxName && (
-                        <div className="preview-cox">Cox: {selectedCrews[0].coxName}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <AuthModal

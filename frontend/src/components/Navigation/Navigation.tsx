@@ -185,7 +185,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onAuthModalOpen })
                     }}
                   >
                     {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                    <span className="dropdown-icon">{isDarkMode ? '☀️' : '🌙'}</span>
                   </button>
                   <button
                     className="dropdown-item logout-item"

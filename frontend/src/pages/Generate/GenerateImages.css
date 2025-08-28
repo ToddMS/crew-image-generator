@@ -861,9 +861,24 @@
   font-weight: 600;
 }
 
-/* Step 3 Styles */
+/* Step 4 Layout */
+.generate-preview-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem auto;
+  max-width: 500px;
+}
+
+.generate-preview-centered .preview-container {
+  width: 400px;
+  height: 400px;
+  aspect-ratio: 1;
+}
+
 .generation-options {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .format-options {
