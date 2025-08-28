@@ -56,8 +56,14 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .step-content {
@@ -77,15 +83,17 @@
 .step-header-with-actions {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
   width: 100%;
+  gap: 1rem;
 }
 
 .crew-selection-actions {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
+  align-items: center;
 }
 
 .btn-sm {
@@ -110,9 +118,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: auto;
-  margin-right: 0;
-  justify-self: flex-end;
+  flex-shrink: 0;
 }
 
 .crew-search-input {
@@ -120,7 +126,7 @@
   border: 2px solid var(--gray-300);
   border-radius: var(--radius);
   font-size: 0.875rem;
-  width: 280px;
+  width: 240px;
   transition: var(--transition);
 }
 
@@ -137,39 +143,70 @@
   margin-bottom: 2rem;
   max-height: 400px;
   overflow-y: auto;
-  padding-right: 0.5rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  background: var(--gray-50);
+  position: relative;
   scrollbar-width: thin;
-  scrollbar-color: var(--gray-400) transparent;
+  scrollbar-color: var(--primary) var(--gray-200);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.crew-selection-grid::before {
+  content: '↕ Scroll to see more crews';
+  position: absolute;
+  top: -1.5rem;
+  right: 0;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  background: var(--white);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.crew-selection-grid[data-scrollable='true']::before {
+  opacity: 1;
 }
 
 .crew-selection-grid::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .crew-selection-grid::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--gray-200);
+  border-radius: var(--radius-lg);
 }
 
 .crew-selection-grid::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: 3px;
+  background: var(--primary);
+  border-radius: 4px;
+  border: 1px solid var(--white);
 }
 
 .crew-selection-grid::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
+  background: var(--primary-dark);
 }
 
 .crew-selection-card {
   border: 2px solid var(--gray-200);
   border-radius: var(--radius-lg);
   padding: 1rem;
-  width: 280px;
   cursor: pointer;
   transition: var(--transition);
   background: var(--white);
   min-height: 120px;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .crew-selection-card:hover {
@@ -216,7 +253,7 @@
   margin-top: 2px;
 }
 
-.selection-checkbox input[type="checkbox"] {
+.selection-checkbox input[type='checkbox'] {
   width: 18px;
   height: 18px;
   accent-color: var(--primary);
@@ -637,7 +674,7 @@
   background: var(--primary-light);
 }
 
-.format-option input[type="checkbox"] {
+.format-option input[type='checkbox'] {
   width: 18px;
   height: 18px;
   accent-color: var(--primary);
@@ -812,8 +849,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-state-icon {
@@ -850,32 +891,32 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .preview-panel {
     position: static;
     order: -1;
   }
-  
+
   .progress-steps {
     padding: 0 1rem;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  
+
   .progress-line {
     display: none;
   }
-  
+
   .step-number {
     width: 32px;
     height: 32px;
     font-size: 0.875rem;
   }
-  
+
   .step-label {
     font-size: 0.75rem;
   }
-  
+
   .crew-selection-grid {
     grid-template-columns: 1fr;
   }
@@ -883,7 +924,7 @@
   .template-selection-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .preset-selection-grid {
     grid-template-columns: repeat(2, 1fr);
   }
