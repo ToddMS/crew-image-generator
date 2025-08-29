@@ -317,13 +317,12 @@ const MyCrewsPage: React.FC = () => {
         <Navigation currentPage={currentPage} onAuthModalOpen={() => setShowAuthModal(true)} />
         <div className="container">
           <div className="empty-state">
-            <div className="empty-state-icon">🚣</div>
             <h2>No Crews Yet</h2>
             <p>
               Create your first crew lineup to get started with generating beautiful rowing images
             </p>
             <Button variant="primary" onClick={() => navigate('/crews/create')}>
-              👥 Create Your First Crew
+              Create Your First Crew
             </Button>
           </div>
         </div>

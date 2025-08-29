@@ -514,7 +514,6 @@ const GenerateImagesPage: React.FC = () => {
                         minHeight: '300px',
                       }}
                     >
-                      <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🚣</div>
                       <h3>{crews.length === 0 ? 'No Crews Found' : 'No Matching Crews'}</h3>
                       <p>
                         {crews.length === 0

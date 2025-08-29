@@ -311,7 +311,6 @@ const NewGalleryPage: React.FC = () => {
         {/* Gallery Content */}
         {filteredImages.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🎨</div>
             <h2>No Images Yet</h2>
             <p>Start creating beautiful crew images by generating your first image</p>
             <Button variant="primary" onClick={() => navigate('/generate')}>
