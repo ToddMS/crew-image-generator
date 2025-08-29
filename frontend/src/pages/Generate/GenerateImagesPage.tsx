@@ -759,8 +759,6 @@ const GenerateImagesPage: React.FC = () => {
           {currentStep === 5 && generationStatus && (
             <div className="generate-step active">
               <div className="step-content text-center">
-                <div className="success-icon">✅</div>
-                <h2>Images Generated Successfully!</h2>
                 <p>Your crew images have been created and saved to your gallery</p>
 
                 <div className="success-summary">
