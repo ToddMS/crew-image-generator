@@ -41,6 +41,7 @@ declare global {
           initialize: (config: GoogleInitializeConfig) => void;
           prompt: (callback?: (notification: GooglePromptNotification) => void) => void;
           renderButton: (element: HTMLElement, config: GoogleRenderButtonConfig) => void;
+          disableAutoSelect: () => void;
         };
       };
     };
@@ -99,46 +100,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         client_id: clientId,
         callback: handleGoogleCredentialResponse,
         auto_select: false,
-        ux_mode: 'popup',
         cancel_on_tap_outside: true,
       });
 
-      console.log('Using alternative approach - renderButton...');
-      // Create a temporary div to render the Google button
-      const tempDiv = document.createElement('div');
-      tempDiv.id = 'temp-google-signin';
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.top = '-9999px';
-      tempDiv.style.left = '-9999px';
-      document.body.appendChild(tempDiv);
-
-      // Render the Google button in the hidden div
-      window.google.accounts.id.renderButton(tempDiv, {
-        theme: 'outline',
-        size: 'large',
-        width: 250,
-        text: 'signin_with',
-        shape: 'rectangular',
-        logo_alignment: 'left',
-      });
-
-      // Auto-click the rendered button
-      setTimeout(() => {
-        const googleButton = tempDiv.querySelector('div[role="button"]') as HTMLElement;
-        if (googleButton) {
-          console.log('Auto-clicking Google button...');
-          googleButton.click();
-        } else {
-          console.error('Could not find Google button to click');
-          setError('Failed to initialize Google Sign-In. Please try email login.');
-        }
-        // Clean up
-        setTimeout(() => {
-          if (document.body.contains(tempDiv)) {
-            document.body.removeChild(tempDiv);
+      console.log('Triggering Google Sign-In popup...');
+      // Use the prompt method to trigger the sign-in
+      window.google.accounts.id.prompt((notification) => {
+        console.log('Google prompt notification:', notification);
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.log('Google prompt not displayed, using disableAutoSelect...');
+          if (window.google?.accounts?.id?.disableAutoSelect) {
+            window.google.accounts.id.disableAutoSelect();
           }
-        }, 1000);
-      }, 500);
+        }
+      });
     } catch (error) {
       console.error('Error initializing Google Sign-In:', error);
       setError('Failed to initialize Google Sign-In. Please try again.');
@@ -299,6 +274,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="auth-input"
+              autoComplete="current-password"
             />
 
             <Button
