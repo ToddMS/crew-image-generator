@@ -755,7 +755,6 @@ const GenerateImagesPage: React.FC = () => {
             </div>
           )}
 
-          {/* Success State */}
           {currentStep === 5 && generationStatus && (
             <div className="generate-step active">
               <div className="step-content text-center">
