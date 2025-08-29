@@ -58,7 +58,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         await login(response.credential);
         onSuccess?.();
         onClose();
-      } catch (error) {
+      } catch {
         setError('Google sign-in failed. Please try again.');
       } finally {
         setLoading(false);
@@ -123,7 +123,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         if (googleButton) {
           googleButton.click();
         } else {
-          setError('Failed to trigger Google Sign-In.');
+          // Fallback: Try to find any clickable element in the rendered button
+          const anyButton = hiddenDiv.querySelector(
+            '[role="button"], button, div[jsname]',
+          ) as HTMLElement;
+          if (anyButton) {
+            anyButton.click();
+          } else {
+            setError('Google Sign-In is temporarily unavailable. Please use email login.');
+          }
         }
 
         setTimeout(() => {
@@ -131,8 +139,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
             document.body.removeChild(hiddenDiv);
           }
         }, 1000);
-      }, 500);
-    } catch (error) {
+      }, 1000);
+    } catch {
       setError('Failed to initialize Google Sign-In.');
     }
   }, [handleGoogleCredentialResponse, isSignUp]);
@@ -256,6 +264,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="auth-input"
+              autoComplete="username"
             />
 
             <input
