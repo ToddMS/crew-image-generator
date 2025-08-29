@@ -118,28 +118,52 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         text: isSignUp ? 'signup_with' : 'signin_with',
       });
 
-      setTimeout(() => {
-        const googleButton = hiddenDiv.querySelector('div[role="button"]') as HTMLElement;
-        if (googleButton) {
-          googleButton.click();
-        } else {
-          // Fallback: Try to find any clickable element in the rendered button
-          const anyButton = hiddenDiv.querySelector(
-            '[role="button"], button, div[jsname]',
-          ) as HTMLElement;
-          if (anyButton) {
-            anyButton.click();
-          } else {
-            setError('Google Sign-In is temporarily unavailable. Please use email login.');
+      // Try multiple times with increasing delays
+      const tryClickButton = (attempt: number = 1) => {
+        if (attempt > 3) {
+          setError('Google Sign-In is temporarily unavailable. Please use email login.');
+          setTimeout(() => {
+            if (document.body.contains(hiddenDiv)) {
+              document.body.removeChild(hiddenDiv);
+            }
+          }, 1000);
+          return;
+        }
+
+        const selectors = [
+          'div[role="button"]',
+          '[role="button"]',
+          'button',
+          'div[jsname]',
+          'div[data-idom-class*="button"]',
+          '.VfPpkd-LgbsSe', // Google's button class
+          'iframe', // Sometimes button is in iframe
+        ];
+
+        let buttonFound = false;
+
+        for (const selector of selectors) {
+          const element = hiddenDiv.querySelector(selector) as HTMLElement;
+          if (element && (element.offsetWidth > 0 || element.offsetHeight > 0)) {
+            element.click();
+            buttonFound = true;
+            break;
           }
         }
 
-        setTimeout(() => {
-          if (document.body.contains(hiddenDiv)) {
-            document.body.removeChild(hiddenDiv);
-          }
-        }, 1000);
-      }, 1000);
+        if (buttonFound) {
+          setTimeout(() => {
+            if (document.body.contains(hiddenDiv)) {
+              document.body.removeChild(hiddenDiv);
+            }
+          }, 1000);
+        } else {
+          // Try again after longer delay
+          setTimeout(() => tryClickButton(attempt + 1), 500 * attempt);
+        }
+      };
+
+      setTimeout(() => tryClickButton(), 1000);
     } catch {
       setError('Failed to initialize Google Sign-In.');
     }
