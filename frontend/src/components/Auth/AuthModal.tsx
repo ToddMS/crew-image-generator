@@ -89,7 +89,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         hasGoogle: !!window.google,
         hasClientId: !!clientId,
       });
-      setError('Google Sign-In is not available. Please try email login.');
+      setError('Failed to initialize Google Sign-In. Please try email login.');
       return;
     }
 
