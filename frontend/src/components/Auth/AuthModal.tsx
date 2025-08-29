@@ -8,20 +8,9 @@ interface GoogleCredentialResponse {
   credential: string;
 }
 
-interface GooglePromptNotification {
-  isNotDisplayed: () => boolean;
-  isSkippedMoment: () => boolean;
-  getDismissedReason: () => string;
-  getNotDisplayedReason: () => string;
-  getSkippedReason: () => string;
-}
-
 interface GoogleInitializeConfig {
   client_id: string;
   callback: (response: GoogleCredentialResponse) => void;
-  auto_select?: boolean;
-  cancel_on_tap_outside?: boolean;
-  ux_mode?: string;
 }
 
 interface GoogleRenderButtonConfig {
@@ -39,9 +28,7 @@ declare global {
       accounts: {
         id: {
           initialize: (config: GoogleInitializeConfig) => void;
-          prompt: (callback?: (notification: GooglePromptNotification) => void) => void;
           renderButton: (element: HTMLElement, config: GoogleRenderButtonConfig) => void;
-          disableAutoSelect: () => void;
         };
       };
     };
@@ -72,7 +59,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
         onSuccess?.();
         onClose();
       } catch (error) {
-        console.error('Google login failed:', error);
         setError('Google sign-in failed. Please try again.');
       } finally {
         setLoading(false);
@@ -81,70 +67,75 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     [login, onSuccess, onClose],
   );
 
-  const initializeGoogleSignIn = useCallback(() => {
+  const handleGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    console.log('Initializing Google Sign-In with clientId:', clientId);
 
-    if (!window.google || !clientId) {
-      console.error('Google Sign-In not available:', {
-        hasGoogle: !!window.google,
-        hasClientId: !!clientId,
-      });
-      setError('Failed to initialize Google Sign-In. Please try email login.');
+    if (!clientId) {
+      setError('Google Sign-In is not configured.');
       return;
     }
 
-    try {
-      console.log('Calling google.accounts.id.initialize...');
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleCredentialResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-
-      console.log('Triggering Google Sign-In popup...');
-      // Use the prompt method to trigger the sign-in
-      window.google.accounts.id.prompt((notification) => {
-        console.log('Google prompt notification:', notification);
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.log('Google prompt not displayed, using disableAutoSelect...');
-          if (window.google?.accounts?.id?.disableAutoSelect) {
-            window.google.accounts.id.disableAutoSelect();
-          }
-        }
-      });
-    } catch (error) {
-      console.error('Error initializing Google Sign-In:', error);
-      setError('Failed to initialize Google Sign-In. Please try again.');
-    }
-  }, [handleGoogleCredentialResponse]);
-
-  const handleGoogleLogin = useCallback(() => {
-    console.log('Google login button clicked');
-    console.log('window.google exists:', !!window.google);
-    console.log('VITE_GOOGLE_CLIENT_ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
-
     if (!window.google) {
-      console.log('Loading Google script...');
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        console.log('Google script loaded');
         setTimeout(() => initializeGoogleSignIn(), 100);
       };
       script.onerror = () => {
-        console.error('Failed to load Google script');
         setError('Failed to load Google Sign-In. Please try again.');
       };
       document.head.appendChild(script);
     } else {
-      console.log('Google script already loaded, initializing...');
       initializeGoogleSignIn();
     }
-  }, [initializeGoogleSignIn]);
+  }, []);
+
+  const initializeGoogleSignIn = useCallback(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!window.google || !clientId) {
+      setError('Failed to initialize Google Sign-In.');
+      return;
+    }
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+      });
+
+      const hiddenDiv = document.createElement('div');
+      hiddenDiv.style.position = 'absolute';
+      hiddenDiv.style.top = '-9999px';
+      hiddenDiv.style.left = '-9999px';
+      document.body.appendChild(hiddenDiv);
+
+      window.google.accounts.id.renderButton(hiddenDiv, {
+        theme: 'outline',
+        size: 'large',
+        text: isSignUp ? 'signup_with' : 'signin_with',
+      });
+
+      setTimeout(() => {
+        const googleButton = hiddenDiv.querySelector('div[role="button"]') as HTMLElement;
+        if (googleButton) {
+          googleButton.click();
+        } else {
+          setError('Failed to trigger Google Sign-In.');
+        }
+
+        setTimeout(() => {
+          if (document.body.contains(hiddenDiv)) {
+            document.body.removeChild(hiddenDiv);
+          }
+        }, 1000);
+      }, 500);
+    } catch (error) {
+      setError('Failed to initialize Google Sign-In.');
+    }
+  }, [handleGoogleCredentialResponse, isSignUp]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,7 +206,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
           <Button
             variant="secondary"
             size="large"
-            onClick={handleGoogleLogin}
+            onClick={handleGoogleSignIn}
             disabled={loading}
             className="google-login-btn"
           >
