@@ -1,21 +1,51 @@
 import React, { useState, useCallback } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  Typography,
-  Box,
-  IconButton,
-  Alert,
-  Button,
-  TextField,
-  Tabs,
-  Tab,
-} from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import CloseIcon from '@mui/icons-material/Close';
-import GoogleIcon from '@mui/icons-material/Google';
-import EmailIcon from '@mui/icons-material/Email';
 import { useAuth } from '../../context/AuthContext';
+import Button from '../Button';
+import './AuthModal.css';
+
+// Extend the Window interface to include Google types
+interface GoogleCredentialResponse {
+  credential: string;
+}
+
+interface GooglePromptNotification {
+  isNotDisplayed: () => boolean;
+  isSkippedMoment: () => boolean;
+  getDismissedReason: () => string;
+  getNotDisplayedReason: () => string;
+  getSkippedReason: () => string;
+}
+
+interface GoogleInitializeConfig {
+  client_id: string;
+  callback: (response: GoogleCredentialResponse) => void;
+  auto_select?: boolean;
+  cancel_on_tap_outside?: boolean;
+  ux_mode?: string;
+}
+
+interface GoogleRenderButtonConfig {
+  theme?: 'outline' | 'filled_blue' | 'filled_black';
+  size?: 'large' | 'medium' | 'small';
+  width?: number;
+  text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
+  shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+  logo_alignment?: 'left' | 'center';
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: GoogleInitializeConfig) => void;
+          prompt: (callback?: (notification: GooglePromptNotification) => void) => void;
+          renderButton: (element: HTMLElement, config: GoogleRenderButtonConfig) => void;
+        };
+      };
+    };
+  }
+}
 
 interface AuthModalProps {
   open: boolean;
@@ -24,27 +54,16 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
-  const theme = useTheme();
   const { login, emailSignUp, emailSignIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-    setError(null);
-    setEmail('');
-    setPassword('');
-    setName('');
-    setIsSignUp(false);
-  };
-
   const handleGoogleCredentialResponse = useCallback(
-    async (response: { credential: string }) => {
+    async (response: GoogleCredentialResponse) => {
       try {
         setLoading(true);
         setError(null);
@@ -63,54 +82,94 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
 
   const initializeGoogleSignIn = useCallback(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    console.log('Initializing Google Sign-In with clientId:', clientId);
 
     if (!window.google || !clientId) {
+      console.error('Google Sign-In not available:', {
+        hasGoogle: !!window.google,
+        hasClientId: !!clientId,
+      });
       setError('Google Sign-In is not available. Please try email login.');
       return;
     }
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleGoogleCredentialResponse,
-      auto_select: false,
-      use_fedcm_for_prompt: false,
-      ux_mode: 'popup',
-      cancel_on_tap_outside: true,
-    });
+    try {
+      console.log('Calling google.accounts.id.initialize...');
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        ux_mode: 'popup',
+        cancel_on_tap_outside: true,
+      });
 
-    const buttonDiv = document.getElementById('google-signin-button');
-    if (buttonDiv) {
-      buttonDiv.innerHTML = '';
-      window.google.accounts.id.renderButton(buttonDiv, {
+      console.log('Using alternative approach - renderButton...');
+      // Create a temporary div to render the Google button
+      const tempDiv = document.createElement('div');
+      tempDiv.id = 'temp-google-signin';
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.left = '-9999px';
+      document.body.appendChild(tempDiv);
+
+      // Render the Google button in the hidden div
+      window.google.accounts.id.renderButton(tempDiv, {
         theme: 'outline',
         size: 'large',
-        width: 300,
-        text: 'continue_with',
+        width: 250,
+        text: 'signin_with',
         shape: 'rectangular',
+        logo_alignment: 'left',
       });
+
+      // Auto-click the rendered button
+      setTimeout(() => {
+        const googleButton = tempDiv.querySelector('div[role="button"]') as HTMLElement;
+        if (googleButton) {
+          console.log('Auto-clicking Google button...');
+          googleButton.click();
+        } else {
+          console.error('Could not find Google button to click');
+          setError('Failed to initialize Google Sign-In. Please try email login.');
+        }
+        // Clean up
+        setTimeout(() => {
+          if (document.body.contains(tempDiv)) {
+            document.body.removeChild(tempDiv);
+          }
+        }, 1000);
+      }, 500);
+    } catch (error) {
+      console.error('Error initializing Google Sign-In:', error);
+      setError('Failed to initialize Google Sign-In. Please try again.');
     }
   }, [handleGoogleCredentialResponse]);
 
   const handleGoogleLogin = useCallback(() => {
+    console.log('Google login button clicked');
+    console.log('window.google exists:', !!window.google);
+    console.log('VITE_GOOGLE_CLIENT_ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
+
     if (!window.google) {
+      console.log('Loading Google script...');
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       script.onload = () => {
+        console.log('Google script loaded');
         setTimeout(() => initializeGoogleSignIn(), 100);
+      };
+      script.onerror = () => {
+        console.error('Failed to load Google script');
+        setError('Failed to load Google Sign-In. Please try again.');
       };
       document.head.appendChild(script);
     } else {
-      setTimeout(() => initializeGoogleSignIn(), 100);
+      console.log('Google script already loaded, initializing...');
+      initializeGoogleSignIn();
     }
   }, [initializeGoogleSignIn]);
-
-  React.useEffect(() => {
-    if (tabValue === 0 && open) {
-      handleGoogleLogin();
-    }
-  }, [tabValue, open, handleGoogleLogin]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,219 +211,117 @@ const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
     setPassword('');
     setName('');
     setIsSignUp(false);
-    setTabValue(0);
     onClose();
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          p: 0,
-          maxWidth: 450,
-          backgroundColor: theme.palette.background.paper,
-        },
-      }}
-    >
-      {/* Header */}
-      <Box
-        sx={{
-          p: 3,
-          pb: 1,
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          position: 'relative',
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 700,
-            color: theme.palette.text.primary,
-            textAlign: 'center',
-            mb: 1,
-          }}
-        >
-          Welcome to RowGram
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: theme.palette.text.secondary,
-            textAlign: 'center',
-          }}
-        >
-          Sign in to save crews and customize settings
-        </Typography>
+    <div className="auth-modal-overlay" onClick={handleClose}>
+      <div className="auth-modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="auth-modal-close" onClick={handleClose}>
+          ×
+        </button>
 
-        <IconButton
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 16,
-            top: 16,
-            color: theme.palette.text.secondary,
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </Box>
+        <div className="auth-modal-header">
+          <h1>{isSignUp ? 'Sign up for RowGram' : 'Log in to RowGram'}</h1>
+          <p>
+            {isSignUp ? 'Have an account?' : 'Need an account?'}{' '}
+            <button type="button" className="auth-toggle-link" onClick={toggleSignUpMode}>
+              {isSignUp ? 'Sign in now' : 'Sign up now'}
+            </button>
+          </p>
+        </div>
 
-      <DialogContent sx={{ p: 3 }}>
-        {/* Auth Method Tabs */}
-        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }} variant="fullWidth">
-          <Tab icon={<GoogleIcon />} label="Google" sx={{ textTransform: 'none' }} />
-          <Tab icon={<EmailIcon />} label="Email" sx={{ textTransform: 'none' }} />
-        </Tabs>
+        <div className="auth-modal-body">
+          {error && <div className="auth-error">{error}</div>}
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
+          {/* Google Login Button */}
+          <Button
+            variant="secondary"
+            size="large"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="google-login-btn"
+          >
+            <svg className="google-icon" width="20" height="20" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            {isSignUp ? ' Sign up with Google' : ' Login with Google'}
+          </Button>
 
-        {tabValue === 0 && (
-          <Box>
-            <div
-              id="google-signin-button"
-              style={{
-                marginBottom: '16px',
-                display: 'flex',
-                justifyContent: 'center',
-                minHeight: '48px',
-              }}
-            ></div>
+          {/* Divider */}
+          <div className="auth-divider">
+            <span>Or</span>
+          </div>
 
-            <Typography
-              variant="body2"
-              sx={{
-                mt: 2,
-                color: theme.palette.text.secondary,
-                textAlign: 'center',
-                fontSize: '13px',
-              }}
-            >
-              Quick and secure authentication with your Google account
-            </Typography>
-          </Box>
-        )}
-
-        {tabValue === 1 && (
-          <Box component="form" onSubmit={handleEmailAuth}>
-            <Typography variant="h6" sx={{ mb: 2, color: theme.palette.text.primary }}>
-              {isSignUp ? 'Create Account' : 'Sign In'}
-            </Typography>
-
+          {/* Email Form */}
+          <form onSubmit={handleEmailAuth} className="auth-form">
             {isSignUp && (
-              <TextField
-                fullWidth
-                label="Full Name"
+              <input
+                type="text"
+                placeholder="Full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                sx={{ mb: 2 }}
+                className="auth-input"
               />
             )}
 
-            <TextField
-              fullWidth
-              label="Email"
+            <input
               type="email"
+              placeholder="Username or email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              sx={{ mb: 2 }}
+              className="auth-input"
             />
 
-            <TextField
-              fullWidth
-              label="Password"
+            <input
               type="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              sx={{ mb: 3 }}
+              className="auth-input"
             />
 
             <Button
-              fullWidth
               type="submit"
-              variant="contained"
+              variant="primary"
               size="large"
               disabled={loading}
-              sx={{
-                py: 1.5,
-                backgroundColor: theme.palette.primary.main,
-                textTransform: 'none',
-                fontSize: '16px',
-                fontWeight: 600,
-                '&:hover': {
-                  backgroundColor: theme.palette.primary.dark,
-                },
-              }}
+              className="auth-submit-btn"
             >
-              {isSignUp ? 'Create Account' : 'Sign In'}
+              {isSignUp ? 'CREATE ACCOUNT' : 'LOG IN'}
             </Button>
+          </form>
 
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Button
-                variant="text"
-                onClick={toggleSignUpMode}
-                sx={{
-                  textTransform: 'none',
-                  color: theme.palette.primary.main,
-                }}
-              >
-                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        <Box
-          sx={{
-            mt: 4,
-            p: 2,
-            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(94, 152, 194, 0.1)' : '#f8f9ff',
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.divider}`,
-          }}
-        >
-          <Typography
-            variant="subtitle2"
-            sx={{
-              mb: 1,
-              color: theme.palette.primary.main,
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-            }}
-          >
-            🚣‍♂️ What you get with an account:
-          </Typography>
-
-          <Box
-            component="ul"
-            sx={{
-              m: 0,
-              pl: 2,
-              color: theme.palette.text.secondary,
-              '& li': { mb: 0.5, fontSize: '14px' },
-            }}
-          >
-            <li>Save and manage your crew lineups</li>
-            <li>Customize your club colors and logo</li>
-            <li>Generate personalized crew images</li>
-            <li>Access your data from any device</li>
-          </Box>
-        </Box>
-      </DialogContent>
-    </Dialog>
+          {!isSignUp && (
+            <div className="auth-footer">
+              <button type="button" className="forgot-password-link">
+                Forgot your password?
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
