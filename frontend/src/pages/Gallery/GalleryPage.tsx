@@ -304,10 +304,6 @@ const NewGalleryPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="gallery-status">
-          {filteredImages.length} of {images.length} images
-        </div>
-
         {/* Gallery Content */}
         {filteredImages.length === 0 ? (
           <div className="empty-state">
