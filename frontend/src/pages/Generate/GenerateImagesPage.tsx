@@ -506,6 +506,12 @@ const GenerateImagesPage: React.FC = () => {
                         backgroundColor: 'var(--gray-50)',
                         borderRadius: 'var(--radius-lg)',
                         border: '2px dashed var(--gray-300)',
+                        gridColumn: '1 / -1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '300px',
                       }}
                     >
                       <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🚣</div>
