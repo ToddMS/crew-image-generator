@@ -33,16 +33,21 @@ interface Template {
   thumbnail?: string;
 }
 
-interface GenerationStatus {
-  id: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  images?: Array<{
-    format: string;
-    url: string;
-    size: string;
+interface MultiCrewGenerationStatus {
+  totalCrews: number;
+  completedCrews: number;
+  currentCrew?: string;
+  results: Array<{
+    crewId: string;
+    crewName: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    images?: Array<{
+      format: string;
+      url: string;
+      size: string;
+    }>;
+    error?: string;
   }>;
-  error?: string;
 }
 
 const GenerateImagesPage: React.FC = () => {
@@ -73,7 +78,7 @@ const GenerateImagesPage: React.FC = () => {
   // Loading and error states
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [generationStatus, setGenerationStatus] = useState<GenerationStatus | null>(null);
+  const [multiCrewStatus, setMultiCrewStatus] = useState<MultiCrewGenerationStatus | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getCurrentPage = () => 'generate';
@@ -360,34 +365,140 @@ const GenerateImagesPage: React.FC = () => {
     }
 
     setGenerating(true);
-    try {
-      // Generate images for each selected crew
-      const requests = selectedCrews.map((crew) => ({
+
+    // Initialize multi-crew status
+    const initialStatus: MultiCrewGenerationStatus = {
+      totalCrews: selectedCrews.length,
+      completedCrews: 0,
+      currentCrew: selectedCrews[0]?.name,
+      results: selectedCrews.map((crew) => ({
         crewId: crew.id,
-        templateId: selectedTemplate.id,
-        colors: {
-          primary: selectedPreset.primary_color,
-          secondary: selectedPreset.secondary_color,
-        },
-        formats: selectedFormats,
-      }));
+        crewName: crew.name,
+        status: 'pending' as const,
+      })),
+    };
+    setMultiCrewStatus(initialStatus);
 
-      // For now, generate images for the first crew (until backend supports batch generation)
-      // TODO: Update when backend supports multiple crew generation
-      const response = await ApiService.generateImages(requests[0]);
+    try {
+      const allResults = [];
+      let successCount = 0;
 
-      if (response.data) {
-        setGenerationStatus(response.data);
+      // Generate images for each selected crew sequentially
+      for (let i = 0; i < selectedCrews.length; i++) {
+        const crew = selectedCrews[i];
 
-        // Since we're using immediate generation, no need to poll
-        // Just set the final state directly
-        if (response.data.status === 'completed') {
-          setGenerating(false);
-          setCurrentStep(5); // Success step
-          showSuccess('Images generated successfully!');
+        // Update current crew being processed
+        setMultiCrewStatus((prev) =>
+          prev
+            ? {
+                ...prev,
+                currentCrew: crew.name,
+                results: prev.results.map((result) =>
+                  result.crewId === crew.id ? { ...result, status: 'processing' } : result,
+                ),
+              }
+            : null,
+        );
+
+        try {
+          const request = {
+            crewId: crew.id,
+            templateId: selectedTemplate.id,
+            colors: {
+              primary: selectedPreset.primary_color,
+              secondary: selectedPreset.secondary_color,
+            },
+            formats: selectedFormats,
+          };
+
+          const response = await ApiService.generateImages(request);
+
+          if (response.data && response.data.status === 'completed') {
+            successCount++;
+            allResults.push({
+              crewId: crew.id,
+              crewName: crew.name,
+              status: 'completed' as const,
+              images: response.data.images || [],
+            });
+
+            setMultiCrewStatus((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    completedCrews: i + 1,
+                    results: prev.results.map((result) =>
+                      result.crewId === crew.id
+                        ? { ...result, status: 'completed', images: response.data!.images || [] }
+                        : result,
+                    ),
+                  }
+                : null,
+            );
+          } else {
+            allResults.push({
+              crewId: crew.id,
+              crewName: crew.name,
+              status: 'failed' as const,
+              error: response.error || 'Generation failed',
+            });
+
+            // Update status
+            setMultiCrewStatus((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    completedCrews: i + 1,
+                    results: prev.results.map((result) =>
+                      result.crewId === crew.id
+                        ? {
+                            ...result,
+                            status: 'failed',
+                            error: response.error || 'Generation failed',
+                          }
+                        : result,
+                    ),
+                  }
+                : null,
+            );
+          }
+        } catch {
+          allResults.push({
+            crewId: crew.id,
+            crewName: crew.name,
+            status: 'failed' as const,
+            error: 'Network error or server failure',
+          });
+
+          setMultiCrewStatus((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  completedCrews: i + 1,
+                  results: prev.results.map((result) =>
+                    result.crewId === crew.id
+                      ? { ...result, status: 'failed', error: 'Network error or server failure' }
+                      : result,
+                  ),
+                }
+              : null,
+          );
         }
+      }
+
+      // All crews processed
+      setGenerating(false);
+      setCurrentStep(5); // Success step
+
+      // Show appropriate success/error message
+      if (successCount === selectedCrews.length) {
+        showSuccess(`All ${selectedCrews.length} crew images generated successfully!`);
+      } else if (successCount > 0) {
+        showSuccess(
+          `${successCount} of ${selectedCrews.length} crew images generated successfully.`,
+        );
       } else {
-        throw new Error(response.error || 'Generation failed');
+        showError('Failed to generate any images. Please try again.');
       }
     } catch {
       showError('Failed to generate images. Please try again.');
@@ -397,7 +508,7 @@ const GenerateImagesPage: React.FC = () => {
 
   const resetGenerator = () => {
     setCurrentStep(1);
-    setGenerationStatus(null);
+    setMultiCrewStatus(null);
     setGenerating(false);
     setErrors({});
     setSelectedFormats(['instagram_post']);
@@ -748,52 +859,223 @@ const GenerateImagesPage: React.FC = () => {
                     loading={generating}
                     disabled={generating}
                   >
-                    Generate Images
+                    Generate Images for {selectedCrews.length} Crew
+                    {selectedCrews.length > 1 ? 's' : ''}
                   </Button>
                 </div>
               </div>
             </div>
           )}
 
-          {currentStep === 5 && generationStatus && (
+          {/* Generation Progress State */}
+          {generating && multiCrewStatus && (
             <div className="generate-step active">
               <div className="step-content text-center">
+                <div className="progress-container">
+                  <h3>Generating Images...</h3>
+                  <p>
+                    Currently processing: <strong>{multiCrewStatus.currentCrew}</strong>
+                  </p>
+
+                  <div
+                    className="progress-bar-container"
+                    style={{
+                      width: '100%',
+                      backgroundColor: '#f3f4f6',
+                      borderRadius: '8px',
+                      padding: '4px',
+                      margin: '1rem 0',
+                    }}
+                  >
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: `${(multiCrewStatus.completedCrews / multiCrewStatus.totalCrews) * 100}%`,
+                        backgroundColor: '#3b82f6',
+                        height: '20px',
+                        borderRadius: '4px',
+                        transition: 'width 0.3s ease',
+                      }}
+                    ></div>
+                  </div>
+
+                  <p>
+                    {multiCrewStatus.completedCrews} of {multiCrewStatus.totalCrews} crews completed
+                  </p>
+
+                  {/* Live status of each crew */}
+                  <div
+                    className="crew-progress-list"
+                    style={{ margin: '2rem 0', textAlign: 'left' }}
+                  >
+                    {multiCrewStatus.results.map((result) => (
+                      <div
+                        key={result.crewId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '0.5rem 1rem',
+                          margin: '0.25rem 0',
+                          backgroundColor: 'rgba(243, 244, 246, 0.5)',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        <span>{result.crewName}</span>
+                        <span
+                          style={{
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            backgroundColor:
+                              result.status === 'completed'
+                                ? '#22c55e'
+                                : result.status === 'processing'
+                                  ? '#3b82f6'
+                                  : result.status === 'failed'
+                                    ? '#ef4444'
+                                    : '#9ca3af',
+                            color: 'white',
+                          }}
+                        >
+                          {result.status === 'processing'
+                            ? '🔄 Processing'
+                            : result.status === 'completed'
+                              ? '✅ Done'
+                              : result.status === 'failed'
+                                ? '❌ Failed'
+                                : '⏳ Pending'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && multiCrewStatus && (
+            <div className="generate-step active">
+              <div className="step-content text-center">
+                <h2>Crew Images Generated!</h2>
                 <p>Your crew images have been created and saved to your gallery</p>
 
                 <div className="success-summary">
                   <div className="success-stat">
-                    <div className="stat-number">{generationStatus.images?.length || 0}</div>
-                    <div className="stat-label">Images Generated</div>
+                    <div className="stat-number">
+                      {multiCrewStatus.results.filter((r) => r.status === 'completed').length}
+                    </div>
+                    <div className="stat-label">Successful</div>
                   </div>
-                  {generationStatus.images && generationStatus.images.length > 0 && (
+                  <div className="success-stat">
+                    <div className="stat-number">{multiCrewStatus.totalCrews}</div>
+                    <div className="stat-label">Total Crews</div>
+                  </div>
+                  {multiCrewStatus.results.filter((r) => r.status === 'failed').length > 0 && (
                     <div className="success-stat">
-                      <div className="stat-number">{generationStatus.images[0].size}</div>
-                      <div className="stat-label">{generationStatus.images[0].format}</div>
+                      <div className="stat-number" style={{ color: 'var(--error-color, #ef4444)' }}>
+                        {multiCrewStatus.results.filter((r) => r.status === 'failed').length}
+                      </div>
+                      <div className="stat-label">Failed</div>
                     </div>
                   )}
                 </div>
 
-                <div className="success-actions">
-                  {generationStatus.images && generationStatus.images.length > 0 && (
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = generationStatus.images![0].url;
-                        link.download = `crew-${selectedCrews[0]?.name || 'image'}-${Date.now()}.png`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                {/* Crew Results List */}
+                <div className="crew-results-list" style={{ margin: '3rem 0', textAlign: 'left' }}>
+                  {multiCrewStatus.results.map((result) => (
+                    <div
+                      key={result.crewId}
+                      className="crew-result-item"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1rem 1.5rem',
+                        margin: '0.75rem 0',
+                        minWidth: '500px',
+                        backgroundColor:
+                          result.status === 'completed'
+                            ? 'rgba(34, 197, 94, 0.1)'
+                            : result.status === 'failed'
+                              ? 'rgba(239, 68, 68, 0.1)'
+                              : 'rgba(156, 163, 175, 0.1)',
+                        borderRadius: '12px',
+                        border: `2px solid ${
+                          result.status === 'completed'
+                            ? '#22c55e'
+                            : result.status === 'failed'
+                              ? '#ef4444'
+                              : '#9ca3af'
+                        }`,
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                       }}
                     >
-                      Download Image
-                    </Button>
-                  )}
+                      <div style={{ flex: '1', marginRight: '1.5rem' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                          {result.crewName}
+                        </div>
+                        {result.status === 'failed' && result.error && (
+                          <div
+                            style={{ fontSize: '0.875rem', color: '#ef4444', marginTop: '0.25rem' }}
+                          >
+                            {result.error}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {result.status === 'completed' &&
+                          result.images &&
+                          result.images.length > 0 && (
+                            <Button
+                              variant="primary"
+                              size="small"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = result.images![0].url;
+                                link.download = `crew-${result.crewName}-${Date.now()}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                              style={{
+                                backgroundColor: '#22c55e',
+                                borderColor: '#22c55e',
+                                color: 'white',
+                                padding: '0.375rem 0.75rem',
+                                fontSize: '0.8125rem',
+                              }}
+                            >
+                              Download
+                            </Button>
+                          )}
+                        {result.status === 'failed' && (
+                          <div
+                            style={{
+                              padding: '0.5rem 1rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.875rem',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase',
+                              backgroundColor: '#ef4444',
+                              color: 'white',
+                            }}
+                          >
+                            FAILED
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="success-actions" style={{ marginTop: '3rem' }}>
                   <Button variant="secondary" onClick={resetGenerator}>
-                    Generate Another
+                    Generate More Images
                   </Button>
                   <Button variant="primary" onClick={() => navigate('/gallery')}>
-                    View in Gallery
+                    View all in Gallery
                   </Button>
                 </div>
               </div>
